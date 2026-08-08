@@ -1,0 +1,31 @@
+JLU Whisperers - Development Summary Report
+Date: August 8, 2026
+
+Phase 1: Real-time Messaging & Notifications
+- Integrated Flask-SocketIO in the backend to manage real-time WebSocket connections.
+- Overhauled Direct Messaging (Messages.jsx) to instantly broadcast and receive messages via sockets instead of legacy HTTP polling.
+- Implemented a persistent `Notification` database model (models.py) for tracking upvotes, replies, and chat requests.
+- Hooked all major user actions to instantly emit `new_notification` events over sockets.
+- Completely rebuilt `Notifications.jsx` to fetch persistent notification history, mark items as read, and receive live drops via sockets.
+
+Phase 2: Explore & Search
+- Created backend endpoints `/api/explore/trending` and `/api/explore/search`.
+- Built out `Explore.jsx` to fetch real Trending Topics dynamically based on post counts.
+- Implemented global Search functionality allowing users to sweep the database by keyword or User Identity.
+- Fixed a rendering crash caused by passing a Post object instead of strings.
+- Synced the AI-generated "Daily Prompt" into the Explore page layout.
+
+Phase 3: Live Sidebar & AI Campus Polls
+- Upgraded the AI Oracle (`ai.py`) to procedurally generate relatable, multiple-choice Campus Polls.
+- Created `/api/sidebar/stats` to calculate live Community Stats (daily post counts, active users) and dynamically extract `#hashtags` from recent whispers to populate the "Trending Tags".
+- Overhauled `RightSidebar.jsx` to display these live statistics, replacing all previous dummy data.
+- Built a slideable poll carousel in the sidebar allowing users to vote on the AI polls and instantly see percentage distributions.
+- Hooked the Sidebar's "Live Activity" feed to WebSockets to stream global activity as it happens.
+
+Phase 4: UI & Mobile Polish
+- Replaced the center '+' button on the mobile bottom navigation (`BottomNav.jsx`) with a Heart icon.
+- Created a placeholder `/dating` route that displays a "Coming Soon" teaser for an upcoming dating feature.
+- Confirmed the React Admin Dashboard (`AdminDashboard.jsx`) correctly renders access restrictions without crashing.
+
+Ready for Launch!
+
