@@ -23,7 +23,7 @@ from ai import generate_creative_identity, generate_daily_prompt
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
 
 @socketio.on('join')
 def on_join(data):
