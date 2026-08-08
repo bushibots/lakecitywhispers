@@ -1054,11 +1054,11 @@ def get_sidebar_stats():
 
 @app.route('/api/sidebar/polls', methods=['GET'])
 def get_sidebar_polls():
-    polls = Poll.query.order_by(Poll.created_at.desc()).limit(3).all()
+    polls = Poll.query.join(Post).order_by(Post.created_at.desc()).limit(3).all()
     
     from datetime import datetime, timedelta
     # Generate new poll if none exist or latest is > 24 hours old
-    if not polls or polls[0].created_at < datetime.utcnow() - timedelta(days=1):
+    if not polls or polls[0].post.created_at < datetime.utcnow() - timedelta(days=1):
         from ai import generate_campus_poll
         poll_data = generate_campus_poll()
         if poll_data:
@@ -1076,7 +1076,7 @@ def get_sidebar_polls():
             db.session.add(new_post)
             db.session.flush()
             
-            new_poll = Poll(post_id=new_post.id, question=poll_data['question'])
+            new_poll = Poll(post_id=new_post.id)
             db.session.add(new_poll)
             db.session.flush()
             
@@ -1084,21 +1084,21 @@ def get_sidebar_polls():
                 db.session.add(PollOption(poll_id=new_poll.id, text=opt))
             db.session.commit()
             
-            polls = Poll.query.order_by(Poll.created_at.desc()).limit(3).all()
+            polls = Poll.query.join(Post).order_by(Post.created_at.desc()).limit(3).all()
             
     result = []
     for poll in polls:
         opts = PollOption.query.filter_by(poll_id=poll.id).all()
-        total_votes = sum(o.vote_count for o in opts)
+        total_votes = sum(o.votes for o in opts)
         
         # Check if current user voted? The endpoint doesn't strictly need auth, but it helps.
         # We'll just return raw options, frontend can handle auth on vote.
         result.append({
             "id": poll.id,
             "post_id": poll.post_id,
-            "question": poll.question,
+            "question": poll.post.content,
             "total_votes": total_votes,
-            "options": [{"id": o.id, "text": o.text, "votes": o.vote_count} for o in opts]
+            "options": [{"id": o.id, "text": o.text, "votes": o.votes} for o in opts]
         })
         
     return jsonify(result)
