@@ -44,24 +44,12 @@ UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Backblaze B2 Client Initialization
-import boto3
-from botocore.config import Config as BotoConfig
+# Cloudinary Client Initialization
+import cloudinary
+import cloudinary.uploader
 
-B2_KEY_ID = os.environ.get('B2_KEY_ID')
-B2_APPLICATION_KEY = os.environ.get('B2_APPLICATION_KEY')
-B2_BUCKET_NAME = os.environ.get('B2_BUCKET_NAME')
-B2_ENDPOINT_URL = os.environ.get('B2_ENDPOINT_URL')
-
-b2_client = None
-if B2_KEY_ID and B2_APPLICATION_KEY and B2_ENDPOINT_URL:
-    b2_client = boto3.client(
-        's3',
-        endpoint_url=B2_ENDPOINT_URL,
-        aws_access_key_id=B2_KEY_ID,
-        aws_secret_access_key=B2_APPLICATION_KEY,
-        config=BotoConfig(signature_version='s3v4')
-    )
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+cloudinary_enabled = CLOUDINARY_URL is not None
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16 MB max limit
 
 # Initialize extensions
@@ -565,21 +553,14 @@ def upload_file():
         ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else 'bin'
         filename = f"{uuid.uuid4().hex}.{ext}"
         
-        if b2_client:
+        if cloudinary_enabled:
             try:
-                # Stream file to Backblaze B2 bucket
-                b2_client.upload_fileobj(
-                    file,
-                    B2_BUCKET_NAME,
-                    filename,
-                    ExtraArgs={'ContentType': file.content_type}
-                )
-                # Compute the public B2 URL
-                host_only = B2_ENDPOINT_URL.replace("https://", "").replace("http://", "")
-                file_url = f"https://{B2_BUCKET_NAME}.{host_only}/{filename}"
+                # Upload directly to Cloudinary (resource_type="auto" covers audio/image/video)
+                upload_result = cloudinary.uploader.upload(file, resource_type="auto")
+                file_url = upload_result.get("secure_url")
                 return jsonify({"url": file_url}), 201
             except Exception as e:
-                return jsonify({"error": f"Failed to upload to Backblaze: {str(e)}"}), 500
+                return jsonify({"error": f"Failed to upload to Cloudinary: {str(e)}"}), 500
         else:
             # Fallback: Save file locally (useful for local development)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
