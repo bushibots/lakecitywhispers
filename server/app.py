@@ -1,3 +1,6 @@
+import gevent.monkey
+gevent.monkey.patch_all()
+
 import os
 import uuid
 import random
@@ -39,6 +42,10 @@ if db_url:
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'jluwhisper.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280,
+}
 
 UPLOAD_FOLDER = os.path.join(basedir, 'static', 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
