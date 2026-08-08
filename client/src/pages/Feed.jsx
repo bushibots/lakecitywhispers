@@ -208,13 +208,13 @@ export default function Feed() {
         
         {post.image_url && (
             <div style={{ marginTop: '1rem', borderRadius: '12px', overflow: 'hidden' }}>
-                <img src={`http://127.0.0.1:5000${post.image_url}`} alt="Attached" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
+                <img src={post.image_url.startsWith('http') ? post.image_url : (import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com').replace('/api', '') + post.image_url} alt="Attached" style={{ width: '100%', maxHeight: '400px', objectFit: 'cover', display: 'block' }} />
             </div>
         )}
         
         {post.audio_url && (
             <div style={{ marginTop: '1rem' }}>
-                <audio controls src={`http://127.0.0.1:5000${post.audio_url}`} style={{ width: '100%', height: '40px', outline: 'none' }} />
+                <audio controls src={post.audio_url.startsWith('http') ? post.audio_url : (import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com').replace('/api', '') + post.audio_url} style={{ width: '100%', height: '40px', outline: 'none' }} />
             </div>
         )}
         
