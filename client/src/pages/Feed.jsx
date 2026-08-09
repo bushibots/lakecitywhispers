@@ -338,7 +338,7 @@ export default function Feed() {
       opacity: comment.is_optimistic ? 0.6 : 1
     }}>
       <div className="reply-item" style={{ borderBottom: 'none', padding: 0 }}>
-        <div className="avatar-flame small">
+        <div className="avatar-flame small" style={comment.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {}}>
             {comment.author_avatar && comment.author_avatar.startsWith('http') ? (
               <img src={comment.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
             ) : (
@@ -347,7 +347,9 @@ export default function Feed() {
         </div>
         <div className="reply-content" style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="name" style={{ fontSize: '0.85rem' }}>{comment.author_username || 'Anonymous'}</span>
+            <span className="name" style={{ fontSize: '0.85rem', ...(comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}) }}>
+              {comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous')}
+            </span>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
               {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>

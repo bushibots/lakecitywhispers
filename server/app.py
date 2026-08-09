@@ -421,11 +421,8 @@ def serialize_post(p, user=None, user_votes=None):
         else:
             has_voted = PollVote.query.filter_by(poll_id=p.poll.id, user_id=user.id).first() is not None
         
-    author_name = p.author.display_name
-    is_admin_post = False
-    if p.topic == 'Announcement' and p.author.role == 'admin':
-        author_name = 'Admin'
-        is_admin_post = True
+    author_name = 'Admin' if p.author.role == 'admin' else p.author.display_name
+    is_admin_post = (p.author.role == 'admin')
 
     return {
         "id": p.id,
@@ -756,14 +753,18 @@ def reply_post(post_id):
     return jsonify({"message": "Reply posted successfully", "reply_id": new_reply.id}), 201
 
 def serialize_reply(r):
+    author_name = 'Admin' if r.author.role == 'admin' else r.author.display_name
+    is_admin_post = (r.author.role == 'admin')
+    
     return {
         "id": r.id,
         "content": r.content,
         "upvotes": r.upvotes,
         "downvotes": r.downvotes,
         "created_at": r.created_at.isoformat(),
-        "author_username": r.author.display_name,
+        "author_username": author_name,
         "author_avatar": r.author.avatar,
+        "is_admin_post": is_admin_post,
         "replies": [serialize_reply(child) for child in r.replies if not child.is_deleted]
     }
 
