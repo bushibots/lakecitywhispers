@@ -52,6 +52,11 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
   gap: 2rem;
   min-height: 100vh;
 }
+
+.layout-wrapper > * {
+  min-width: 0;
+}
+
 .layout-main {
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
