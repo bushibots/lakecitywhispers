@@ -75,7 +75,7 @@ app.config.from_object(Config())
 scheduler = APScheduler()
 scheduler.init_app(app)
 
-from bot import run_ai_bots
+from bot import cleanup_old_bots, spawn_manual_bots
 
 def cleanup_old_bots():
     with app.app_context():
@@ -93,7 +93,7 @@ def cleanup_old_bots():
             db.session.commit()
             print(f"Cleaned up {deleted_count} old AI bots.")
 
-scheduler.add_job(id='ai_bot_job', func=run_ai_bots, trigger='interval', minutes=15)
+# The ai_bot_job has been removed so AI activity is only triggered manually by admins.
 scheduler.add_job(id='cleanup_old_bots_job', func=cleanup_old_bots, trigger='interval', hours=1)
 scheduler.start()
 
@@ -1429,6 +1429,26 @@ def admin_edit_stats(post_id):
         
     db.session.commit()
     return jsonify({"message": "Stats updated"})
+
+@app.route('/api/admin/bots/spawn', methods=['POST'])
+@admin_required
+def admin_spawn_bots():
+    data = request.json or {}
+    try:
+        count = int(data.get('count', 1))
+    except:
+        count = 1
+    
+    topic = data.get('topic', '')
+    if not topic.strip():
+        topic = None
+        
+    # Cap count to prevent timeouts or rate limit abuse
+    if count > 10:
+        count = 10
+        
+    results = spawn_manual_bots(count, topic)
+    return jsonify({"message": f"Successfully executed {len(results)} bot actions.", "results": results})
 
 @app.route('/api/admin/users', methods=['GET'])
 @admin_required

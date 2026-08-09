@@ -3,7 +3,7 @@ import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3 } fro
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
-    sendAdminBroadcast, fetchAdminConversations, adminForgePost
+    sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots
 } from '../api';
 
 export default function AdminDashboard() {
@@ -19,6 +19,11 @@ export default function AdminDashboard() {
   const [allPosts, setAllPosts] = useState([]);
   const [adminChats, setAdminChats] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
+  
+  // Bot spawning state
+  const [botSpawnCount, setBotSpawnCount] = useState(1);
+  const [botSpawnTopic, setBotSpawnTopic] = useState('');
+  const [isSpawning, setIsSpawning] = useState(false);
   const [sysSettings, setSysSettings] = useState({ 
     lockdown: false, maintenance: false, bots_enabled: false, media_enabled: true,
     bot_active_start: 9, bot_active_end: 23, daily_prompt: '' 
@@ -139,6 +144,18 @@ export default function AdminDashboard() {
     await sendAdminBroadcast(broadcastMsg);
     setBroadcastMsg('');
     alert('Broadcast sent!');
+  };
+
+  const handleSpawnBots = async () => {
+    setIsSpawning(true);
+    const res = await adminSpawnBots(botSpawnCount, botSpawnTopic);
+    setIsSpawning(false);
+    if (res && !res.error) {
+      alert(`Bots successfully generated: ${res.message}`);
+      await loadData();
+    } else {
+      alert(res?.error || "Failed to spawn bots.");
+    }
   };
 
   const handleLogoUpload = async (e) => {
@@ -297,6 +314,46 @@ export default function AdminDashboard() {
                 )}
               </div>
           </>
+      )}
+
+      {activeTab === 'users' && userTab === 'bots' && (
+          <div className="feed-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+              <h2 style={{ marginBottom: '1.5rem' }}>Manual Bot Controller</h2>
+              <div style={{ padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px' }}>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                      Automatically generate AI users, posts, and replies instantly.
+                  </p>
+                  
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                      <div style={{ flex: 1 }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Number of Actions (Max 10)</label>
+                          <input 
+                              type="number" 
+                              className="composer-textarea border-input" 
+                              style={{ width: '100%', height: '40px', padding: '0.5rem' }} 
+                              value={botSpawnCount} 
+                              onChange={(e) => setBotSpawnCount(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))} 
+                              min="1" max="10" 
+                          />
+                      </div>
+                      <div style={{ flex: 2 }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Topic / Context (Optional)</label>
+                          <input 
+                              type="text" 
+                              className="composer-textarea border-input" 
+                              style={{ width: '100%', height: '40px', padding: '0.5rem' }} 
+                              value={botSpawnTopic} 
+                              onChange={(e) => setBotSpawnTopic(e.target.value)} 
+                              placeholder="e.g. exams, pizza, dating..." 
+                          />
+                      </div>
+                  </div>
+
+                  <button className="btn-glow" onClick={handleSpawnBots} disabled={isSpawning} style={{ backgroundColor: 'var(--accent-color)' }}>
+                      {isSpawning ? 'Spawning AI Activity...' : 'Spawn AI Activity Now'}
+                  </button>
+              </div>
+          </div>
       )}
 
       {activeTab === 'users' && (

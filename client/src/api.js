@@ -771,3 +771,19 @@ export const fetchSidebarPolls = async () => {
     } catch (error) { return []; }
 };
 
+
+
+export const adminSpawnBots = async (count, topic) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/admin/bots/spawn`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
+            body: JSON.stringify({ count, topic })
+        });
+        return await res.json();
+    } catch (error) {
+        console.error('Error spawning bots:', error);
+        return { error: 'Network error' };
+    }
+};
