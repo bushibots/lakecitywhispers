@@ -20,6 +20,7 @@ import random
 import string
 from dotenv import load_dotenv
 from ai import generate_creative_identity, generate_daily_prompt
+from sqlalchemy.orm import joinedload
 
 app = Flask(__name__)
 CORS(app)
@@ -381,10 +382,13 @@ def delete_account():
 
 # --- Posts (Whispers) ---
 
-def serialize_post(p, user=None):
+def serialize_post(p, user=None, user_votes=None):
     has_voted = False
     if p.poll and user:
-        has_voted = PollVote.query.filter_by(poll_id=p.poll.id, user_id=user.id).first() is not None
+        if user_votes is not None:
+            has_voted = p.poll.id in user_votes
+        else:
+            has_voted = PollVote.query.filter_by(poll_id=p.poll.id, user_id=user.id).first() is not None
         
     return {
         "id": p.id,
@@ -490,9 +494,23 @@ def get_posts():
         
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first() if session_token else None
+    
+    # Eager load author, poll, options, and replies to optimize DB queries
+    query = query.options(
+        joinedload(Post.author),
+        joinedload(Post.poll).joinedload(Poll.options),
+        joinedload(Post.replies)
+    )
         
     posts = query.order_by(Post.created_at.desc()).all()
-    posts_data = [serialize_post(p, user) for p in posts]
+    
+    # Pre-fetch user's voted poll IDs to avoid N+1 queries during serialization
+    user_votes = set()
+    if user:
+        votes = PollVote.query.filter_by(user_id=user.id).all()
+        user_votes = {v.poll_id for v in votes}
+        
+    posts_data = [serialize_post(p, user, user_votes) for p in posts]
     return jsonify({"posts": posts_data})
 
 @app.route('/api/posts', methods=['POST'])
