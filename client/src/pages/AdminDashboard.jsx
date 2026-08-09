@@ -453,16 +453,25 @@ export default function AdminDashboard() {
       {activeTab === 'all_posts' && (
           <div className="feed-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>Unrestricted Content Search</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
                   {allPosts.map(post => (
-                      <div key={post.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', backgroundColor: post.is_deleted ? 'rgba(231, 76, 60, 0.1)' : 'var(--bg-elevated)', borderRadius: '8px', border: post.is_deleted ? '1px solid var(--danger-color, red)' : 'none' }}>
-                          <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
-                                  Post ID: {post.id} &bull; Display Identity: {post.author_display} &bull; Upvotes: {post.upvotes} &bull; {new Date(post.created_at).toLocaleString()}
-                                  {post.is_deleted && <strong style={{ color: 'var(--danger-color, red)', marginLeft: '10px' }}>(DELETED)</strong>}
+                      <div key={post.id} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1.25rem', backgroundColor: post.is_deleted ? 'rgba(231, 76, 60, 0.05)' : 'var(--bg-elevated)', borderRadius: '8px', border: post.is_deleted ? '1px solid var(--danger-color, red)' : '1px solid var(--border-color)' }}>
+                          <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                      Post ID: {post.id} &bull; Upvotes: {post.upvotes}
+                                      {post.is_deleted && <strong style={{ color: 'var(--danger-color, red)', marginLeft: '10px' }}>(DELETED)</strong>}
+                                  </div>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                      {new Date(post.created_at).toLocaleDateString()}
+                                  </div>
                               </div>
-                              <p style={{ marginBottom: '1rem' }}>{post.content}</p>
+                              <p style={{ margin: '0.5rem 0', wordBreak: 'break-word', fontSize: '0.95rem' }}>{post.content}</p>
                               
+                              <div style={{ fontSize: '0.85rem', color: 'var(--accent-color)', marginBottom: '0.5rem' }}>
+                                  Display Identity: {post.author_display}
+                              </div>
+
                               {revealedAuthors[post.id] && (
                                   <div style={{ padding: '0.5rem', backgroundColor: 'rgba(231, 76, 60, 0.1)', border: '1px solid var(--danger-color, red)', borderRadius: '8px', marginBottom: '0.5rem', display: 'inline-block' }}>
                                       <strong style={{ color: 'var(--danger-color, red)' }}>REAL AUTHOR:</strong> {revealedAuthors[post.id].username} 
@@ -470,15 +479,22 @@ export default function AdminDashboard() {
                                   </div>
                               )}
                           </div>
-                          <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem', flexDirection: 'column' }}>
-                              <button className="btn-glow" style={{ backgroundColor: 'var(--accent-color)', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleRevealAuthor(post.id)}>
-                                <Eye size={16} /> Reveal Author
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                              <button 
+                                  className="btn-glow" 
+                                  style={{ flex: 1, padding: '0.6rem', fontSize: '0.85rem', backgroundColor: 'var(--bg-card)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}
+                                  onClick={() => handleRevealAuthor(post.id)}
+                              >
+                                  <Eye size={14} /> Reveal Author
                               </button>
-                              {!post.is_deleted && (
-                                  <button className="btn-glow" style={{ backgroundColor: 'var(--danger-color, #e74c3c)', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }} onClick={() => handleDeletePost(post.id)}>
-                                    <Trash2 size={16} /> Delete
-                                  </button>
-                              )}
+                              <button 
+                                  className="btn-glow" 
+                                  style={{ flex: 1, padding: '0.6rem', fontSize: '0.85rem', backgroundColor: post.is_deleted ? 'var(--bg-card)' : 'var(--danger-color, red)', color: post.is_deleted ? 'var(--text-muted)' : 'white', opacity: post.is_deleted ? 0.5 : 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}
+                                  onClick={() => handleDeletePost(post.id)}
+                                  disabled={post.is_deleted}
+                              >
+                                  <Trash2 size={14} /> {post.is_deleted ? 'Deleted' : 'Delete'}
+                              </button>
                           </div>
                       </div>
                   ))}
@@ -714,19 +730,41 @@ export default function AdminDashboard() {
       {activeTab === 'all_chats' && (
           <div className="feed-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>All Platform Conversations</h2>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
                   {adminChats.map(chat => (
-                      <div key={chat.id} style={{ padding: '1rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px' }}>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-                              Chat ID: {chat.id} &bull; Users: {chat.user1.id} &amp; {chat.user2.id} &bull; Last Updated: {new Date(chat.updated_at).toLocaleString()}
+                      <div key={chat.id} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-elevated)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+                          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(255,255,255,0.02)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                  <strong style={{ fontSize: '1rem' }}>Chat #{chat.id}</strong>
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(chat.updated_at).toLocaleDateString()}</span>
+                              </div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--accent-color)' }}>
+                                  Users: {chat.user1.id} &amp; {chat.user2.id}
+                              </div>
                           </div>
-                          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                              {chat.messages.map((m, idx) => (
-                                  <div key={idx} style={{ padding: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                      <span style={{ color: 'var(--accent-color)', fontSize: '0.8rem', marginRight: '8px' }}>User {m.sender_id}:</span>
-                                      <span style={{ fontSize: '0.9rem' }}>{m.content}</span>
-                                  </div>
-                              ))}
+                          
+                          <div style={{ padding: '1rem', maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                              {chat.messages.map((m, idx) => {
+                                  const isUser1 = m.sender_id === chat.user1.id;
+                                  return (
+                                      <div key={idx} style={{ 
+                                          alignSelf: isUser1 ? 'flex-start' : 'flex-end',
+                                          maxWidth: '85%',
+                                          padding: '0.6rem 0.8rem',
+                                          borderRadius: '12px',
+                                          backgroundColor: isUser1 ? 'var(--bg-card)' : 'rgba(var(--accent-rgb), 0.15)',
+                                          border: isUser1 ? '1px solid var(--border-color)' : '1px solid rgba(var(--accent-rgb), 0.3)',
+                                          color: 'var(--text-color)'
+                                      }}>
+                                          <div style={{ fontSize: '0.7rem', color: isUser1 ? 'var(--text-muted)' : 'var(--accent-color)', marginBottom: '2px', fontWeight: 'bold' }}>
+                                              User {m.sender_id}
+                                          </div>
+                                          <div style={{ fontSize: '0.9rem', wordBreak: 'break-word' }}>
+                                              {m.content}
+                                          </div>
+                                      </div>
+                                  );
+                              })}
                           </div>
                       </div>
                   ))}

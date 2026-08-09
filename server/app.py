@@ -1514,10 +1514,14 @@ def admin_spawn_bots():
 @app.route('/api/admin/users', methods=['GET'])
 @admin_required
 def admin_get_users():
+    from sqlalchemy import func
     users = User.query.all()
+    # Fetch all post counts in a single query
+    post_counts_raw = db.session.query(Post.user_id, func.count(Post.id)).filter_by(parent_id=None).group_by(Post.user_id).all()
+    post_counts = {uid: count for uid, count in post_counts_raw}
+    
     user_data = []
     for u in users:
-        post_count = Post.query.filter_by(user_id=u.id, parent_id=None).count()
         user_data.append({
             "id": u.id,
             "username": u.username or "Anonymous",
@@ -1526,7 +1530,9 @@ def admin_get_users():
             "is_bot": bool(u.username and (u.username.startswith("bot_") or u.username.startswith("permbot_"))),
             "is_permanent": bool(u.username and u.username.startswith("permbot_")),
             "created_at": u.created_at.isoformat() + 'Z' if u.created_at else "Unknown",
-            "post_count": post_count
+            "post_count": post_counts.get(u.id, 0),
+            "is_banned": u.is_banned,
+            "is_registered": u.is_registered
         })
     return jsonify(user_data)
 
@@ -1602,10 +1608,9 @@ def admin_update_settings():
 @app.route('/api/admin/posts/all', methods=['GET'])
 @admin_required
 def admin_get_all_posts():
-    posts = Post.query.filter_by(parent_id=None).order_by(Post.created_at.desc()).all()
+    results = db.session.query(Post, User).outerjoin(User, Post.user_id == User.id).filter(Post.parent_id == None).order_by(Post.created_at.desc()).all()
     posts_data = []
-    for p in posts:
-        author = User.query.get(p.user_id)
+    for p, author in results:
         posts_data.append({
             "id": p.id,
             "content": p.content,
