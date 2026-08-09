@@ -75,7 +75,7 @@ app.config.from_object(Config())
 scheduler = APScheduler()
 scheduler.init_app(app)
 
-from bot import cleanup_old_bots, spawn_manual_bots
+from bot import spawn_manual_bots
 
 def cleanup_old_bots():
     with app.app_context():
@@ -100,6 +100,12 @@ scheduler.start()
 # Create tables
 with app.app_context():
     db.create_all()
+    # Safely increase avatar column length for Postgres production DB
+    try:
+        db.session.execute(db.text('ALTER TABLE "user" ALTER COLUMN avatar TYPE VARCHAR(255);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 @app.route('/')
 def index():
