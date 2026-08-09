@@ -323,7 +323,7 @@ def update_avatar():
     db.session.commit()
     return jsonify({"message": "Avatar updated", "avatar": user.avatar})
 
-@app.route('/api/auth/me', methods=['GET'])
+@app.route('/api/me', methods=['GET'])
 def get_me():
     session_token = request.headers.get('Authorization')
     if not session_token:
