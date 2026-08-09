@@ -1,5 +1,7 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api';
 
+let sessionPinged = false;
+
 export const getSessionToken = async () => {
     let token = localStorage.getItem('jluwhisper_session');
     if (!token) {
@@ -15,24 +17,22 @@ export const getSessionToken = async () => {
             console.error('Error fetching session:', error);
         }
     } else {
-        // Ping session to update last_active and fetch current display_name
-        try {
-            const res = await fetch(`${API_URL}/users/session`, {
+        // Ping session in background to update last_active, only once per load
+        if (!sessionPinged) {
+            sessionPinged = true;
+            fetch(`${API_URL}/users/session`, {
                 method: 'POST',
                 headers: { 'Authorization': token }
-            });
-            const data = await res.json();
-            if (data.session_token && data.session_token !== token) {
-                token = data.session_token;
-                localStorage.setItem('jluwhisper_session', token);
-            }
-            if (data.display_name) {
-                localStorage.setItem('jluwhisper_identity', data.display_name);
-                localStorage.setItem('jluwhisper_registered', data.is_registered);
-                if (data.is_admin !== undefined) localStorage.setItem('jluwhisper_admin', data.is_admin);
-            }
-        } catch (e) {
-            console.error(e);
+            }).then(res => res.json()).then(data => {
+                if (data.session_token && data.session_token !== token) {
+                    localStorage.setItem('jluwhisper_session', data.session_token);
+                }
+                if (data.display_name) {
+                    localStorage.setItem('jluwhisper_identity', data.display_name);
+                    localStorage.setItem('jluwhisper_registered', data.is_registered);
+                    if (data.is_admin !== undefined) localStorage.setItem('jluwhisper_admin', data.is_admin);
+                }
+            }).catch(e => console.error(e));
         }
     }
     return token;

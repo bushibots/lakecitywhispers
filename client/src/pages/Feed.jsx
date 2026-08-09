@@ -57,8 +57,22 @@ export default function Feed() {
   }, [filterTopic]);
 
   const loadPosts = async (t) => {
+    // 1. Instant load from local cache if on main feed
+    if (!t) {
+      const cached = localStorage.getItem('jluwhisper_feed_cache');
+      if (cached) {
+        try { setPosts(JSON.parse(cached)); } catch (e) {}
+      }
+    }
+    
+    // 2. Fetch fresh data
     const data = await fetchPosts(t);
     setPosts(data);
+    
+    // 3. Update cache
+    if (!t && data && data.length > 0) {
+      localStorage.setItem('jluwhisper_feed_cache', JSON.stringify(data));
+    }
   };
 
   const handlePost = async () => {
