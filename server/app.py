@@ -427,6 +427,15 @@ def get_or_create_prompt_post(text):
 
 @app.route('/api/daily_prompt', methods=['GET'])
 def get_daily_prompt():
+    import time
+    
+    session_token = request.headers.get('Authorization')
+    
+    # Only use cache for guests/anonymous to avoid serializing wrong user vote status
+    # Note: User's own upvote status on daily prompt is ignored for guests
+    if not session_token and time.time() - _server_cache['daily_prompt']['time'] < 60:
+        return _server_cache['daily_prompt']['data']
+
     prompt_setting = SystemSetting.query.filter_by(key='daily_prompt_id').first()
     post = None
     if prompt_setting:
@@ -455,7 +464,11 @@ def get_daily_prompt():
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first() if session_token else None
     
-    return jsonify({"post": serialize_post(post, user)})
+    result = jsonify({"post": serialize_post(post, user)})
+    if not session_token:
+        _server_cache['daily_prompt'] = {'data': result, 'time': time.time()}
+        
+    return result
 
 @app.route('/api/admin/daily_prompt/regenerate', methods=['POST'])
 @admin_required
@@ -1044,6 +1057,10 @@ def explore_search():
 # --- Sidebar API ---
 @app.route('/api/sidebar/stats', methods=['GET'])
 def get_sidebar_stats():
+    import time
+    if time.time() - _server_cache['sidebar_stats']['time'] < 60:
+        return _server_cache['sidebar_stats']['data']
+        
     from datetime import datetime, timedelta
     today = datetime.utcnow() - timedelta(days=1)
     
@@ -1068,11 +1085,14 @@ def get_sidebar_stats():
     sorted_tags = sorted(tags.items(), key=lambda item: item[1], reverse=True)[:5]
     trending_tags = ["#" + t[0] for t in sorted_tags]
     
-    return jsonify({
+    result = jsonify({
         "total_posts_today": total_posts,
         "online_users": online_users,
         "trending_tags": trending_tags
     })
+    
+    _server_cache['sidebar_stats'] = {'data': result, 'time': time.time()}
+    return result
 
 @app.route('/api/sidebar/polls', methods=['GET'])
 def get_sidebar_polls():
