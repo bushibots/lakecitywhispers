@@ -676,6 +676,10 @@ def vote_post(post_id):
         post.upvotes += 1
     elif vote_type == 'down':
         post.downvotes += 1
+    elif vote_type == 'remove_up':
+        post.upvotes = max(0, post.upvotes - 1)
+    elif vote_type == 'remove_down':
+        post.downvotes = max(0, post.downvotes - 1)
     else:
         return jsonify({"error": "Invalid vote type"}), 400
         

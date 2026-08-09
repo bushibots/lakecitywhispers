@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail } from 'lucide-react';
+import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail, MoreVertical } from 'lucide-react';
 import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
 
@@ -22,6 +22,10 @@ export default function Feed() {
   const [replies, setReplies] = useState({});
   const [replyContent, setReplyContent] = useState('');
   const [myIdentity, setMyIdentity] = useState('?');
+  const [activeMenu, setActiveMenu] = useState(null);
+  const [votedPosts, setVotedPosts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('jluwhisper_voted_posts')) || {}; } catch(e) { return {}; }
+  });
   
   // Media states
   const [imageFile, setImageFile] = useState(null);
@@ -155,14 +159,28 @@ export default function Feed() {
   };
 
   const handleVote = async (postId, type) => {
+    // Ponytail: frontend localStorage toggle for single upvote
+    const isUpvoting = type === 'up';
+    if (!isUpvoting) return; // Only support upvote toggle for now
+    
+    const hasVoted = votedPosts[postId];
+    const newType = hasVoted ? 'remove_up' : 'up';
+    
     setPosts(currentPosts => 
       currentPosts.map(p => p.id === postId ? {
         ...p,
-        upvotes: type === 'up' ? p.upvotes + 1 : p.upvotes,
-        downvotes: type === 'down' ? p.downvotes + 1 : p.downvotes
+        upvotes: hasVoted ? Math.max(0, p.upvotes - 1) : p.upvotes + 1
       } : p)
     );
-    await votePost(postId, type);
+    
+    const newVotedPosts = { ...votedPosts };
+    if (hasVoted) delete newVotedPosts[postId];
+    else newVotedPosts[postId] = true;
+    
+    setVotedPosts(newVotedPosts);
+    localStorage.setItem('jluwhisper_voted_posts', JSON.stringify(newVotedPosts));
+    
+    await votePost(postId, newType);
   };
 
   const toggleReplies = async (postId, e) => {
@@ -265,9 +283,20 @@ export default function Feed() {
                 </button>
             )}
             {canEdit && (
-                <div style={{ display: 'flex', gap: '4px' }}>
-                    <button className="icon-btn-minimal" onClick={() => handleEdit(post.id, post.content)} title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-                    <button className="icon-btn-minimal" onClick={() => handleDelete(post.id)} title="Delete"><X size={16} /></button>
+                <div style={{ position: 'relative' }}>
+                    <button className="icon-btn-minimal" onClick={() => setActiveMenu(activeMenu === post.id ? null : post.id)}>
+                        <MoreVertical size={16} />
+                    </button>
+                    {activeMenu === post.id && (
+                        <div style={{ position: 'absolute', right: 0, top: '24px', background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '4px', zIndex: 10, minWidth: '120px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+                            <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px', background: 'transparent', border: 'none', color: 'var(--text-color)', cursor: 'pointer', textAlign: 'left', borderRadius: '4px' }} onClick={() => { setActiveMenu(null); handleEdit(post.id, post.content); }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit
+                            </button>
+                            <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px', background: 'transparent', border: 'none', color: 'var(--danger-color, #ff4757)', cursor: 'pointer', textAlign: 'left', borderRadius: '4px' }} onClick={() => { setActiveMenu(null); handleDelete(post.id); }}>
+                                <X size={14} /> Delete
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
           </div>
@@ -356,8 +385,8 @@ export default function Feed() {
         )}
         
         <div className="reactions-bar">
-          <button className="reaction-btn" onClick={(e) => { e.stopPropagation(); handleVote(post.id, 'up'); }}>
-            <Flame size={16} /> <span>{post.upvotes > 0 ? post.upvotes : 'Relatable'}</span>
+          <button className="reaction-btn" onClick={(e) => { e.stopPropagation(); handleVote(post.id, 'up'); }} style={votedPosts[post.id] ? { color: 'var(--accent-color)' } : {}}>
+            <Flame size={16} fill={votedPosts[post.id] ? 'var(--accent-color)' : 'none'} /> <span>{post.upvotes > 0 ? post.upvotes : 'Relatable'}</span>
           </button>
           
           <button className="reaction-btn" onClick={(e) => toggleReplies(post.id, e)}>
@@ -565,18 +594,18 @@ export default function Feed() {
       {/* Syncing Indicator */}
       {isSyncing && (
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          padding: '0.75rem', marginBottom: '1.5rem', 
-          background: 'var(--bg-elevated)', borderRadius: '12px',
-          border: '1px solid var(--border-color)', opacity: 0.8,
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+          padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '12px',
+          border: '1px solid var(--border-color)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
           animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
         }}>
           <div style={{
-            width: '16px', height: '16px', border: '2px solid var(--primary-color)',
+            width: '24px', height: '24px', border: '3px solid var(--accent-color)',
             borderTopColor: 'transparent', borderRadius: '50%',
-            animation: 'spin 1s linear infinite', marginRight: '10px'
+            animation: 'spin 1s linear infinite', marginRight: '15px'
           }}></div>
-          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+          <span style={{ fontSize: '1rem', color: 'var(--text-color)', fontWeight: 'bold' }}>
             Syncing latest whispers...
           </span>
         </div>
