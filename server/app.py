@@ -1347,8 +1347,8 @@ def admin_get_users():
             "username": u.username or "Anonymous",
             "display_name": u.display_name,
             "role": u.role,
-            "is_banned": u.is_banned,
-            "is_bot": bool(u.username and u.username.startswith("bot_")),
+            "is_bot": bool(u.username and (u.username.startswith("bot_") or u.username.startswith("permbot_"))),
+            "is_permanent": bool(u.username and u.username.startswith("permbot_")),
             "created_at": u.created_at.isoformat() if u.created_at else "Unknown",
             "post_count": post_count
         })
@@ -1365,6 +1365,23 @@ def admin_toggle_ban(user_id):
     db.session.commit()
     status = "banned" if user.is_banned else "unbanned"
     return jsonify({"message": f"User {user.display_name} {status}"})
+
+@app.route('/api/admin/users/<int:user_id>/toggle_permanent', methods=['POST'])
+@admin_required
+def admin_toggle_permanent(user_id):
+    user = User.query.get_or_404(user_id)
+    if not user.username or not (user.username.startswith("bot_") or user.username.startswith("permbot_")):
+        return jsonify({"error": "Can only make bots permanent"}), 400
+        
+    if user.username.startswith("permbot_"):
+        user.username = user.username.replace("permbot_", "bot_", 1)
+        status = "normal bot"
+    else:
+        user.username = user.username.replace("bot_", "permbot_", 1)
+        status = "permanent bot"
+        
+    db.session.commit()
+    return jsonify({"message": f"Bot {user.display_name} is now a {status}"})
 
 @app.route('/api/admin/settings', methods=['GET'])
 @admin_required

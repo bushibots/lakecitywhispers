@@ -47,7 +47,7 @@ def run_ai_bots():
             return
 
         # 3. Create or Pick a Bot Identity
-        bot_users = User.query.filter(User.username.like('bot_%')).all()
+        bot_users = User.query.filter(User.username.like('bot_%') | User.username.like('permbot_%')).all()
         
         # 20% chance to create a fresh identity, otherwise use an existing bot identity
         if not bot_users or random.random() < 0.2:

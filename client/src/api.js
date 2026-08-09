@@ -497,6 +497,20 @@ export const adminToggleBanUser = async (userId) => {
     }
 };
 
+export const adminTogglePermanentBot = async (userId) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/admin/users/${userId}/toggle_permanent`, {
+            method: 'POST',
+            headers: { "Authorization": token }
+        });
+        return await res.json();
+    } catch (error) {
+        console.error("Error toggling permanent bot:", error);
+        return null;
+    }
+};
+
 export const fetchAdminSettings = async () => {
     const token = await getSessionToken();
     try {

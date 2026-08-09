@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame } from 'lucide-react';
 import { 
-    fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminUpdateStats, 
+    fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations
 } from '../api';
@@ -65,6 +65,14 @@ export default function AdminDashboard() {
     const confirmBan = window.confirm(`Toggle ban status for ${displayName}?`);
     if (confirmBan) {
       await adminToggleBanUser(userId);
+      await loadData();
+    }
+  };
+
+  const handleTogglePermanent = async (userId, displayName, isPermanent) => {
+    const confirmPerm = window.confirm(`Make ${displayName} a ${isPermanent ? 'normal (auto-deleting)' : 'permanent'} bot?`);
+    if (confirmPerm) {
+      await adminTogglePermanentBot(userId);
       await loadData();
     }
   };
@@ -234,7 +242,7 @@ export default function AdminDashboard() {
                       {allUsers.filter(u => userTab === 'bots' ? u.is_bot : !u.is_bot).map(u => (
                           <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                               <td style={{ padding: '0.75rem 0.5rem' }}>{u.username}</td>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>{u.display_name} {u.is_bot && '🤖'}</td>
+                              <td style={{ padding: '0.75rem 0.5rem' }}>{u.display_name} {u.is_bot && '🤖'} {u.is_permanent && '🛡️'}</td>
                               <td style={{ padding: '0.75rem 0.5rem' }}>
                                   <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', backgroundColor: u.role === 'admin' ? 'rgba(var(--accent-rgb), 0.2)' : 'var(--bg-elevated)', color: u.role === 'admin' ? 'var(--accent-color)' : 'var(--text-color)' }}>
                                       {u.role}
@@ -249,13 +257,25 @@ export default function AdminDashboard() {
                               </td>
                               <td style={{ padding: '0.75rem 0.5rem' }}>
                                   {u.role !== 'admin' && (
-                                      <button 
-                                          className="btn-glow" 
-                                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: u.is_banned ? 'green' : 'var(--danger-color, red)' }}
-                                          onClick={() => handleToggleBan(u.id, u.display_name)}
-                                      >
-                                          <Ban size={14} style={{ marginRight: '4px' }}/> {u.is_banned ? 'Unban' : 'Ban'}
-                                      </button>
+                                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                          <button 
+                                              className="btn-glow" 
+                                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: u.is_banned ? 'green' : 'var(--danger-color, red)' }}
+                                              onClick={() => handleToggleBan(u.id, u.display_name)}
+                                          >
+                                              <Ban size={14} style={{ marginRight: '4px' }}/> {u.is_banned ? 'Unban' : 'Ban'}
+                                          </button>
+                                          {u.is_bot && (
+                                              <button 
+                                                  className="btn-glow" 
+                                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: u.is_permanent ? 'var(--accent-color)' : 'var(--bg-elevated)', color: u.is_permanent ? 'black' : 'var(--text-color)' }}
+                                                  onClick={() => handleTogglePermanent(u.id, u.display_name, u.is_permanent)}
+                                                  title={u.is_permanent ? "Remove Permanent Status" : "Make Permanent (Won't be auto-deleted)"}
+                                              >
+                                                  <Shield size={14} style={{ marginRight: '4px' }}/> {u.is_permanent ? 'Permanent' : 'Make Perm'}
+                                              </button>
+                                          )}
+                                      </div>
                                   )}
                               </td>
                           </tr>
