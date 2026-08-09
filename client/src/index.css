@@ -584,3 +584,30 @@ input, select, textarea, button { font-size: 16px !important; }
   letter-spacing: 2px;
   font-weight: bold;
 }
+
+/* --- Global Overlap Fixes --- */
+* {
+  min-width: 0;
+}
+
+.feed-card, .widget, .card-text, .reply-content {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.reactions-bar {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.card-meta {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.nested-replies {
+  max-width: 100%;
+  overflow-x: hidden;
+}

@@ -727,20 +727,21 @@ def reply_post(post_id):
     
     return jsonify({"message": "Reply posted successfully", "reply_id": new_reply.id}), 201
 
+def serialize_reply(r):
+    return {
+        "id": r.id,
+        "content": r.content,
+        "upvotes": r.upvotes,
+        "downvotes": r.downvotes,
+        "created_at": r.created_at.isoformat(),
+        "author_username": r.author.display_name,
+        "replies": [serialize_reply(child) for child in r.replies if not child.is_deleted]
+    }
+
 @app.route('/api/posts/<int:post_id>/replies', methods=['GET'])
 def get_replies(post_id):
     post = Post.query.get_or_404(post_id)
-    replies_data = []
-    for r in post.replies:
-        if not r.is_deleted:
-            replies_data.append({
-                "id": r.id,
-                "content": r.content,
-                "upvotes": r.upvotes,
-                "downvotes": r.downvotes,
-                "created_at": r.created_at.isoformat(),
-                "author_username": r.author.display_name
-            })
+    replies_data = [serialize_reply(r) for r in post.replies if not r.is_deleted]
     return jsonify({"replies": replies_data})
 
 @app.route('/api/posts/<int:post_id>/poll_vote', methods=['POST'])

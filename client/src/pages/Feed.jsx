@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail, MoreVertical } from 'lucide-react';
+import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail, MoreVertical, Bookmark } from 'lucide-react';
 import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
 
@@ -26,6 +26,12 @@ export default function Feed() {
   const [votedPosts, setVotedPosts] = useState(() => {
     try { return JSON.parse(localStorage.getItem('jluwhisper_voted_posts')) || {}; } catch(e) { return {}; }
   });
+  const [savedPosts, setSavedPosts] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('jluwhisper_saved_posts')) || {}; } catch(e) { return {}; }
+  });
+  
+  // Track which specific comment we are replying to, if any
+  const [replyingTo, setReplyingTo] = useState(null);
   
   // Media states
   const [imageFile, setImageFile] = useState(null);
@@ -48,7 +54,8 @@ export default function Feed() {
 
     const handleNewPost = (post) => {
       // If we are filtering, only show if it matches
-      if (filterTopic && post.topic !== filterTopic) return;
+      if (filterTopic && filterTopic !== 'Watchlist' && post.topic !== filterTopic) return;
+      if (filterTopic === 'Watchlist' && !savedPosts[post.id]) return;
       
       setPosts(prev => {
         // Avoid duplicates if we created it
@@ -72,7 +79,14 @@ export default function Feed() {
     
     // 2. Fetch fresh data
     setIsSyncing(true);
-    const data = await fetchPosts(t);
+    const backendTopic = t === 'Watchlist' ? '' : t;
+    let data = await fetchPosts(backendTopic);
+    
+    if (t === 'Watchlist') {
+      const saved = JSON.parse(localStorage.getItem('jluwhisper_saved_posts')) || {};
+      data = data.filter(p => saved[p.id]);
+    }
+    
     setPosts(data);
     setIsSyncing(false);
     
@@ -99,14 +113,35 @@ export default function Feed() {
     }
     
     const validPollOptions = showPollInputs ? pollOptions.filter(o => o.trim()) : [];
+    
+    // OPTIMISTIC UI for createPost
+    const tempId = Date.now() + Math.random();
+    const tempPost = {
+        id: tempId,
+        content: content.trim() || " ",
+        topic,
+        author_username: myIdentity,
+        created_at: new Date().toISOString(),
+        upvotes: 0, downvotes: 0, views: 0, replies_count: 0,
+        is_optimistic: true
+    };
+    
+    setPosts(prev => [tempPost, ...prev]);
+    setContent('');
+    setImageFile(null);
+    setAudioBlob(null);
+    setShowPollInputs(false);
+    setPollOptions(['', '']);
+    
     const res = await createPost(content.trim() || " ", topic, validPollOptions, imageUrl, audioUrl);
+    
     if (res && res.message) {
-      setContent('');
-      setImageFile(null);
-      setAudioBlob(null);
-      setShowPollInputs(false);
-      setPollOptions(['', '']);
+      // Background re-fetch to ensure sync
       await loadPosts(filterTopic);
+    } else {
+      // Revert if failed
+      setPosts(prev => prev.filter(p => p.id !== tempId));
+      import('react-hot-toast').then(m => m.toast.error("Failed to post whisper."));
     }
     setIsPosting(false);
   };
@@ -213,15 +248,61 @@ export default function Feed() {
     }
   };
 
-  const submitReply = async (postId) => {
+  const handleSavePost = (postId, e) => {
+    e.stopPropagation();
+    const newSaved = { ...savedPosts };
+    if (newSaved[postId]) delete newSaved[postId];
+    else newSaved[postId] = true;
+    setSavedPosts(newSaved);
+    localStorage.setItem('jluwhisper_saved_posts', JSON.stringify(newSaved));
+  };
+
+  const submitReply = async (rootPostId, targetId) => {
     if (!replyContent.trim()) return;
-    await createReply(postId, replyContent.trim());
-    setReplyContent('');
-    const data = await fetchReplies(postId);
-    setReplies(prev => ({ ...prev, [postId]: data }));
+    
+    // OPTIMISTIC UI for Reply
+    const tempReply = {
+      id: Date.now() + Math.random(),
+      content: replyContent.trim(),
+      author_username: myIdentity,
+      created_at: new Date().toISOString(),
+      upvotes: 0, downvotes: 0,
+      replies: [],
+      is_optimistic: true
+    };
+    
+    // Helper to recursively insert reply
+    const insertReply = (nodes, targetId, newReply) => {
+      if (rootPostId === targetId) return [newReply, ...nodes];
+      return nodes.map(node => {
+        if (node.id === targetId) {
+          return { ...node, replies: [newReply, ...(node.replies || [])] };
+        }
+        if (node.replies) {
+          return { ...node, replies: insertReply(node.replies, targetId, newReply) };
+        }
+        return node;
+      });
+    };
+    
+    setReplies(prev => ({
+      ...prev,
+      [rootPostId]: insertReply(prev[rootPostId] || [], targetId, tempReply)
+    }));
     setPosts(currentPosts => currentPosts.map(p => 
-      p.id === postId ? { ...p, replies_count: p.replies_count + 1 } : p
+      p.id === rootPostId ? { ...p, replies_count: p.replies_count + 1 } : p
     ));
+    
+    const contentToPost = replyContent.trim();
+    setReplyContent('');
+    setReplyingTo(null);
+    
+    // Background POST
+    await createReply(targetId, contentToPost);
+    
+    // Sync true state
+    const data = await fetchReplies(rootPostId);
+    setReplies(prev => ({ ...prev, [rootPostId]: data }));
   };
 
   const handleDelete = async (postId) => {
@@ -247,6 +328,60 @@ export default function Feed() {
       setPosts(posts.map(p => p.id === postId ? { ...p, is_pinned: res.is_pinned } : p));
     }
   };
+
+  const Comment = ({ comment, rootPostId, depth = 0 }) => (
+    <div style={{ 
+      marginLeft: depth > 0 ? '1rem' : '0', 
+      paddingLeft: depth > 0 ? '1rem' : '0',
+      borderLeft: depth > 0 ? '2px solid var(--border-strong)' : 'none',
+      marginTop: '1rem',
+      opacity: comment.is_optimistic ? 0.6 : 1
+    }}>
+      <div className="reply-item" style={{ borderBottom: 'none', padding: 0 }}>
+        <div className="avatar-flame small">{(comment.author_username || 'A').charAt(0)}</div>
+        <div className="reply-content" style={{ flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="name" style={{ fontSize: '0.85rem' }}>{comment.author_username || 'Anonymous'}</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+              {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
+          <p style={{ fontSize: '0.9rem', marginTop: '4px' }}>{comment.content}</p>
+          
+          <div style={{ display: 'flex', gap: '12px', marginTop: '6px' }}>
+            <button className="icon-btn-minimal" style={{ fontSize: '0.75rem', padding: 0 }} onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}>
+              <MessageCircle size={12} style={{ marginRight: '4px' }} /> Reply
+            </button>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              <Flame size={12} style={{ marginRight: '4px' }} /> {comment.upvotes}
+            </span>
+          </div>
+          
+          {replyingTo === comment.id && (
+            <div className="reply-composer" style={{ marginTop: '0.5rem', background: 'transparent' }}>
+              <input 
+                className="composer-textarea reply-input" 
+                style={{ fontSize: '0.85rem', padding: '0.4rem', border: '1px solid var(--border)', borderRadius: '8px' }}
+                placeholder={`Reply to ${comment.author_username}...`}
+                value={replyContent}
+                onChange={e => setReplyContent(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && submitReply(rootPostId, comment.id)}
+                autoFocus
+              />
+              <button className="btn-glow small" onClick={() => submitReply(rootPostId, comment.id)} disabled={!replyContent.trim()}>Send</button>
+            </div>
+          )}
+        </div>
+      </div>
+      
+      {/* Recursive Replies Render */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="nested-replies">
+          {comment.replies.map(r => <Comment key={r.id} comment={r} rootPostId={rootPostId} depth={depth + 1} />)}
+        </div>
+      )}
+    </div>
+  );
 
   const renderPost = (post, isDailyPrompt = false) => {
     if (!post) return null;
@@ -398,6 +533,9 @@ export default function Feed() {
             <button className="icon-btn-minimal" onClick={(e) => { e.stopPropagation(); handleMessageRequest(post.id, identity); }} title="Send Message">
                 <Mail size={16} />
             </button>
+            <button className="icon-btn-minimal" onClick={(e) => handleSavePost(post.id, e)} style={{ color: savedPosts[post.id] ? 'var(--accent-color)' : 'inherit' }} title={savedPosts[post.id] ? "Remove from Watchlist" : "Add to Watchlist"}>
+                <Bookmark size={16} fill={savedPosts[post.id] ? 'var(--accent-color)' : 'none'} />
+            </button>
             <button className="icon-btn-minimal"><Share size={16} /></button>
           </div>
         </div>
@@ -411,20 +549,16 @@ export default function Feed() {
                 placeholder="Drop an anonymous reply..." 
                 value={replyContent}
                 onChange={e => setReplyContent(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submitReply(post.id)}
+                onKeyDown={e => e.key === 'Enter' && submitReply(post.id, post.id)}
               />
-              <button className="btn-glow small" onClick={() => submitReply(post.id)} disabled={!replyContent.trim()}>Reply</button>
+              <button className="btn-glow small" onClick={() => submitReply(post.id, post.id)} disabled={!replyContent.trim()}>Reply</button>
             </div>
             
-            {replies[post.id]?.map(r => (
-              <div key={r.id} className="reply-item">
-                <div className="avatar-flame small">{(r.author_username || 'A').charAt(0)}</div>
-                <div className="reply-content">
-                  <span className="name">{r.author_username || 'Anonymous'}</span>
-                  <p>{r.content}</p>
-                </div>
-              </div>
-            ))}
+            <div className="comments-tree">
+              {(replies[post.id] || []).map(r => (
+                <Comment key={r.id} comment={r} rootPostId={post.id} depth={0} />
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -441,6 +575,13 @@ export default function Feed() {
           onClick={() => setFilterTopic('')}
         >
           Trending
+        </div>
+        <div 
+          className={`pill-tab ${filterTopic === 'Watchlist' ? 'active' : ''}`}
+          onClick={() => setFilterTopic('Watchlist')}
+          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+        >
+          <Bookmark size={14} /> Watchlist
         </div>
         {CATEGORIES.map(t => (
           <div 
