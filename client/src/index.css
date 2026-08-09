@@ -135,7 +135,7 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 
 .pill-menu { display: flex; gap: 0.75rem; padding: 0.5rem 0; margin-bottom: 1.5rem; overflow-x: auto; scrollbar-width: none; }
 .pill-menu::-webkit-scrollbar { display: none; }
-.pill-tab { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 0.5rem 1.25rem; border-radius: 14px; font-weight: 500; font-size: 0.9rem; cursor: pointer; white-space: nowrap; transition: 0.3s; color: var(--text-muted); }
+.pill-tab { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 0.5rem 1.25rem; border-radius: 14px; font-weight: 500; font-size: 0.9rem; cursor: pointer; white-space: nowrap; transition: 0.3s; color: var(--text-muted); flex-shrink: 0; }
 .pill-tab.active { background: var(--primary); color: #000; border-color: var(--primary); box-shadow: 0 0 15px rgba(15, 143, 168, 0.4); }
 .pill-tab:not(.active):hover { background: rgba(255,255,255,0.08); color: var(--text-main); }
 
@@ -586,9 +586,6 @@ input, select, textarea, button { font-size: 16px !important; }
 }
 
 /* --- Global Overlap Fixes --- */
-* {
-  min-width: 0;
-}
 
 .feed-card, .widget, .card-text, .reply-content {
   overflow-wrap: break-word;
