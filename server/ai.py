@@ -49,10 +49,11 @@ def generate_with_retry(prompt, is_json=False):
     return None
 
 def generate_creative_identity():
-    prompt = """Generate a unique, creative, and slightly mysterious anonymous identity for a user on a college anonymous app. 
+    prompt = """Generate a wildly random, highly unique anonymous alias for a user on a college app. 
+    DO NOT use a consistent theme. Mix completely random concepts: foods, moods, obscure animals, random objects, academic terms, funny concepts, or surreal combinations (e.g. 'Caffeinated Toaster', 'Quantum Potato', 'Angry Sock', 'Philosophical Pigeon'). Avoid edge-lord or overly dramatic fantasy names unless it's funny. Make it fresh, weird, and totally unpredictable every single time.
     Return the result as a JSON object with two keys: 
-    1. 'display_name': A cool title like 'Crimson Phoenix of the West' or 'Midnight Wanderer'. 
-    2. 'username': A snake_case version of the name or something similar, like 'crimson_phoenix_99'. 
+    1. 'display_name': The wildly random alias. 
+    2. 'username': A snake_case or lowercase version of the name with some random numbers, like 'quantum_potato_42'. 
     Do not use markdown blocks, just return raw JSON."""
     
     data = generate_with_retry(prompt, is_json=True)
