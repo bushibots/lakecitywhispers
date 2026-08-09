@@ -394,6 +394,12 @@ def serialize_post(p, user=None, user_votes=None):
         else:
             has_voted = PollVote.query.filter_by(poll_id=p.poll.id, user_id=user.id).first() is not None
         
+    author_name = p.author.display_name
+    is_admin_post = False
+    if p.topic == 'Announcement' and p.author.role == 'admin':
+        author_name = 'Admin'
+        is_admin_post = True
+
     return {
         "id": p.id,
         "content": p.content,
@@ -405,7 +411,9 @@ def serialize_post(p, user=None, user_votes=None):
         "views": p.views,
         "created_at": p.created_at.isoformat(),
         "replies_count": len([r for r in p.replies if not r.is_deleted]),
-        "author_username": p.author.display_name,
+        "author_username": author_name,
+        "is_admin_post": is_admin_post,
+        "is_pinned": p.is_pinned,
         "poll": {
             "id": p.poll.id,
             "has_voted": has_voted,
@@ -519,7 +527,7 @@ def get_posts():
         joinedload(Post.replies)
     )
         
-    posts = query.order_by(Post.created_at.desc()).all()
+    posts = query.order_by(Post.is_pinned.desc(), Post.created_at.desc()).all()
     
     # Pre-fetch user's voted poll IDs to avoid N+1 queries during serialization
     user_votes = set()
@@ -573,6 +581,53 @@ def create_post():
     db.session.commit()
     
     return jsonify({"message": "Whisper posted successfully", "post_id": new_post.id}), 201
+
+@app.route('/api/posts/<int:post_id>', methods=['DELETE'])
+def delete_post(post_id):
+    session_token = request.headers.get('Authorization')
+    if not session_token: return jsonify({"error": "Unauthorized"}), 401
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    
+    post = Post.query.get_or_404(post_id)
+    if post.user_id != user.id and user.role != 'admin':
+        return jsonify({"error": "Forbidden"}), 403
+        
+    post.is_deleted = True
+    db.session.commit()
+    return jsonify({"message": "Post deleted"})
+
+@app.route('/api/posts/<int:post_id>', methods=['PUT'])
+def edit_post(post_id):
+    session_token = request.headers.get('Authorization')
+    if not session_token: return jsonify({"error": "Unauthorized"}), 401
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    
+    post = Post.query.get_or_404(post_id)
+    if post.user_id != user.id and user.role != 'admin':
+        return jsonify({"error": "Forbidden"}), 403
+        
+    data = request.json
+    new_content = data.get('content')
+    if new_content:
+        # Ponytail: append (edited) rather than schema migration
+        if not new_content.endswith(' (edited)'):
+            new_content += ' (edited)'
+        post.content = new_content
+        db.session.commit()
+    return jsonify({"message": "Post updated", "post": serialize_post(post, user)})
+
+@app.route('/api/posts/<int:post_id>/pin', methods=['POST'])
+def pin_post(post_id):
+    session_token = request.headers.get('Authorization')
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user or user.role != 'admin': return jsonify({"error": "Unauthorized"}), 403
+    
+    post = Post.query.get_or_404(post_id)
+    post.is_pinned = not post.is_pinned
+    db.session.commit()
+    return jsonify({"message": "Pin status toggled", "is_pinned": post.is_pinned})
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
@@ -713,6 +768,42 @@ def vote_poll(post_id):
     return jsonify({"message": "Vote cast", "options": updated_options})
 
 # --- Direct Messaging ---
+@app.route('/api/messages/support', methods=['POST'])
+def support_request():
+    data = request.json
+    content = data.get('content')
+    session_token = request.headers.get('Authorization')
+    
+    if not session_token: return jsonify({"error": "Unauthorized"}), 401
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user: return jsonify({"error": "Invalid session"}), 401
+    
+    # Get or create system oracle
+    sys_user = User.query.filter_by(username='system_oracle').first()
+    if not sys_user:
+        sys_user = User(username='system_oracle', display_name='🌟 JLU Oracle', avatar='🌟', is_registered=True, role='admin')
+        db.session.add(sys_user)
+        db.session.commit()
+        
+    recipient_id = sys_user.id
+    
+    conv = Conversation.query.filter(
+        ((Conversation.user1_id == user.id) & (Conversation.user2_id == recipient_id)) |
+        ((Conversation.user1_id == recipient_id) & (Conversation.user2_id == user.id))
+    ).first()
+    
+    if not conv:
+        conv = Conversation(user1_id=user.id, user2_id=recipient_id, status='accepted')
+        db.session.add(conv)
+        db.session.commit()
+        
+    msg = Message(conversation_id=conv.id, sender_id=user.id, content=content)
+    db.session.add(msg)
+    conv.updated_at = datetime.utcnow()
+    db.session.commit()
+    
+    return jsonify({"message": "Support request sent!"})
+
 @app.route('/api/messages/request', methods=['POST'])
 def message_request():
     data = request.json
@@ -1148,6 +1239,38 @@ def get_sidebar_polls():
 # --- Admin Routes ---
 
 
+
+@app.route('/api/admin/broadcast', methods=['POST'])
+@admin_required
+def admin_broadcast():
+    data = request.json
+    message = data.get('message')
+    if not message:
+        return jsonify({"error": "Message required"}), 400
+        
+    socketio.emit('new_notification', {
+        'type': 'system',
+        'message': message,
+        'post_id': None
+    })
+    return jsonify({"message": "Broadcast sent successfully"})
+
+@app.route('/api/admin/conversations', methods=['GET'])
+@admin_required
+def admin_conversations():
+    conversations = Conversation.query.order_by(Conversation.updated_at.desc()).all()
+    res = []
+    for c in conversations:
+        msgs = [{"sender_id": m.sender_id, "content": m.content, "created_at": m.created_at.isoformat()} for m in c.messages]
+        res.append({
+            "id": c.id,
+            "user1": {"id": c.user1_id},
+            "user2": {"id": c.user2_id},
+            "status": c.status,
+            "updated_at": c.updated_at.isoformat(),
+            "messages": msgs
+        })
+    return jsonify({"conversations": res})
 
 @app.route('/api/admin/dashboard', methods=['GET'])
 @admin_required

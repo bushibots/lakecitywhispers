@@ -132,6 +132,49 @@ export const votePost = async (postId, type) => {
     }
 };
 
+export const deletePost = async (postId) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/posts/${postId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': token }
+        });
+        return await res.json();
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+};
+
+export const editPost = async (postId, content) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/posts/${postId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
+            body: JSON.stringify({ content })
+        });
+        return await res.json();
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+};
+
+export const pinPost = async (postId) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/posts/${postId}/pin`, {
+            method: 'POST',
+            headers: { 'Authorization': token }
+        });
+        return await res.json();
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
+};
+
 export const recordView = async (postId) => {
     try {
         const res = await fetch(`${API_URL}/posts/${postId}/view`, {
@@ -238,6 +281,35 @@ export const createReply = async (postId, content) => {
 };
 
 // --- Admin Endpoints ---
+export const sendAdminBroadcast = async (message) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/admin/broadcast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
+            body: JSON.stringify({ message })
+        });
+        return await res.json();
+    } catch (e) {
+        console.error(e);
+        return { error: 'Network error' };
+    }
+};
+
+export const fetchAdminConversations = async () => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/admin/conversations`, {
+            headers: { 'Authorization': token }
+        });
+        const data = await res.json();
+        return data.conversations || [];
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+};
+
 export const fetchAdminDashboard = async () => {
     const token = await getSessionToken();
     try {
@@ -309,6 +381,21 @@ export const requestMessage = async (postId, content) => {
         return await res.json();
     } catch (error) {
         console.error("Error requesting message:", error);
+        return null;
+    }
+};
+
+export const requestSupportMessage = async (content) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/messages/support`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": token },
+            body: JSON.stringify({ content })
+        });
+        return await res.json();
+    } catch (error) {
+        console.error("Error requesting support:", error);
         return null;
     }
 };

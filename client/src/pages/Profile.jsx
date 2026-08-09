@@ -1,6 +1,7 @@
-import { Award, Shield, Settings, Bookmark, LogOut } from 'lucide-react';
+import { Award, Shield, Settings, Bookmark, LogOut, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import AuthModal from '../components/AuthModal';
+import { requestSupportMessage } from '../api';
 
 export default function Profile() {
   const [identity, setIdentity] = useState('Guest');
@@ -21,6 +22,18 @@ export default function Profile() {
     localStorage.removeItem('jluwhisper_identity');
     localStorage.removeItem('jluwhisper_registered');
     window.location.reload();
+  };
+
+  const handleSupport = async () => {
+    const msg = prompt("What do you need help with?");
+    if (msg && msg.trim()) {
+      const res = await requestSupportMessage(msg.trim());
+      if (res && res.message) {
+        alert("Support request sent! Check your Messages tab for a reply from the admin team.");
+      } else {
+        alert("Failed to send support request.");
+      }
+    }
   };
 
   return (
@@ -85,6 +98,7 @@ export default function Profile() {
         <ul className="settings-list">
           <li><Bookmark size={18} /> Saved Whispers</li>
           <li><Settings size={18} /> Account Settings</li>
+          <li onClick={handleSupport}><HelpCircle size={18} /> Get Help from Admin Forum</li>
           <li className="text-danger" onClick={handleLogout}><LogOut size={18} /> Log Out (Reset Identity)</li>
         </ul>
       </div>

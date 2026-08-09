@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame } from 'lucide-react';
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminUpdateStats, 
-    fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt
+    fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
+    sendAdminBroadcast, fetchAdminConversations
 } from '../api';
 
 export default function AdminDashboard() {
@@ -15,6 +16,8 @@ export default function AdminDashboard() {
 
   const [allUsers, setAllUsers] = useState([]);
   const [allPosts, setAllPosts] = useState([]);
+  const [adminChats, setAdminChats] = useState([]);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
   const [sysSettings, setSysSettings] = useState({ 
     lockdown: false, maintenance: false, bots_enabled: false, media_enabled: true,
     bot_active_start: 9, bot_active_end: 23, daily_prompt: '' 
@@ -45,6 +48,9 @@ export default function AdminDashboard() {
     } else if (activeTab === 'settings') {
         const data = await fetchAdminSettings();
         if (data && !data.error) setSysSettings(data);
+    } else if (activeTab === 'all_chats') {
+        const data = await fetchAdminConversations();
+        setAdminChats(data);
     }
     setLoading(false);
   };
@@ -120,6 +126,12 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'all_posts' ? 'active' : ''}`} onClick={() => setActiveTab('all_posts')} style={{ backgroundColor: activeTab === 'all_posts' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'all_posts' ? 'white' : 'var(--text-color)' }}>
             <Database size={16} style={{ marginRight: '8px' }}/> All Posts
+        </button>
+        <button className={`pill-tab ${activeTab === 'all_chats' ? 'active' : ''}`} onClick={() => setActiveTab('all_chats')} style={{ backgroundColor: activeTab === 'all_chats' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'all_chats' ? 'white' : 'var(--text-color)' }}>
+            <Eye size={16} style={{ marginRight: '8px' }}/> All Chats
+        </button>
+        <button className={`pill-tab ${activeTab === 'broadcast' ? 'active' : ''}`} onClick={() => setActiveTab('broadcast')} style={{ backgroundColor: activeTab === 'broadcast' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'broadcast' ? 'white' : 'var(--text-color)' }}>
+            <Flame size={16} style={{ marginRight: '8px' }}/> Broadcast
         </button>
         <button className={`pill-tab ${activeTab === 'ai_bots' ? 'active' : ''}`} onClick={() => setActiveTab('ai_bots')} style={{ backgroundColor: activeTab === 'ai_bots' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'ai_bots' ? 'white' : 'var(--text-color)' }}>
             <Flame size={16} style={{ marginRight: '8px' }}/> AI Bots
@@ -363,6 +375,49 @@ export default function AdminDashboard() {
           </div>
       )}
 
+      {activeTab === 'broadcast' && (
+          <div className="feed-card" style={{ padding: '1.5rem' }}>
+              <h2 style={{ marginBottom: '1.5rem' }}>Global Broadcast</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Send a real-time notification to all connected users.</p>
+              <textarea 
+                  className="composer-textarea"
+                  style={{ width: '100%', minHeight: '100px', padding: '1rem', marginBottom: '1rem' }}
+                  placeholder="Enter broadcast message..."
+                  value={broadcastMsg}
+                  onChange={(e) => setBroadcastMsg(e.target.value)}
+              ></textarea>
+              <button className="btn-glow" onClick={async () => {
+                  if(!broadcastMsg.trim()) return;
+                  await sendAdminBroadcast(broadcastMsg);
+                  setBroadcastMsg('');
+                  alert('Broadcast sent!');
+              }}>Send Broadcast</button>
+          </div>
+      )}
+
+      {activeTab === 'all_chats' && (
+          <div className="feed-card" style={{ padding: '1.5rem' }}>
+              <h2 style={{ marginBottom: '1.5rem' }}>All Platform Conversations</h2>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {adminChats.map(chat => (
+                      <div key={chat.id} style={{ padding: '1rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+                              Chat ID: {chat.id} &bull; Users: {chat.user1.id} &amp; {chat.user2.id} &bull; Last Updated: {new Date(chat.updated_at).toLocaleString()}
+                          </div>
+                          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                              {chat.messages.map((m, idx) => (
+                                  <div key={idx} style={{ padding: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                      <span style={{ color: 'var(--accent-color)', fontSize: '0.8rem', marginRight: '8px' }}>User {m.sender_id}:</span>
+                                      <span style={{ fontSize: '0.9rem' }}>{m.content}</span>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      )}
+      
     </div>
   );
 }

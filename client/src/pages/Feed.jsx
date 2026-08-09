@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail } from 'lucide-react';
-import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt } from '../api';
+import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
 
 const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'Advice', 'Events'];
@@ -206,19 +206,71 @@ export default function Feed() {
     ));
   };
 
+  const handleDelete = async (postId) => {
+    if (confirm("Are you sure you want to delete this whisper?")) {
+      await deletePost(postId);
+      setPosts(posts.filter(p => p.id !== postId));
+    }
+  };
+
+  const handleEdit = async (postId, oldContent) => {
+    const newContent = prompt("Edit your whisper:", oldContent.replace(" (edited)", ""));
+    if (newContent !== null && newContent.trim()) {
+      const res = await editPost(postId, newContent.trim());
+      if (res && res.post) {
+        setPosts(posts.map(p => p.id === postId ? res.post : p));
+      }
+    }
+  };
+
+  const handlePin = async (postId) => {
+    const res = await pinPost(postId);
+    if (res) {
+      setPosts(posts.map(p => p.id === postId ? { ...p, is_pinned: res.is_pinned } : p));
+    }
+  };
+
   const renderPost = (post, isDailyPrompt = false) => {
     if (!post) return null;
     const identity = post.author_username || 'Anonymous';
+    const isAdminUser = localStorage.getItem('jluwhisper_admin') === 'true';
+    const isAuthor = post.author_username === myIdentity;
+    const canEdit = isAdminUser || isAuthor;
+    
+    // Distinctive styling for admin posts and pinned posts
+    const cardStyle = { ... (isDailyPrompt ? { border: '2px solid var(--accent-color)', boxShadow: '0 4px 12px rgba(108, 92, 231, 0.15)', position: 'relative' } : {}) };
+    if (post.is_admin_post) {
+        cardStyle.border = '1px solid #ffd700';
+        cardStyle.background = 'linear-gradient(145deg, rgba(255, 215, 0, 0.05) 0%, rgba(0,0,0,0) 100%)';
+    }
+    if (post.is_pinned) {
+        cardStyle.borderLeft = '4px solid var(--accent-color)';
+    }
+
     return (
-      <div key={post.id} className="feed-card" style={isDailyPrompt ? { border: '2px solid var(--accent-color)', boxShadow: '0 4px 12px rgba(108, 92, 231, 0.15)', position: 'relative' } : {}}>
+      <div key={post.id} className="feed-card" style={cardStyle}>
+        {post.is_pinned && <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>📌 PINNED</div>}
         {isDailyPrompt && <div style={{ position: 'absolute', top: '-12px', left: '1.5rem', backgroundColor: 'var(--accent-color)', color: 'white', padding: '0.2rem 0.8rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}><Flame size={12}/> Prompt of the Day</div>}
         <div className="card-header">
-          <div className="avatar-flame">{identity.charAt(0)}</div>
+          <div className="avatar-flame" style={post.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {}}>{identity.charAt(0)}</div>
           <div className="card-meta">
-            <span className="name">{identity}</span>
+            <span className="name" style={post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}}>{post.is_admin_post ? '👑 Admin' : identity}</span>
             <span className="time">{new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
-          <span className="category-badge">{post.topic}</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span className="category-badge">{post.topic}</span>
+            {isAdminUser && (
+                <button className="icon-btn-minimal" onClick={() => handlePin(post.id)} title={post.is_pinned ? "Unpin Post" : "Pin Post"}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={post.is_pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+                </button>
+            )}
+            {canEdit && (
+                <div style={{ display: 'flex', gap: '4px' }}>
+                    <button className="icon-btn-minimal" onClick={() => handleEdit(post.id, post.content)} title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                    <button className="icon-btn-minimal" onClick={() => handleDelete(post.id)} title="Delete"><X size={16} /></button>
+                </div>
+            )}
+          </div>
         </div>
         
         <div className="card-text">{post.content.trim() && post.content.trim() !== " " ? post.content : ""}</div>
