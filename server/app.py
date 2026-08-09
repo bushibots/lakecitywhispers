@@ -386,7 +386,8 @@ def regenerate_identity():
         
     new_display, new_username = generate_creative_identity()
     user.display_name = new_display
-    user.username = new_username
+    if not user.is_registered:
+        user.username = new_username
     user.avatar = new_display[0] if new_display else 'A'
     db.session.commit()
     
@@ -395,6 +396,32 @@ def regenerate_identity():
         "display_name": user.display_name,
         "avatar": user.avatar
     })
+
+@app.route('/api/settings/change_username', methods=['POST'])
+def change_username():
+    session_token = request.headers.get('Authorization')
+    if not session_token:
+        return jsonify({"error": "Unauthorized"}), 401
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user or not user.is_registered:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json or {}
+    new_username = data.get('new_username')
+    password = data.get('password')
+    
+    if not new_username or not password:
+        return jsonify({"error": "Missing new_username or password"}), 400
+        
+    if not check_password_hash(user.password_hash, password):
+        return jsonify({"error": "Incorrect password"}), 401
+        
+    if User.query.filter_by(username=new_username, is_registered=True).first():
+        return jsonify({"error": "Username is already taken"}), 400
+        
+    user.username = new_username
+    db.session.commit()
+    return jsonify({"message": "Username successfully updated", "new_username": new_username})
 
 @app.route('/api/me/password', methods=['POST'])
 def change_password():

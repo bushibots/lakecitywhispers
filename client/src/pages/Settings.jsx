@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Settings as SettingsIcon, Shield, Trash2, Key, RefreshCw } from 'lucide-react';
-import { fetchMe, regenerateIdentity, changePassword, deleteAccount } from '../api';
+import { fetchMe, regenerateIdentity, changePassword, deleteAccount, changeUsername } from '../api';
 
 export default function Settings() {
   const [profile, setProfile] = useState(null);
@@ -11,6 +11,12 @@ export default function Settings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passError, setPassError] = useState('');
   const [passSuccess, setPassSuccess] = useState('');
+  
+  const [newUsername, setNewUsername] = useState('');
+  const [userPass, setUserPass] = useState('');
+  const [userError, setUserError] = useState('');
+  const [userSuccess, setUserSuccess] = useState('');
+
   const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
@@ -120,6 +126,26 @@ export default function Settings() {
       setOldPassword('');
       setNewPassword('');
       setConfirmPassword('');
+    }
+  };
+
+  const handleChangeUsername = async (e) => {
+    e.preventDefault();
+    setUserError('');
+    setUserSuccess('');
+    
+    if (newUsername.trim() === '') {
+      setUserError("Username cannot be empty.");
+      return;
+    }
+    
+    const res = await changeUsername(newUsername.trim(), userPass);
+    if (res.error) {
+      setUserError(res.error);
+    } else {
+      setUserSuccess("Username changed successfully! You can now log in with your new username.");
+      setNewUsername('');
+      setUserPass('');
     }
   };
 
@@ -233,10 +259,54 @@ export default function Settings() {
                 required
               />
             </div>
-            <button type="submit" className="btn-glow" style={{ marginTop: '0.5rem' }}>Update Password</button>
+            <button type="submit" className="btn-glow" style={{ padding: '0.8rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <Key size={18} /> Update Password
+            </button>
           </form>
         </div>
-      ) : (
+      ) : null}
+
+      {profile.is_registered ? (
+        <div className="feed-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+          <h2 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <User size={20} color="var(--accent-color)" /> Change Username
+          </h2>
+          
+          {userError && <div style={{ backgroundColor: 'rgba(231, 76, 60, 0.1)', color: '#e74c3c', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>{userError}</div>}
+          {userSuccess && <div style={{ backgroundColor: 'rgba(46, 204, 113, 0.1)', color: '#2ecc71', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>{userSuccess}</div>}
+          
+          <form onSubmit={handleChangeUsername} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '400px' }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>New Username</label>
+              <input 
+                type="text" 
+                className="composer-textarea border-input" 
+                style={{ minHeight: '40px', padding: '0.8rem', width: '100%' }}
+                value={newUsername}
+                onChange={e => setNewUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>Current Password</label>
+              <input 
+                type="password" 
+                className="composer-textarea border-input" 
+                style={{ minHeight: '40px', padding: '0.8rem', width: '100%' }}
+                value={userPass}
+                onChange={e => setUserPass(e.target.value)}
+                required
+              />
+            </div>
+            
+            <button type="submit" className="btn-glow" style={{ padding: '0.8rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <User size={18} /> Change Username
+            </button>
+          </form>
+        </div>
+      ) : null}
+
+      {!profile.is_registered && (
         <div className="feed-card" style={{ padding: '2rem', marginBottom: '2rem', border: '1px solid var(--accent-color)' }}>
           <h2 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Shield size={20} color="var(--accent-color)" /> Secure Your Account

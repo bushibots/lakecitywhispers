@@ -787,3 +787,18 @@ export const adminSpawnBots = async (count, topic) => {
         return { error: 'Network error' };
     }
 };
+
+
+export const changeUsername = async (newUsername, password) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/settings/change_username`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
+            body: JSON.stringify({ new_username: newUsername, password })
+        });
+        return await res.json();
+    } catch (error) {
+        return { error: 'Network error' };
+    }
+};
