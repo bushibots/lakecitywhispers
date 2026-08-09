@@ -179,6 +179,23 @@ def admin_required(f):
     return decorated_function
 
 # --- Authentication & Identity ---
+import threading
+
+def async_generate_identity(app_obj, user_id):
+    with app_obj.app_context():
+        from ai import generate_creative_identity
+        from models import User, db
+        try:
+            display_name, new_username = generate_creative_identity()
+            user = User.query.get(user_id)
+            if user and not user.is_registered:
+                user.display_name = display_name
+                user.username = new_username
+                user.avatar = display_name[0] if display_name else 'A'
+                db.session.commit()
+        except Exception as e:
+            print("Failed to generate async identity:", e)
+
 @app.route('/api/users/session', methods=['POST'])
 def create_session():
     # Provide an existing token to just log activity, or create a new guest
@@ -195,15 +212,24 @@ def create_session():
                 "is_admin": user.role == 'admin'
             }), 200
 
-    # Create new Guest Identity
-    display_name, username = generate_creative_identity()
+    # Create new Guest Identity quickly
+    import random
+    guest_num = random.randint(1000, 99999)
+    display_name = f"Guest_{guest_num}"
+    username = f"guest_{guest_num}_{random.randint(1000,9999)}"
+    
     new_user = User(
         display_name=display_name,
         username=username,
-        avatar=display_name[0] if display_name else 'A'
+        avatar=display_name[0]
     )
     db.session.add(new_user)
     db.session.commit()
+    
+    # Trigger background AI generation
+    thread = threading.Thread(target=async_generate_identity, args=(app, new_user.id))
+    thread.daemon = True
+    thread.start()
     return jsonify({
         "session_token": new_user.session_token, 
         "display_name": new_user.display_name,
@@ -352,8 +378,10 @@ def regenerate_identity():
     if not user:
         return jsonify({"error": "Unauthorized"}), 401
         
-    new_identity = generate_creative_identity()
-    user.display_name = new_identity
+    new_display, new_username = generate_creative_identity()
+    user.display_name = new_display
+    user.username = new_username
+    user.avatar = new_display[0] if new_display else 'A'
     db.session.commit()
     
     return jsonify({
