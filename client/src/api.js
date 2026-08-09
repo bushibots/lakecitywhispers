@@ -483,11 +483,11 @@ export const fetchAdminUsers = async () => {
     }
 };
 
-export const adminToggleBanUser = async (username) => {
+export const adminToggleBanUser = async (userId) => {
     const token = await getSessionToken();
     try {
-        const res = await fetch(`${API_URL}/admin/users/${username}/toggle_ban`, {
-            method: "POST",
+        const res = await fetch(`${API_URL}/admin/users/${userId}/toggle_ban`, {
+            method: 'POST',
             headers: { "Authorization": token }
         });
         return await res.json();

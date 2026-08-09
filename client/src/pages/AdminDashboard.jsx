@@ -60,10 +60,10 @@ export default function AdminDashboard() {
     await loadData();
   };
 
-  const handleToggleBan = async (username) => {
-    const confirmBan = window.confirm(`Toggle ban status for ${username}?`);
+  const handleToggleBan = async (userId, displayName) => {
+    const confirmBan = window.confirm(`Toggle ban status for ${displayName}?`);
     if (confirmBan) {
-      await adminToggleBanUser(username);
+      await adminToggleBanUser(userId);
       await loadData();
     }
   };
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
                                       <button 
                                           className="btn-glow" 
                                           style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: u.is_banned ? 'green' : 'var(--danger-color, red)' }}
-                                          onClick={() => handleToggleBan(u.username)}
+                                          onClick={() => handleToggleBan(u.id, u.display_name)}
                                       >
                                           <Ban size={14} style={{ marginRight: '4px' }}/> {u.is_banned ? 'Unban' : 'Ban'}
                                       </button>

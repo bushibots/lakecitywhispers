@@ -1325,32 +1325,31 @@ def admin_edit_stats(post_id):
 @app.route('/api/admin/users', methods=['GET'])
 @admin_required
 def admin_get_users():
-    users = User.query.order_by(User.created_at.desc()).all()
+    users = User.query.all()
     user_data = []
     for u in users:
         post_count = Post.query.filter_by(user_id=u.id, parent_id=None).count()
         user_data.append({
             "id": u.id,
-            "username": u.username,
+            "username": u.username or "Anonymous",
             "display_name": u.display_name,
             "role": u.role,
             "is_banned": u.is_banned,
-            "created_at": u.created_at.isoformat(),
             "post_count": post_count
         })
     return jsonify(user_data)
 
-@app.route('/api/admin/users/<username>/toggle_ban', methods=['POST'])
+@app.route('/api/admin/users/<int:user_id>/toggle_ban', methods=['POST'])
 @admin_required
-def admin_toggle_ban(username):
-    user = User.query.filter_by(username=username).first_or_404()
+def admin_toggle_ban(user_id):
+    user = User.query.get_or_404(user_id)
     if user.role == 'admin':
         return jsonify({"error": "Cannot ban an admin"}), 403
         
     user.is_banned = not user.is_banned
     db.session.commit()
     status = "banned" if user.is_banned else "unbanned"
-    return jsonify({"message": f"User {username} {status}"})
+    return jsonify({"message": f"User {user.display_name} {status}"})
 
 @app.route('/api/admin/settings', methods=['GET'])
 @admin_required
