@@ -339,7 +339,7 @@ def get_me():
         "avatar": user.avatar,
         "role": user.role,
         "is_registered": user.is_registered,
-        "created_at": user.created_at.isoformat()
+        "created_at": user.created_at.isoformat() + 'Z'
     })
 
 @app.route('/api/me/identity', methods=['POST'])
@@ -433,7 +433,7 @@ def serialize_post(p, user=None, user_votes=None):
         "upvotes": p.upvotes,
         "downvotes": p.downvotes,
         "views": p.views,
-        "created_at": p.created_at.isoformat(),
+        "created_at": p.created_at.isoformat() + 'Z',
         "replies_count": len([r for r in p.replies if not r.is_deleted]),
         "author_username": author_name,
         "author_avatar": p.author.avatar,
@@ -761,7 +761,7 @@ def serialize_reply(r):
         "content": r.content,
         "upvotes": r.upvotes,
         "downvotes": r.downvotes,
-        "created_at": r.created_at.isoformat(),
+        "created_at": r.created_at.isoformat() + 'Z',
         "author_username": author_name,
         "author_avatar": r.author.avatar,
         "is_admin_post": is_admin_post,
@@ -913,7 +913,7 @@ def get_conversations():
             "other_user": other_name,
             "status": c.status,
             "last_message": last_msg_text,
-            "updated_at": c.updated_at.isoformat(),
+            "updated_at": c.updated_at.isoformat() + 'Z',
             "is_requester": c.user1_id == user.id
         }
         
@@ -972,7 +972,7 @@ def get_messages(conv_id):
             "id": m.id,
             "is_mine": m.sender_id == user.id,
             "content": m.content,
-            "created_at": m.created_at.isoformat()
+            "created_at": m.created_at.isoformat() + 'Z'
         })
         
     other_user_id = conv.user2_id if conv.user1_id == user.id else conv.user1_id
@@ -1017,7 +1017,7 @@ def send_message(conv_id):
         "id": msg.id,
         "is_mine": False, # it's not mine for the receiver!
         "content": msg.content,
-        "created_at": msg.created_at.isoformat(),
+        "created_at": msg.created_at.isoformat() + 'Z',
         "conversation_id": conv.id
     }
     
@@ -1035,7 +1035,7 @@ def send_message(conv_id):
         "id": msg.id,
         "is_mine": True,
         "content": msg.content,
-        "created_at": msg.created_at.isoformat()
+        "created_at": msg.created_at.isoformat() + 'Z'
     }), 201
 
 
@@ -1110,7 +1110,7 @@ def get_notifications():
         "message": n.message,
         "post_id": n.post_id,
         "is_read": n.is_read,
-        "created_at": n.created_at.isoformat()
+        "created_at": n.created_at.isoformat() + 'Z'
     } for n in notifs])
 
 @app.route('/api/notifications/read', methods=['POST'])
@@ -1169,7 +1169,7 @@ def explore_search():
             "content": p.content,
             "media_url": p.media_url,
             "author": author.display_name if author else "Unknown",
-            "created_at": p.created_at.isoformat(),
+            "created_at": p.created_at.isoformat() + 'Z',
             "upvotes": upvotes - downvotes,
             "reply_count": reply_count,
             "view_count": p.view_count,
@@ -1346,13 +1346,13 @@ def admin_conversations():
     conversations = Conversation.query.order_by(Conversation.updated_at.desc()).all()
     res = []
     for c in conversations:
-        msgs = [{"sender_id": m.sender_id, "content": m.content, "created_at": m.created_at.isoformat()} for m in c.messages]
+        msgs = [{"sender_id": m.sender_id, "content": m.content, "created_at": m.created_at.isoformat() + 'Z'} for m in c.messages]
         res.append({
             "id": c.id,
             "user1": {"id": c.user1_id},
             "user2": {"id": c.user2_id},
             "status": c.status,
-            "updated_at": c.updated_at.isoformat(),
+            "updated_at": c.updated_at.isoformat() + 'Z',
             "messages": msgs
         })
     return jsonify({"conversations": res})
@@ -1371,7 +1371,7 @@ def admin_dashboard():
             "id": p.id,
             "content": p.content,
             "author": p.author.display_name,
-            "created_at": p.created_at.isoformat()
+            "created_at": p.created_at.isoformat() + 'Z'
         })
     return jsonify({
         "stats": {"users": total_users, "posts": total_posts, "active_polls": active_polls},
@@ -1416,7 +1416,7 @@ def admin_get_users():
             "role": u.role,
             "is_bot": bool(u.username and (u.username.startswith("bot_") or u.username.startswith("permbot_"))),
             "is_permanent": bool(u.username and u.username.startswith("permbot_")),
-            "created_at": u.created_at.isoformat() if u.created_at else "Unknown",
+            "created_at": u.created_at.isoformat() + 'Z' if u.created_at else "Unknown",
             "post_count": post_count
         })
     return jsonify(user_data)
@@ -1502,7 +1502,7 @@ def admin_get_all_posts():
             "content": p.content,
             "author_display": author.display_name if author else "Unknown",
             "author_username": author.username if author else "Unknown",
-            "created_at": p.created_at.isoformat(),
+            "created_at": p.created_at.isoformat() + 'Z',
             "is_deleted": p.is_deleted,
             "upvotes": p.upvotes
         })
@@ -1520,7 +1520,7 @@ def admin_get_post_author(post_id):
         "username": author.username,
         "display_name": author.display_name,
         "is_registered": author.password_hash is not None,
-        "created_at": author.created_at.isoformat()
+        "created_at": author.created_at.isoformat() + 'Z'
     })
 
 @app.route('/api/admin/users/<username>/ban', methods=['POST'])
