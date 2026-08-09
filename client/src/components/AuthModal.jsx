@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { X, ShieldAlert, Key } from 'lucide-react';
 import { login, register, recoverAccount } from '../api';
 
-export default function AuthModal({ isOpen, onClose, onSuccess }) {
-  const [mode, setMode] = useState('login'); // 'login', 'register', 'recovery_show', 'recover_account'
+export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }) {
+  const [mode, setMode] = useState(initialMode); // 'login', 'register', 'recovery_show', 'recover_account'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [recoveryKeyInput, setRecoveryKeyInput] = useState('');

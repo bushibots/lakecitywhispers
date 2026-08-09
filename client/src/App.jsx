@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import Guide from './pages/Guide';
 import AdminDashboard from './pages/AdminDashboard';
 import Settings from './pages/Settings';
+import AuthModal from './components/AuthModal';
 import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { useEffect } from 'react';
@@ -59,6 +60,16 @@ function App() {
         <Route path="guide" element={<Guide />} />
         <Route path="settings" element={<Settings />} />
         <Route path="admin" element={<AdminDashboard />} />
+        <Route path="login" element={
+            <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+                <AuthModal isOpen={true} initialMode="login" onClose={() => window.location.href='/feed'} onSuccess={() => window.location.href='/feed'} />
+            </div>
+        } />
+        <Route path="register" element={
+            <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+                <AuthModal isOpen={true} initialMode="register" onClose={() => window.location.href='/feed'} onSuccess={() => window.location.href='/feed'} />
+            </div>
+        } />
         <Route path="dating" element={<div className="page-content" style={{textAlign: 'center', marginTop: '20vh'}}><Heart size={64} color="#FF5E5B" style={{margin: '0 auto 1rem'}} /><h2>Dating Coming Soon</h2><p className="text-muted">Find your campus crush. Stay tuned!</p></div>} />
         {/* Placeholders for others */}
         <Route path="*" element={<div className="page-content"><h2>Coming Soon</h2><p>This page is under construction.</p></div>} />
