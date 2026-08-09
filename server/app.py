@@ -1290,6 +1290,56 @@ def admin_broadcast():
     })
     return jsonify({"message": "Broadcast sent successfully"})
 
+@app.route('/api/admin/forge_post', methods=['POST'])
+@admin_required
+def admin_forge_post():
+    data = request.json
+    content = data.get('content')
+    topic = data.get('topic', 'General')
+    author_name = data.get('author_name', '').strip()
+    
+    if not content:
+        return jsonify({"error": "Content is required"}), 400
+        
+    if author_name:
+        # Check if bot user already exists
+        user = User.query.filter(User.display_name == author_name, User.username.like('bot_%') | User.username.like('permbot_%')).first()
+        if not user:
+            import uuid
+            username = f"bot_{uuid.uuid4().hex[:8]}"
+            user = User(
+                display_name=author_name,
+                username=username,
+                avatar=author_name[0] if author_name else 'A'
+            )
+            db.session.add(user)
+            db.session.commit()
+    else:
+        # Select random bot from User
+        import random
+        bots = User.query.filter(User.username.like('bot_%') | User.username.like('permbot_%')).all()
+        if bots:
+            user = random.choice(bots)
+        else:
+            display_name, username = generate_creative_identity()
+            user = User(
+                display_name=display_name,
+                username=f"bot_{username}" if not username.startswith("bot_") else username,
+                avatar=display_name[0] if display_name else 'A'
+            )
+            db.session.add(user)
+            db.session.commit()
+            
+    post = Post(
+        content=content,
+        topic=topic,
+        author_id=user.id
+    )
+    db.session.add(post)
+    db.session.commit()
+    
+    return jsonify({"message": "Post forged successfully", "post_id": post.id})
+
 @app.route('/api/admin/conversations', methods=['GET'])
 @admin_required
 def admin_conversations():

@@ -281,6 +281,21 @@ export const createReply = async (postId, content) => {
 };
 
 // --- Admin Endpoints ---
+export const adminForgePost = async (content, topic = 'General', authorName = '') => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/admin/forge_post`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
+            body: JSON.stringify({ content, topic, author_name: authorName })
+        });
+        return await res.json();
+    } catch (error) {
+        console.error('Error forging post:', error);
+        return { error: 'Failed' };
+    }
+};
+
 export const sendAdminBroadcast = async (message) => {
     const token = await getSessionToken();
     try {

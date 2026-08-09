@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame } from 'lucide-react';
+import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3 } from 'lucide-react';
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
-    sendAdminBroadcast, fetchAdminConversations
+    sendAdminBroadcast, fetchAdminConversations, adminForgePost
 } from '../api';
 
 export default function AdminDashboard() {
@@ -23,6 +23,11 @@ export default function AdminDashboard() {
     lockdown: false, maintenance: false, bots_enabled: false, media_enabled: true,
     bot_active_start: 9, bot_active_end: 23, daily_prompt: '' 
   });
+  
+  const [forgeContent, setForgeContent] = useState('');
+  const [forgeTopic, setForgeTopic] = useState('General');
+  const [forgeAuthor, setForgeAuthor] = useState('');
+  const [forgeLoading, setForgeLoading] = useState(false);
   const [revealedAuthors, setRevealedAuthors] = useState({});
 
   useEffect(() => {
@@ -111,6 +116,29 @@ export default function AdminDashboard() {
   const handleSettingChange = async (key, value) => {
       setSysSettings(prev => ({ ...prev, [key]: value }));
       await updateAdminSettings({ [key]: value });
+  };
+
+  const handleForgePost = async (e) => {
+    e.preventDefault();
+    if (!forgeContent.trim()) return alert("Content cannot be empty.");
+    setForgeLoading(true);
+    const res = await adminForgePost(forgeContent, forgeTopic, forgeAuthor);
+    setForgeLoading(false);
+    if (res && !res.error) {
+      alert("Post successfully forged!");
+      setForgeContent('');
+      setForgeAuthor('');
+      await loadData();
+    } else {
+      alert(res.error || "Failed to forge post.");
+    }
+  };
+
+  const handleSendBroadcast = async () => {
+    if (!broadcastMsg.trim()) return;
+    await sendAdminBroadcast(broadcastMsg);
+    setBroadcastMsg('');
+    alert('Broadcast sent!');
   };
 
   const handleLogoUpload = async (e) => {
@@ -205,6 +233,9 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'ai_bots' ? 'active' : ''}`} onClick={() => setActiveTab('ai_bots')} style={{ backgroundColor: activeTab === 'ai_bots' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'ai_bots' ? 'white' : 'var(--text-color)' }}>
             <Flame size={16} style={{ marginRight: '8px' }}/> AI Bots
+        </button>
+        <button className={`pill-tab ${activeTab === 'forge' ? 'active' : ''}`} onClick={() => setActiveTab('forge')} style={{ backgroundColor: activeTab === 'forge' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'forge' ? 'white' : 'var(--text-color)' }}>
+            <Edit3 size={16} style={{ marginRight: '8px' }}/> Forge Whisper
         </button>
         <button className={`pill-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} style={{ backgroundColor: activeTab === 'settings' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'settings' ? 'white' : 'var(--text-color)' }}>
             <Settings size={16} style={{ marginRight: '8px' }}/> System Controls
@@ -519,13 +550,65 @@ export default function AdminDashboard() {
                   placeholder="Enter broadcast message..."
                   value={broadcastMsg}
                   onChange={(e) => setBroadcastMsg(e.target.value)}
-              ></textarea>
-              <button className="btn-glow" onClick={async () => {
-                  if(!broadcastMsg.trim()) return;
-                  await sendAdminBroadcast(broadcastMsg);
-                  setBroadcastMsg('');
-                  alert('Broadcast sent!');
-              }}>Send Broadcast</button>
+              />
+              <button className="btn-glow" style={{ backgroundColor: 'var(--accent-color)' }} onClick={handleSendBroadcast}>
+                  Send Broadcast
+              </button>
+          </div>
+      )}
+
+      {activeTab === 'forge' && (
+          <div className="feed-card" style={{ padding: '1.5rem' }}>
+              <h2 style={{ marginBottom: '1.5rem' }}>Forge Fake Whisper 🤫</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                  Seed the platform with posts by masquerading as existing bots or creating new ones.
+              </p>
+              
+              <form onSubmit={handleForgePost} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                      <div style={{ flex: 1 }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Author Display Name (Optional)</label>
+                          <input 
+                              type="text" 
+                              className="composer-textarea border-input" 
+                              style={{ width: '100%', height: '40px', padding: '0.5rem' }} 
+                              value={forgeAuthor} 
+                              onChange={(e) => setForgeAuthor(e.target.value)} 
+                              placeholder="e.g. Feral Canteen Tea (Leave blank to pick a random AI bot)" 
+                          />
+                      </div>
+                      <div style={{ width: '200px' }}>
+                          <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Topic</label>
+                          <select 
+                              value={forgeTopic} 
+                              onChange={(e) => setForgeTopic(e.target.value)}
+                              style={{ width: '100%', height: '40px', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-main)' }}
+                          >
+                              <option value="General">General</option>
+                              <option value="Confessions">Confessions</option>
+                              <option value="Academic">Academic</option>
+                              <option value="Rants">Rants</option>
+                              <option value="Events">Events</option>
+                          </select>
+                      </div>
+                  </div>
+                  
+                  <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Whisper Content</label>
+                      <textarea 
+                          className="composer-textarea"
+                          style={{ width: '100%', minHeight: '120px', padding: '1rem' }}
+                          placeholder="What would you like this fake user to whisper?"
+                          value={forgeContent}
+                          onChange={(e) => setForgeContent(e.target.value)}
+                          required
+                      />
+                  </div>
+                  
+                  <button type="submit" className="btn-glow" style={{ width: '200px', backgroundColor: 'var(--accent-color)', alignSelf: 'flex-start' }} disabled={forgeLoading}>
+                      {forgeLoading ? 'Forging...' : 'Forge & Publish'}
+                  </button>
+              </form>
           </div>
       )}
 
