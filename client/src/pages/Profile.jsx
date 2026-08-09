@@ -1,20 +1,23 @@
 import { Award, Shield, Settings, Bookmark, LogOut, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import AuthModal from '../components/AuthModal';
-import { requestSupportMessage } from '../api';
+import { requestSupportMessage, fetchMe } from '../api';
 
 export default function Profile() {
-  const [identity, setIdentity] = useState('Guest');
-  const [isRegistered, setIsRegistered] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   useEffect(() => {
     loadProfile();
   }, []);
 
-  const loadProfile = () => {
-    setIdentity(localStorage.getItem('jluwhisper_identity') || 'Anonymous');
-    setIsRegistered(localStorage.getItem('jluwhisper_registered') === 'true');
+  const loadProfile = async () => {
+    const data = await fetchMe();
+    if (data && !data.error) {
+      setProfile(data);
+    }
+    setLoading(false);
   };
 
   const handleLogout = () => {
@@ -36,6 +39,13 @@ export default function Profile() {
     }
   };
 
+  if (loading) return (
+    <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+      <div style={{ width: '40px', height: '40px', border: '4px solid rgba(var(--accent-rgb), 0.2)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+    </div>
+  );
+  if (!profile) return <div className="page-content"><h2>Error loading profile. Try logging in again.</h2></div>;
+
   return (
     <div className="page-content">
       {/* Auth Modal */}
@@ -49,14 +59,20 @@ export default function Profile() {
       />
 
       <div className="profile-header">
-        <div className="avatar-flame large">{identity.charAt(0)}</div>
-        <h2>{identity}</h2>
+        <div className="avatar-flame large">
+          {profile.avatar && profile.avatar.startsWith('http') ? (
+            <img src={profile.avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
+            (profile.avatar || profile.display_name).charAt(0)
+          )}
+        </div>
+        <h2>{profile.display_name}</h2>
         <span className="status-badge">
-          <Shield size={14} /> {isRegistered ? 'Verified Account' : 'Guest Account'}
+          <Shield size={14} /> {profile.is_registered ? 'Verified Account' : 'Guest Account'}
         </span>
         <p className="bio">"Just here for the tea."</p>
         
-        {!isRegistered && (
+        {!profile.is_registered && (
           <div className="guest-warning mt-4">
             <p>You are currently a Guest. Your account will expire in 7 days if inactive.</p>
             <button className="btn-glow mt-2" onClick={() => setIsAuthModalOpen(true)}>Secure Your Account</button>

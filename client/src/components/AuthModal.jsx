@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ShieldAlert, Key } from 'lucide-react';
 import { login, register, recoverAccount } from '../api';
 
@@ -52,10 +53,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
     onClose();
   };
 
-  return (
-    <div className="modal-backdrop">
-      <div className="modal-content">
-        <button className="icon-btn close-btn" onClick={onClose}><X size={24} /></button>
+  return createPortal(
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <button className="close-btn" onClick={onClose}><X size={20}/></button>
         
         {mode === 'recovery_show' ? (
           <div className="recovery-view">
@@ -140,6 +141,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

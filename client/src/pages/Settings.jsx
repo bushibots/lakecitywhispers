@@ -138,7 +138,11 @@ export default function Settings() {
     }
   };
 
-  if (loading) return <div className="page-content"><h2>Loading Profile...</h2></div>;
+  if (loading) return (
+    <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
+      <div style={{ width: '40px', height: '40px', border: '4px solid rgba(var(--accent-rgb), 0.2)', borderTop: '4px solid var(--accent-color)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+    </div>
+  );
   if (!profile) return <div className="page-content"><h2>Error loading profile. Try logging in again.</h2></div>;
 
   return (
