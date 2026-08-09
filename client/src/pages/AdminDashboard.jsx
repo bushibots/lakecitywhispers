@@ -3,7 +3,7 @@ import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3 } fro
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
-    sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots
+    sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser
 } from '../api';
 
 export default function AdminDashboard() {
@@ -155,6 +155,22 @@ export default function AdminDashboard() {
       await loadData();
     } else {
       alert(res?.error || "Failed to spawn bots.");
+    }
+  };
+  
+  const handleWipeUser = async (username) => {
+    const confirm1 = window.confirm(`Are you absolutely sure you want to WIPE user ${username}? This cannot be undone and will delete all their content forever.`);
+    if (confirm1) {
+        const confirm2 = window.prompt("Type 'WIPE' to confirm.");
+        if (confirm2 === 'WIPE') {
+            const res = await adminWipeUser(username);
+            if (res && res.message) {
+                alert(res.message);
+                await loadData();
+            } else {
+                alert(res?.error || "Failed to wipe user.");
+            }
+        }
     }
   };
 
@@ -375,62 +391,62 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                      <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
-                          <th style={{ padding: '0.5rem' }}>Username</th>
-                          <th style={{ padding: '0.5rem' }}>Display Identity</th>
-                          <th style={{ padding: '0.5rem' }}>Role</th>
-                          <th style={{ padding: '0.5rem' }}>Posts</th>
-                          <th style={{ padding: '0.5rem' }}>Created At</th>
-                          <th style={{ padding: '0.5rem' }}>Status</th>
-                          <th style={{ padding: '0.5rem' }}>Actions</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      {allUsers.filter(u => userTab === 'bots' ? u.is_bot : !u.is_bot).map(u => (
-                          <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>{u.username}</td>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>{u.display_name} {u.is_bot && '🤖'} {u.is_permanent && '🛡️'}</td>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>
-                                  <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', backgroundColor: u.role === 'admin' ? 'rgba(var(--accent-rgb), 0.2)' : 'var(--bg-elevated)', color: u.role === 'admin' ? 'var(--accent-color)' : 'var(--text-color)' }}>
-                                      {u.role}
-                                  </span>
-                              </td>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>{u.post_count}</td>
-                              <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.85rem' }}>
-                                  {u.created_at !== "Unknown" ? new Date(u.created_at).toLocaleDateString() : 'Unknown'}
-                              </td>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>
-                                  {u.is_banned ? <span style={{ color: 'var(--danger-color, red)', fontWeight: 'bold' }}>Banned</span> : <span style={{ color: 'green' }}>Active</span>}
-                              </td>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>
-                                  {u.role !== 'admin' && (
-                                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                  {allUsers.filter(u => userTab === 'bots' ? u.is_bot : !u.is_bot).map(u => (
+                      <div key={u.id} className="feed-card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: u.is_banned ? 'rgba(231, 76, 60, 0.05)' : 'var(--bg-elevated)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                              <div>
+                                  <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '5px', fontSize: '1.2rem' }}>
+                                      {u.display_name} {u.is_bot && '🤖'} {u.is_permanent && '🛡️'}
+                                  </h3>
+                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>@{u.username}</div>
+                              </div>
+                              <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: u.role === 'admin' ? 'rgba(var(--accent-rgb), 0.2)' : 'var(--bg-card)', color: u.role === 'admin' ? 'var(--accent-color)' : 'var(--text-muted)' }}>
+                                  {u.role.toUpperCase()}
+                              </span>
+                          </div>
+                          
+                          <div style={{ fontSize: '0.85rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                              {u.is_registered && <span style={{ padding: '4px 8px', backgroundColor: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71', borderRadius: '4px', fontWeight: 'bold' }}>✓ Registered</span>}
+                              {u.is_banned ? <span style={{ padding: '4px 8px', backgroundColor: 'rgba(231, 76, 60, 0.15)', color: 'var(--danger-color, red)', borderRadius: '4px', fontWeight: 'bold' }}>Banned</span> : <span style={{ padding: '4px 8px', backgroundColor: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71', borderRadius: '4px', fontWeight: 'bold' }}>Active</span>}
+                              <span style={{ padding: '4px 8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', color: 'var(--text-muted)' }}>{u.post_count} Posts</span>
+                              <span style={{ padding: '4px 8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', color: 'var(--text-muted)' }}>{u.created_at !== "Unknown" ? new Date(u.created_at).toLocaleDateString() : 'Unknown'}</span>
+                          </div>
+                          
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                              {u.role !== 'admin' && (
+                                  <>
+                                      <button 
+                                          className="btn-glow" 
+                                          style={{ flex: 1, padding: '0.6rem', fontSize: '0.85rem', backgroundColor: u.is_banned ? '#2ecc71' : 'var(--danger-color, red)', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}
+                                          onClick={() => handleToggleBan(u.id, u.display_name)}
+                                      >
+                                          <Ban size={14} /> {u.is_banned ? 'Unban User' : 'Ban User'}
+                                      </button>
+                                      {u.is_bot && (
                                           <button 
                                               className="btn-glow" 
-                                              style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: u.is_banned ? 'green' : 'var(--danger-color, red)' }}
-                                              onClick={() => handleToggleBan(u.id, u.display_name)}
+                                              style={{ flex: 1, padding: '0.6rem', fontSize: '0.85rem', backgroundColor: u.is_permanent ? 'var(--accent-color)' : 'var(--bg-card)', color: u.is_permanent ? 'black' : 'var(--text-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}
+                                              onClick={() => handleTogglePermanent(u.id, u.display_name, u.is_permanent)}
+                                              title={u.is_permanent ? "Remove Permanent Status" : "Make Permanent"}
                                           >
-                                              <Ban size={14} style={{ marginRight: '4px' }}/> {u.is_banned ? 'Unban' : 'Ban'}
+                                              <Shield size={14} /> {u.is_permanent ? 'Perm Bot' : 'Make Perm'}
                                           </button>
-                                          {u.is_bot && (
-                                              <button 
-                                                  className="btn-glow" 
-                                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', backgroundColor: u.is_permanent ? 'var(--accent-color)' : 'var(--bg-elevated)', color: u.is_permanent ? 'black' : 'var(--text-color)' }}
-                                                  onClick={() => handleTogglePermanent(u.id, u.display_name, u.is_permanent)}
-                                                  title={u.is_permanent ? "Remove Permanent Status" : "Make Permanent (Won't be auto-deleted)"}
-                                              >
-                                                  <Shield size={14} style={{ marginRight: '4px' }}/> {u.is_permanent ? 'Permanent' : 'Make Perm'}
-                                              </button>
-                                          )}
-                                      </div>
-                                  )}
-                              </td>
-                          </tr>
-                      ))}
-                  </tbody>
-              </table>
+                                      )}
+                                      <button 
+                                          className="btn-glow" 
+                                          style={{ flex: 1, padding: '0.6rem', fontSize: '0.85rem', backgroundColor: 'var(--danger-color, red)', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px' }}
+                                          onClick={() => handleWipeUser(u.username)}
+                                          title="Completely Wipe User & All Posts"
+                                      >
+                                          <Trash2 size={14} /> Wipe
+                                      </button>
+                                  </>
+                              )}
+                          </div>
+                      </div>
+                  ))}
+              </div>
           </div>
       )}
 

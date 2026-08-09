@@ -1645,6 +1645,22 @@ def admin_ban_user(username):
     db.session.commit()
     return jsonify({"message": f"User {username} banned and content hidden."})
 
+@app.route('/api/admin/users/<username>/wipe', methods=['DELETE'])
+@admin_required
+def admin_wipe_user(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    if user.role == 'admin':
+        return jsonify({"error": "Cannot wipe an admin."}), 403
+        
+    for p in user.posts:
+        db.session.delete(p)
+        
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": f"User {username} completely wiped."})
+
 @app.route('/api/health')
 def health():
     return jsonify({"status": "ok"})

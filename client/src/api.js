@@ -817,3 +817,17 @@ export const changeAlias = async (newAlias) => {
         return { error: 'Network error' };
     }
 };
+
+
+export const adminWipeUser = async (username) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/admin/users/${username}/wipe`, {
+            method: 'DELETE',
+            headers: { 'Authorization': token }
+        });
+        return await res.json();
+    } catch (error) {
+        return { error: 'Network error' };
+    }
+};
