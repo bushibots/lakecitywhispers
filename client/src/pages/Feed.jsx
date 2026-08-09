@@ -735,20 +735,26 @@ export default function Feed() {
       {/* Syncing Indicator */}
       {isSyncing && (
         <div style={{
-          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-          padding: '1.5rem', background: 'var(--bg-card)', borderRadius: '12px',
-          border: '1px solid var(--border-color)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', padding: '10px 0', marginBottom: '1.5rem'
         }}>
-          <div style={{
-            width: '24px', height: '24px', border: '3px solid var(--accent-color)',
-            borderTopColor: 'transparent', borderRadius: '50%',
-            animation: 'spin 1s linear infinite', marginRight: '15px'
-          }}></div>
-          <span style={{ fontSize: '1rem', color: 'var(--text-color)', fontWeight: 'bold' }}>
-            Syncing latest whispers...
+          <span style={{ 
+            fontSize: '0.75rem', color: 'var(--text-muted)', 
+            marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '2px',
+            animation: 'pulse 1.5s infinite'
+          }}>
+            Syncing
           </span>
+          <div style={{
+            width: '120px', height: '2px', background: 'rgba(255, 255, 255, 0.05)', 
+            borderRadius: '2px', overflow: 'hidden', position: 'relative'
+          }}>
+             <div style={{
+               position: 'absolute', top: 0, left: 0, bottom: 0,
+               width: '50%', background: 'linear-gradient(90deg, transparent, var(--accent-glow), transparent)',
+               animation: 'shimmerLine 1.5s infinite linear'
+             }}></div>
+          </div>
         </div>
       )}
 

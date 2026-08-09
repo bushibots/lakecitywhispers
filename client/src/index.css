@@ -613,3 +613,8 @@ input, select, textarea, button { font-size: 16px !important; }
   max-width: 100%;
   overflow-x: hidden;
 }
+
+@keyframes shimmerLine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
