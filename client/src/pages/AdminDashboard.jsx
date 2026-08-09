@@ -556,6 +556,7 @@ export default function AdminDashboard() {
                           <option value="t-space">Space (Deep Nebula)</option>
                           <option value="t-inverted">Inverted (Light Mode)</option>
                           <option value="t-retro">Retro (Arcade Style)</option>
+                          <option value="t-india">Independence Day 🇮🇳</option>
                       </select>
                   </div>
               </div>

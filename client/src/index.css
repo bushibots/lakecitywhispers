@@ -711,3 +711,39 @@ body.t-retro::before, body.t-retro::after { display: none; }
 body.t-retro .feed-card { border: 4px solid #0f0; border-radius: 0; box-shadow: 8px 8px 0 rgba(0, 255, 0, 0.2); }
 body.t-retro .btn-glow { border-radius: 0; background: #000; border: 2px solid #0f0; color: #0f0; }
 body.t-retro .btn-glow:hover { background: #0f0; color: #000; }
+
+
+/* Independence Day (Tiranga) */
+body.t-india {
+  --bg-color: #0c0814;
+  --bg-secondary: rgba(255,153,51,0.03);
+  --card-bg: rgba(10, 20, 30, 0.85);
+  --primary: #FF9933; /* Saffron */
+  --accent-glow: #138808; /* Green */
+  --text-main: #FFFFFF;
+  --text-muted: #B0C4DE;
+  --border: rgba(0, 0, 128, 0.3); /* Navy Blue */
+  --border-strong: rgba(0, 0, 128, 0.6);
+}
+body.t-india::before { background: var(--primary); opacity: 0.15; }
+body.t-india::after { background: var(--accent-glow); opacity: 0.15; }
+body.t-india .feed-card {
+  box-shadow: 0 10px 30px rgba(0,0,128,0.15), inset 0 0 15px rgba(255,153,51,0.05);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+body.t-india .btn-glow {
+  background: rgba(0,0,128,0.2);
+  border: 1px solid #000080;
+  box-shadow: 0 0 10px rgba(0,0,128,0.3);
+}
+body.t-india .btn-glow:hover {
+  background: rgba(0,0,128,0.4);
+  box-shadow: 0 0 20px rgba(0,0,128,0.6);
+}
+
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

@@ -11,7 +11,8 @@ import Settings from './pages/Settings';
 import AuthModal from './components/AuthModal';
 import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import EasterEggs from './components/EasterEggs';
 import { socket, joinSocketRoom } from './socket';
 import { fetchMe, fetchPublicConfig } from './api';
 import './index.css';
@@ -75,6 +76,7 @@ function App() {
   return (
     <>
       <Toaster position="top-center" reverseOrder={false} />
+      <EasterEggs />
       <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="/feed" replace />} />

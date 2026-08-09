@@ -27,23 +27,55 @@ export default function LeftSidebar() {
 
   const [siteLogo, setSiteLogo] = useState('');
   const [siteName, setSiteName] = useState('JLU Whisper');
+  const [globalTheme, setGlobalTheme] = useState('');
+  const [chakraClicks, setChakraClicks] = useState(0);
 
   useEffect(() => {
     fetchPublicConfig().then(cfg => {
       if (cfg && cfg.site_logo) setSiteLogo(cfg.site_logo);
       if (cfg && cfg.site_name) setSiteName(cfg.site_name);
+      if (cfg && cfg.global_theme) setGlobalTheme(cfg.global_theme);
     });
   }, []);
 
+  const handleChakraClick = () => {
+    setChakraClicks(prev => {
+        const newCount = prev + 1;
+        if (newCount >= 3) {
+            window.dispatchEvent(new CustomEvent('trigger_confetti', { detail: { colors: ['#FF9933', '#FFFFFF', '#138808'] } }));
+            return 0; // reset
+        }
+        return newCount;
+    });
+  };
+
   return (
     <aside className="left-sidebar">
-      <div className="sidebar-header">
+      <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center' }}>
         {siteLogo ? (
           <img src={siteLogo} alt="Site Logo" style={{ height: '32px', marginRight: '10px', objectFit: 'contain' }} />
         ) : (
           <div className="logo-flame"><Flame size={24} /></div>
         )}
-        <h2>{siteName}</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {siteName}
+            {globalTheme === 't-india' && (
+                <span 
+                    onClick={handleChakraClick}
+                    style={{ 
+                        cursor: 'pointer', 
+                        display: 'inline-block', 
+                        animation: 'spin 10s linear infinite', 
+                        color: '#000080',
+                        fontSize: '1.2rem',
+                        userSelect: 'none'
+                    }}
+                    title="Jai Hind!"
+                >
+                    ☸
+                </span>
+            )}
+        </h2>
       </div>
 
       <nav className="sidebar-nav">

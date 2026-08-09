@@ -101,6 +101,12 @@ export default function Feed() {
     if (!content.trim() && !imageFile && !audioBlob) return;
     setIsPosting(true);
     
+    // Independence Day Easter Egg
+    const textLower = content.toLowerCase();
+    if (textLower.includes('jai hind') || textLower.includes('vande mataram') || textLower.includes('happy independence day')) {
+        window.dispatchEvent(new CustomEvent('trigger_confetti', { detail: { colors: ['#FF9933', '#FFFFFF', '#138808'] } }));
+    }
+    
     let imageUrl = null;
     let audioUrl = null;
     
