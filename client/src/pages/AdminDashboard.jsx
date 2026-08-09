@@ -479,6 +479,31 @@ export default function AdminDashboard() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+                  <div style={{ flex: 1, marginRight: '1rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem' }}>Global Theme</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Change the visual theme of the site for all users instantly.</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <select 
+                          className="composer-textarea border-input" 
+                          style={{ width: '200px', height: '40px', padding: '0.5rem' }} 
+                          value={sysSettings.global_theme || 't-default'} 
+                          onChange={(e) => {
+                              handleSettingChange('global_theme', e.target.value);
+                              document.body.className = e.target.value; // Optimistic local update
+                          }}
+                      >
+                          <option value="t-default">Default (Dark)</option>
+                          <option value="t-aurora">Aurora (Premium Glassmorphism)</option>
+                          <option value="t-cyber">Cyberpunk (Neon)</option>
+                          <option value="t-space">Space (Deep Nebula)</option>
+                          <option value="t-inverted">Inverted (Light Mode)</option>
+                          <option value="t-retro">Retro (Arcade Style)</option>
+                      </select>
+                  </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div>
                       <h3 style={{ marginBottom: '0.5rem' }}>Global Site Logo</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Upload a custom logo to replace the default JLU Whisper text globally. (Max 500KB)</p>

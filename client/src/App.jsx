@@ -13,7 +13,7 @@ import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import { useEffect } from 'react';
 import { socket, joinSocketRoom } from './socket';
-import { fetchMe } from './api';
+import { fetchMe, fetchPublicConfig } from './api';
 import './index.css';
 
 function App() {
@@ -39,6 +39,15 @@ function App() {
     fetchMe().then(user => {
       if (user && user.id) {
         joinSocketRoom(user.id);
+      }
+    });
+
+    // 1b. Fetch global configuration for theme
+    fetchPublicConfig().then(cfg => {
+      if (cfg && cfg.global_theme) {
+          document.body.className = cfg.global_theme;
+      } else {
+          document.body.className = 't-default';
       }
     });
 

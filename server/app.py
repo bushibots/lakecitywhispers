@@ -1483,7 +1483,7 @@ def get_public_config():
     settings = SystemSetting.query.all()
     config = {}
     for s in settings:
-        if s.key in ['site_logo', 'maintenance', 'site_name']:
+        if s.key in ['site_logo', 'maintenance', 'site_name', 'global_theme']:
             config[s.key] = s.value == 'true' if s.value in ['true', 'false'] else s.value
     return jsonify(config)
 
