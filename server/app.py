@@ -1,7 +1,5 @@
 import gevent.monkey
 gevent.monkey.patch_all()
-from psycogreen.gevent import patch_psycopg
-patch_psycopg()
 
 import os
 import uuid
@@ -40,7 +38,11 @@ basedir = os.path.abspath(os.path.dirname(__name__))
 db_url = os.environ.get('DATABASE_URL')
 if db_url:
     if db_url.startswith('postgres://'):
-        db_url = db_url.replace('postgres://', 'postgresql+psycopg2://', 1)
+        db_url = db_url.replace('postgres://', 'postgresql+pg8000://', 1)
+    elif db_url.startswith('postgresql://'):
+        db_url = db_url.replace('postgresql://', 'postgresql+pg8000://', 1)
+    elif db_url.startswith('postgresql+psycopg2://'):
+        db_url = db_url.replace('postgresql+psycopg2://', 'postgresql+pg8000://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'jluwhisper.db')
