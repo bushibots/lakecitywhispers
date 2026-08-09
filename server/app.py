@@ -76,12 +76,25 @@ scheduler = APScheduler()
 scheduler.init_app(app)
 
 from bot import run_ai_bots
-# Check every 5 minutes if it's time to run based on the admin setting
-# The actual logic in bot.py can determine if it should execute or not.
-# Wait, actually let's run it every 5 minutes, but bot.py will just roll a dice 
-# or we can schedule it dynamically. For simplicity, we trigger the bot loop every 5 minutes, 
-# and it has a high chance to post. 
+
+def cleanup_old_bots():
+    with app.app_context():
+        # Delete bots older than 24 hours
+        bot_users = User.query.filter(User.username.like('bot_%')).all()
+        now = datetime.utcnow()
+        deleted_count = 0
+        for bot in bot_users:
+            if not bot.created_at or (now - bot.created_at).total_seconds() > 86400:
+                # Delete their posts first
+                Post.query.filter_by(user_id=bot.id).delete()
+                db.session.delete(bot)
+                deleted_count += 1
+        if deleted_count > 0:
+            db.session.commit()
+            print(f"Cleaned up {deleted_count} old AI bots.")
+
 scheduler.add_job(id='ai_bot_job', func=run_ai_bots, trigger='interval', minutes=15)
+scheduler.add_job(id='cleanup_old_bots_job', func=cleanup_old_bots, trigger='interval', hours=1)
 scheduler.start()
 
 # Create tables
@@ -1335,6 +1348,8 @@ def admin_get_users():
             "display_name": u.display_name,
             "role": u.role,
             "is_banned": u.is_banned,
+            "is_bot": bool(u.username and u.username.startswith("bot_")),
+            "created_at": u.created_at.isoformat() if u.created_at else "Unknown",
             "post_count": post_count
         })
     return jsonify(user_data)

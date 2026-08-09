@@ -15,6 +15,7 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
 
   const [allUsers, setAllUsers] = useState([]);
+  const [userTab, setUserTab] = useState('real'); // 'real' or 'bots'
   const [allPosts, setAllPosts] = useState([]);
   const [adminChats, setAdminChats] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
@@ -201,6 +202,22 @@ export default function AdminDashboard() {
       {activeTab === 'users' && (
           <div className="feed-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>User Management</h2>
+              
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
+                <button 
+                  style={{ background: 'none', border: 'none', color: userTab === 'real' ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: userTab === 'real' ? 'bold' : 'normal', cursor: 'pointer' }}
+                  onClick={() => setUserTab('real')}
+                >
+                  Real Users
+                </button>
+                <button 
+                  style={{ background: 'none', border: 'none', color: userTab === 'bots' ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: userTab === 'bots' ? 'bold' : 'normal', cursor: 'pointer' }}
+                  onClick={() => setUserTab('bots')}
+                >
+                  AI Bots
+                </button>
+              </div>
+
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                       <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left' }}>
@@ -208,21 +225,25 @@ export default function AdminDashboard() {
                           <th style={{ padding: '0.5rem' }}>Display Identity</th>
                           <th style={{ padding: '0.5rem' }}>Role</th>
                           <th style={{ padding: '0.5rem' }}>Posts</th>
+                          <th style={{ padding: '0.5rem' }}>Created At</th>
                           <th style={{ padding: '0.5rem' }}>Status</th>
                           <th style={{ padding: '0.5rem' }}>Actions</th>
                       </tr>
                   </thead>
                   <tbody>
-                      {allUsers.map(u => (
+                      {allUsers.filter(u => userTab === 'bots' ? u.is_bot : !u.is_bot).map(u => (
                           <tr key={u.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                               <td style={{ padding: '0.75rem 0.5rem' }}>{u.username}</td>
-                              <td style={{ padding: '0.75rem 0.5rem' }}>{u.display_name}</td>
+                              <td style={{ padding: '0.75rem 0.5rem' }}>{u.display_name} {u.is_bot && '🤖'}</td>
                               <td style={{ padding: '0.75rem 0.5rem' }}>
                                   <span style={{ padding: '2px 8px', borderRadius: '12px', fontSize: '0.8rem', backgroundColor: u.role === 'admin' ? 'rgba(var(--accent-rgb), 0.2)' : 'var(--bg-elevated)', color: u.role === 'admin' ? 'var(--accent-color)' : 'var(--text-color)' }}>
                                       {u.role}
                                   </span>
                               </td>
                               <td style={{ padding: '0.75rem 0.5rem' }}>{u.post_count}</td>
+                              <td style={{ padding: '0.75rem 0.5rem', fontSize: '0.85rem' }}>
+                                  {u.created_at !== "Unknown" ? new Date(u.created_at).toLocaleDateString() : 'Unknown'}
+                              </td>
                               <td style={{ padding: '0.75rem 0.5rem' }}>
                                   {u.is_banned ? <span style={{ color: 'var(--danger-color, red)', fontWeight: 'bold' }}>Banned</span> : <span style={{ color: 'green' }}>Active</span>}
                               </td>
