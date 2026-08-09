@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Settings as SettingsIcon, Shield, Trash2, Key, RefreshCw } from 'lucide-react';
-import { fetchMe, regenerateIdentity, changePassword, deleteAccount, changeUsername } from '../api';
+import { fetchMe, regenerateIdentity, changePassword, deleteAccount, changeUsername, changeAlias } from '../api';
 
 export default function Settings() {
   const [profile, setProfile] = useState(null);
@@ -16,6 +16,7 @@ export default function Settings() {
   const [userPass, setUserPass] = useState('');
   const [userError, setUserError] = useState('');
   const [userSuccess, setUserSuccess] = useState('');
+  const [customAliasInput, setCustomAliasInput] = useState('');
 
   const [isRegenerating, setIsRegenerating] = useState(false);
 
@@ -149,6 +150,19 @@ export default function Settings() {
     }
   };
 
+  const handleChangeAlias = async (e) => {
+    e.preventDefault();
+    if (!customAliasInput.trim()) return;
+    const res = await changeAlias(customAliasInput);
+    if (!res.error) {
+      setProfile(prev => ({ ...prev, display_name: res.display_name, avatar: res.avatar }));
+      setCustomAliasInput('');
+      import('react-hot-toast').then(m => m.toast.success("Alias updated!"));
+    } else {
+      import('react-hot-toast').then(m => m.toast.error(res.error));
+    }
+  };
+
   const handleDelete = async () => {
     const confirm1 = window.confirm("Are you sure you want to delete your account? This action is permanent and will delete all your posts and replies.");
     if (confirm1) {
@@ -214,6 +228,20 @@ export default function Settings() {
           Don't like your current alias? The AI will assign you a completely new, creative identity. 
           Your past posts will still show your old identity.
         </p>
+
+        <form onSubmit={handleChangeAlias} style={{ display: 'flex', gap: '8px', maxWidth: '400px', margin: '1.5rem auto 0 auto' }}>
+          <input 
+            type="text" 
+            className="composer-textarea border-input" 
+            style={{ flex: 1, minHeight: '40px', padding: '0.8rem' }}
+            placeholder="Or type a custom alias..."
+            value={customAliasInput}
+            onChange={e => setCustomAliasInput(e.target.value)}
+          />
+          <button type="submit" className="btn-glow" style={{ padding: '0.8rem 1.2rem', whiteSpace: 'nowrap' }}>
+            Save Alias
+          </button>
+        </form>
       </div>
 
       {profile.is_registered ? (

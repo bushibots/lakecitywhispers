@@ -248,6 +248,7 @@ def register():
     data = request.json
     username = data.get('username')
     password = data.get('password')
+    custom_alias = data.get('custom_alias')
     session_token = request.headers.get('Authorization')
     
     if not username or not password:
@@ -267,11 +268,18 @@ def register():
         user.password_hash = generate_password_hash(password)
         user.is_registered = True
         user.recovery_key_hash = generate_password_hash(recovery_key)
+        if custom_alias and custom_alias.strip():
+            user.display_name = custom_alias.strip()
+            user.avatar = user.display_name[0]
         db.session.commit()
         return jsonify({"message": "Registration successful", "recovery_key": recovery_key}), 201
         
     # If no valid guest session, create a fresh registered user
-    display_name, _ = generate_creative_identity()
+    if custom_alias and custom_alias.strip():
+        display_name = custom_alias.strip()
+    else:
+        display_name, _ = generate_creative_identity()
+        
     new_user = User(
         username=username,
         password_hash=generate_password_hash(password),
@@ -422,6 +430,26 @@ def change_username():
     user.username = new_username
     db.session.commit()
     return jsonify({"message": "Username successfully updated", "new_username": new_username})
+
+@app.route('/api/settings/change_alias', methods=['POST'])
+def change_alias():
+    session_token = request.headers.get('Authorization')
+    if not session_token:
+        return jsonify({"error": "Unauthorized"}), 401
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user or not user.is_registered:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json or {}
+    new_alias = data.get('new_alias')
+    
+    if not new_alias or not new_alias.strip():
+        return jsonify({"error": "Alias cannot be empty"}), 400
+        
+    user.display_name = new_alias.strip()
+    user.avatar = user.display_name[0]
+    db.session.commit()
+    return jsonify({"message": "Alias successfully updated", "display_name": user.display_name, "avatar": user.avatar})
 
 @app.route('/api/me/password', methods=['POST'])
 def change_password():

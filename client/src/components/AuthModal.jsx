@@ -7,6 +7,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
   const [mode, setMode] = useState(initialMode); // 'login', 'register', 'recovery_show', 'recover_account'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [customAlias, setCustomAlias] = useState('');
   const [recoveryKeyInput, setRecoveryKeyInput] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,7 +29,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
           onClose();
         }
       } else if (mode === 'register') {
-        const res = await register(username, password);
+        const res = await register(username, password, customAlias);
         if (res.error) setError(res.error);
         else if (res.recovery_key) {
           setGeneratedKey(res.recovery_key);
@@ -93,6 +94,19 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
                 required
               />
             </div>
+
+            {mode === 'register' && (
+              <div className="input-group mt-4">
+                <label>Optional Custom Alias</label>
+                <input 
+                  type="text" 
+                  className="composer-textarea border-input"
+                  value={customAlias}
+                  onChange={e => setCustomAlias(e.target.value)}
+                  placeholder="e.g. Batman (leave blank for AI name)"
+                />
+              </div>
+            )}
 
             {mode === 'recover_account' && (
               <div className="input-group mt-4">

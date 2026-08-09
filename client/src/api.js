@@ -38,7 +38,7 @@ export const getSessionToken = async () => {
     return token;
 };
 
-export const register = async (username, password) => {
+export const register = async (username, password, customAlias = '') => {
     const token = await getSessionToken();
     try {
         const res = await fetch(`${API_URL}/auth/register`, {
@@ -47,7 +47,7 @@ export const register = async (username, password) => {
                 'Content-Type': 'application/json',
                 'Authorization': token
             },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password, custom_alias: customAlias })
         });
         const data = await res.json();
         if (data.session_token) {
@@ -796,6 +796,21 @@ export const changeUsername = async (newUsername, password) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': token },
             body: JSON.stringify({ new_username: newUsername, password })
+        });
+        return await res.json();
+    } catch (error) {
+        return { error: 'Network error' };
+    }
+};
+
+
+export const changeAlias = async (newAlias) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/settings/change_alias`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
+            body: JSON.stringify({ new_alias: newAlias })
         });
         return await res.json();
     } catch (error) {
