@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, TrendingUp, Shield, LogIn } from 'lucide-react';
+import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, TrendingUp, Shield, LogIn, Flame } from 'lucide-react';
 import AuthModal from './AuthModal';
+import { fetchPublicConfig } from '../api';
 
 export default function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,6 +14,13 @@ export default function MobileHeader() {
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
+
+  const [siteLogo, setSiteLogo] = useState('');
+  useEffect(() => {
+    fetchPublicConfig().then(cfg => {
+      if (cfg && cfg.site_logo) setSiteLogo(cfg.site_logo);
+    });
+  }, []);
 
   const navLinks = [
     { path: '/feed', label: 'Feed', icon: Home },
@@ -32,8 +40,13 @@ export default function MobileHeader() {
         <button className="icon-btn-minimal" onClick={() => setIsOpen(true)}>
           <Menu size={24} color="var(--text-main)" />
         </button>
-        <h1>JLU Whisperers</h1>
-        <div style={{ width: 24 }}></div> {/* Spacer for flex centering */}
+        {siteLogo ? (
+          <img src={siteLogo} alt="Logo" style={{ height: '24px', marginRight: '8px', objectFit: 'contain' }} />
+        ) : (
+          <div className="logo-flame" style={{ fontSize: '1.5rem', marginRight: '5px' }}><Flame size={20}/></div>
+        )}
+        <h2 style={{ fontSize: '1.2rem', margin: 0 }}>JLU Whisper</h2>
+        <div style={{ flex: 1 }} />
       </header>
 
       {/* Drawer Overlay */}

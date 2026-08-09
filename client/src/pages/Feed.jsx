@@ -338,7 +338,13 @@ export default function Feed() {
       opacity: comment.is_optimistic ? 0.6 : 1
     }}>
       <div className="reply-item" style={{ borderBottom: 'none', padding: 0 }}>
-        <div className="avatar-flame small">{(comment.author_username || 'A').charAt(0)}</div>
+        <div className="avatar-flame small">
+            {comment.author_avatar && comment.author_avatar.startsWith('http') ? (
+              <img src={comment.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              (comment.author_avatar || comment.author_username || 'A').charAt(0)
+            )}
+        </div>
         <div className="reply-content" style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span className="name" style={{ fontSize: '0.85rem' }}>{comment.author_username || 'Anonymous'}</span>
@@ -405,7 +411,13 @@ export default function Feed() {
         {post.is_pinned && <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>📌 PINNED</div>}
         {isDailyPrompt && <div style={{ position: 'absolute', top: '-12px', left: '1.5rem', backgroundColor: 'var(--accent-color)', color: 'white', padding: '0.2rem 0.8rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}><Flame size={12}/> Prompt of the Day</div>}
         <div className="card-header">
-          <div className="avatar-flame" style={post.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {}}>{identity.charAt(0)}</div>
+          <div className="avatar-flame" style={post.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {}}>
+            {post.author_avatar && post.author_avatar.startsWith('http') ? (
+              <img src={post.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              (post.author_avatar || identity).charAt(0)
+            )}
+          </div>
           <div className="card-meta">
             <span className="name" style={post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}}>{post.is_admin_post ? '👑 Admin' : identity}</span>
             <span className="time">{new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>

@@ -309,7 +309,21 @@ def recover():
 
 # --- Account Settings ---
 
-@app.route('/api/me', methods=['GET'])
+@app.route('/api/auth/profile/avatar', methods=['PUT'])
+def update_avatar():
+    data = request.json
+    avatar_url = data.get('avatar')
+    
+    session_token = request.headers.get('Authorization')
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    user.avatar = avatar_url
+    db.session.commit()
+    return jsonify({"message": "Avatar updated", "avatar": user.avatar})
+
+@app.route('/api/auth/me', methods=['GET'])
 def get_me():
     session_token = request.headers.get('Authorization')
     if not session_token:
@@ -425,6 +439,7 @@ def serialize_post(p, user=None, user_votes=None):
         "created_at": p.created_at.isoformat(),
         "replies_count": len([r for r in p.replies if not r.is_deleted]),
         "author_username": author_name,
+        "author_avatar": p.author.avatar,
         "is_admin_post": is_admin_post,
         "is_pinned": p.is_pinned,
         "poll": {
@@ -748,6 +763,7 @@ def serialize_reply(r):
         "downvotes": r.downvotes,
         "created_at": r.created_at.isoformat(),
         "author_username": r.author.display_name,
+        "author_avatar": r.author.avatar,
         "replies": [serialize_reply(child) for child in r.replies if not child.is_deleted]
     }
 
@@ -1383,11 +1399,25 @@ def admin_toggle_permanent(user_id):
     db.session.commit()
     return jsonify({"message": f"Bot {user.display_name} is now a {status}"})
 
+@app.route('/api/config', methods=['GET'])
+def get_public_config():
+    settings = SystemSetting.query.all()
+    config = {}
+    for s in settings:
+        if s.key in ['site_logo', 'maintenance']:
+            config[s.key] = s.value == 'true' if s.value in ['true', 'false'] else s.value
+    return jsonify(config)
+
 @app.route('/api/admin/settings', methods=['GET'])
 @admin_required
 def admin_get_settings():
     settings = SystemSetting.query.all()
-    settings_dict = {s.key: (s.value == 'true') for s in settings}
+    settings_dict = {}
+    for s in settings:
+        if s.value in ['true', 'false']:
+            settings_dict[s.key] = (s.value == 'true')
+        else:
+            settings_dict[s.key] = s.value
     return jsonify(settings_dict)
 
 @app.route('/api/admin/settings', methods=['POST'])
@@ -1396,7 +1426,11 @@ def admin_update_settings():
     data = request.json
     for k, v in data.items():
         setting = SystemSetting.query.filter_by(key=k).first()
-        val_str = 'true' if v else 'false'
+        if isinstance(v, bool):
+            val_str = 'true' if v else 'false'
+        else:
+            val_str = str(v)
+            
         if setting:
             setting.value = val_str
         else:

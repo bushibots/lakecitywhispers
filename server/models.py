@@ -18,7 +18,7 @@ class User(db.Model):
     
     # Anonymous Identity
     display_name = db.Column(db.String(50), nullable=False)
-    avatar = db.Column(db.String(10), nullable=True)
+    avatar = db.Column(db.String(255), nullable=True)
     
     # Lifecycle
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

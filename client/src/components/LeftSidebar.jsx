@@ -1,7 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield, LogIn } from 'lucide-react';
-import { useState } from 'react';
+import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield, LogIn, Flame } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import AuthModal from './AuthModal';
+import { fetchPublicConfig } from '../api';
 
 export default function LeftSidebar() {
   const location = useLocation();
@@ -19,14 +20,27 @@ export default function LeftSidebar() {
     { path: '/settings', label: 'Settings', icon: SettingsIcon },
   ];
 
-  if (localStorage.getItem('jluwhisper_admin') === 'true') {
+  const isAdmin = localStorage.getItem('jluwhisper_admin') === 'true';
+  if (isAdmin) {
     navItems.push({ path: '/admin', label: 'Admin', icon: Shield });
   }
+
+  const [siteLogo, setSiteLogo] = useState('');
+
+  useEffect(() => {
+    fetchPublicConfig().then(cfg => {
+      if (cfg && cfg.site_logo) setSiteLogo(cfg.site_logo);
+    });
+  }, []);
 
   return (
     <aside className="left-sidebar">
       <div className="sidebar-header">
-        <div className="logo-flame">🔥</div>
+        {siteLogo ? (
+          <img src={siteLogo} alt="Site Logo" style={{ height: '32px', marginRight: '10px', objectFit: 'contain' }} />
+        ) : (
+          <div className="logo-flame"><Flame size={24} /></div>
+        )}
         <h2>JLU Whisper</h2>
       </div>
 

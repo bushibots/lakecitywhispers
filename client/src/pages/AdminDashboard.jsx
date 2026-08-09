@@ -112,6 +112,67 @@ export default function AdminDashboard() {
       setSysSettings(prev => ({ ...prev, [key]: value }));
       await updateAdminSettings({ [key]: value });
   };
+
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Compress client-side
+    const compressImage = (f, maxSizeKB) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(f);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width, height = img.height;
+            const MAX = 400; // Smaller for logo
+            if (width > height && width > MAX) { height *= MAX / width; width = MAX; }
+            else if (height > MAX) { width *= MAX / height; height = MAX; }
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            let quality = 0.9;
+            const step = () => {
+              canvas.toBlob((blob) => {
+                if (blob.size / 1024 > maxSizeKB && quality > 0.2) {
+                  quality -= 0.1;
+                  step();
+                } else {
+                  resolve(new File([blob], f.name, { type: 'image/jpeg' }));
+                }
+              }, 'image/jpeg', quality);
+            };
+            step();
+          };
+        };
+      });
+    };
+
+    alert("Uploading and compressing logo...");
+    const compressed = await compressImage(file, 500); // 500kb for logo
+
+    const formData = new FormData();
+    formData.append('file', compressed);
+    const token = localStorage.getItem('jluwhisper_session');
+    
+    try {
+      const upRes = await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/upload', {
+        method: 'POST', headers: { "Authorization": token }, body: formData
+      });
+      const upData = await upRes.json();
+      if (upData.url) {
+        setSysSettings(prev => ({ ...prev, site_logo: upData.url }));
+        await updateAdminSettings({ site_logo: upData.url });
+        alert("Logo updated globally! Please refresh the page to see changes.");
+      }
+    } catch(err) {
+      alert("Upload failed.");
+    }
+  };
   
   const handleRegeneratePrompt = async () => {
       const p = await regenerateDailyPrompt();
@@ -375,6 +436,27 @@ export default function AdminDashboard() {
           <div className="feed-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>Global System Toggles (Killswitches)</h2>
               
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+                  <div>
+                      <h3 style={{ marginBottom: '0.5rem' }}>Global Site Logo</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Upload a custom logo to replace the default JLU Whisper text globally. (Max 500KB)</p>
+                      {sysSettings.site_logo && (
+                        <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                          <img src={sysSettings.site_logo} alt="Site Logo" style={{ height: '40px', objectFit: 'contain' }} />
+                          <button className="btn-glow" style={{ backgroundColor: 'var(--danger-color, red)', padding: '0.3rem 0.6rem', fontSize: '0.8rem' }} onClick={() => { setSysSettings(prev => ({ ...prev, site_logo: '' })); updateAdminSettings({ site_logo: '' }); }}>
+                            <Trash2 size={14}/> Remove Logo
+                          </button>
+                        </div>
+                      )}
+                  </div>
+                  <div>
+                      <label className="btn-glow" style={{ cursor: 'pointer', display: 'inline-block' }}>
+                          Upload Logo
+                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
+                      </label>
+                  </div>
+              </div>
+
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div>
                       <h3 style={{ marginBottom: '0.5rem' }}>Lockdown Mode</h3>

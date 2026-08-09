@@ -25,6 +25,74 @@ export default function Settings() {
     setLoading(false);
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Compress client-side
+    const compressImage = (f, maxSizeKB) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(f);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width, height = img.height;
+            const MAX = 600;
+            if (width > height && width > MAX) { height *= MAX / width; width = MAX; }
+            else if (height > MAX) { width *= MAX / height; height = MAX; }
+            canvas.width = width; canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            let quality = 0.9;
+            const step = () => {
+              canvas.toBlob((blob) => {
+                if (blob.size / 1024 > maxSizeKB && quality > 0.2) {
+                  quality -= 0.1;
+                  step();
+                } else {
+                  resolve(new File([blob], f.name, { type: 'image/jpeg' }));
+                }
+              }, 'image/jpeg', quality);
+            };
+            step();
+          };
+        };
+      });
+    };
+
+    setPassError(''); setPassSuccess('');
+    const compressed = await compressImage(file, 990); // 990kb
+
+    const formData = new FormData();
+    formData.append('file', compressed);
+    const token = localStorage.getItem('jluwhisper_session');
+    
+    try {
+      const upRes = await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/upload', {
+        method: 'POST', headers: { "Authorization": token }, body: formData
+      });
+      const upData = await upRes.json();
+      if (upData.url) {
+        // Update avatar in DB
+        const avRes = await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/auth/profile/avatar', {
+          method: 'PUT', headers: { "Authorization": token, "Content-Type": "application/json" },
+          body: JSON.stringify({ avatar: upData.url })
+        });
+        const avData = await avRes.json();
+        if (avData.avatar) {
+          setProfile(prev => ({ ...prev, avatar: avData.avatar }));
+          setPassSuccess("Profile picture updated!");
+        }
+      }
+    } catch(err) {
+      setPassError("Upload failed.");
+    }
+  };
+
   const handleRegenerate = async () => {
     setIsRegenerating(true);
     const data = await regenerateIdentity();
@@ -77,8 +145,18 @@ export default function Settings() {
     <div className="page-content">
 
       <div className="feed-card" style={{ padding: '2rem', textAlign: 'center', marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(var(--accent-rgb), 0.1) 0%, var(--bg-card) 100%)' }}>
-        <div className="avatar-flame" style={{ width: 80, height: 80, fontSize: '2rem', margin: '0 auto 1rem auto', boxShadow: '0 0 20px rgba(var(--accent-rgb), 0.4)' }}>
-          {profile.avatar || profile.display_name.charAt(0)}
+        <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto 1rem auto' }}>
+          <div className="avatar-flame" style={{ width: '100%', height: '100%', fontSize: '2rem', boxShadow: '0 0 20px rgba(var(--accent-rgb), 0.4)' }}>
+            {profile.avatar && profile.avatar.startsWith('http') ? (
+              <img src={profile.avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              profile.avatar || profile.display_name.charAt(0)
+            )}
+          </div>
+          <label style={{ position: 'absolute', bottom: -5, right: -5, background: 'var(--accent-color)', borderRadius: '50%', padding: '5px', cursor: 'pointer', display: 'flex' }}>
+            <SettingsIcon size={14} color="black" />
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+          </label>
         </div>
         <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem' }}>{profile.display_name}</h2>
         <div style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>

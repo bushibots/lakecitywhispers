@@ -524,6 +524,16 @@ export const fetchAdminSettings = async () => {
     }
 };
 
+export const fetchPublicConfig = async () => {
+    try {
+        const res = await fetch(`${API_URL}/config`);
+        return await res.json();
+    } catch (error) {
+        console.error("Error fetching config:", error);
+        return {};
+    }
+};
+
 export const updateAdminSettings = async (settings) => {
     const token = await getSessionToken();
     try {

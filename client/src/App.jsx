@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Feed from './pages/Feed';
 import Explore from './pages/Explore';
@@ -17,6 +17,23 @@ import { fetchMe } from './api';
 import './index.css';
 
 function App() {
+  const location = useLocation();
+
+  useEffect(() => {
+    let pageName = 'Home';
+    const path = location.pathname;
+    if (path === '/feed' || path === '/') pageName = 'Feed';
+    else if (path.startsWith('/explore')) pageName = 'Explore';
+    else if (path.startsWith('/notifications')) pageName = 'Notifications';
+    else if (path.startsWith('/messages')) pageName = 'Messages';
+    else if (path.startsWith('/profile')) pageName = 'Profile';
+    else if (path.startsWith('/guide')) pageName = 'Guide';
+    else if (path.startsWith('/admin')) pageName = 'Admin';
+    else if (path.startsWith('/settings')) pageName = 'Settings';
+    
+    document.title = `${pageName} | JLU Whisper`;
+  }, [location.pathname]);
+
   useEffect(() => {
     // 1. Fetch user ID to join socket room securely
     fetchMe().then(user => {
