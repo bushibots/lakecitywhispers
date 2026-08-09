@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Heart, MessageCircle, Flame, Mail, CheckCircle2 } from 'lucide-react';
 import { fetchNotifications, markNotificationsRead } from '../api';
 import { socket } from '../socket';
+import { formatTime } from '../utils';
 
 export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
@@ -73,7 +74,7 @@ export default function Notifications() {
                 </div>
                 <div className="notif-content">
                   <p style={{ fontWeight: n.is_read ? 'normal' : 'bold' }}>{n.message}</p>
-                  <span className="time">{new Date(n.created_at).toLocaleDateString()} {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="time">{formatTime(n.created_at)}</span>
                 </div>
                 {!n.is_read && (
                   <div style={{ width: 8, height: 8, background: 'var(--accent-color)', borderRadius: '50%' }}></div>

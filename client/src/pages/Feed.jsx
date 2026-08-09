@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail, MoreVertical, Bookmark } from 'lucide-react';
 import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
+import { formatTime } from '../utils';
 
 const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'Advice', 'Events'];
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
@@ -351,7 +352,7 @@ export default function Feed() {
               {comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous')}
             </span>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-              {new Date(comment.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {formatTime(comment.created_at)}
             </span>
           </div>
           <p style={{ fontSize: '0.9rem', marginTop: '4px' }}>{comment.content}</p>
@@ -422,7 +423,7 @@ export default function Feed() {
           </div>
           <div className="card-meta">
             <span className="name" style={post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}}>{post.is_admin_post ? '👑 Admin' : identity}</span>
-            <span className="time">{new Date(post.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="time">{formatTime(post.created_at)}</span>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
             <span className="category-badge">{post.topic}</span>

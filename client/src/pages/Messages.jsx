@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getConversations, getMessages, sendMessage, acceptRequest, rejectRequest, blockUser, deleteConversation, unsendMessage } from '../api';
 import { socket } from '../socket';
 import { Send, Check, X as RejectIcon, UserCircle, Search, MailPlus, MoreVertical, Trash2, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { formatTime } from '../utils';
 
 export default function Messages() {
   const [conversations, setConversations] = useState({ active: [], requests: [] });
@@ -288,7 +289,7 @@ export default function Messages() {
                                     {msg.content}
                                 </div>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '4px', textAlign: msg.is_mine ? 'right' : 'left' }}>
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    {formatTime(msg.created_at)}
                                 </div>
                             </div>
                         </div>
