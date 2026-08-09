@@ -12,6 +12,7 @@ export default function Feed() {
   const [topic, setTopic] = useState('Confessions');
   const [filterTopic, setFilterTopic] = useState('');
   const [isPosting, setIsPosting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [showPollInputs, setShowPollInputs] = useState(false);
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [votedPolls, setVotedPolls] = useState({});
@@ -66,8 +67,10 @@ export default function Feed() {
     }
     
     // 2. Fetch fresh data
+    setIsSyncing(true);
     const data = await fetchPosts(t);
     setPosts(data);
+    setIsSyncing(false);
     
     // 3. Update cache
     if (!t && data && data.length > 0) {
@@ -504,6 +507,26 @@ export default function Feed() {
       {dailyPrompt && filterTopic === '' && (
         <div className="daily-prompt-section" style={{ marginBottom: '2rem' }}>
           {renderPost(dailyPrompt, true)}
+        </div>
+      )}
+
+      {/* Syncing Indicator */}
+      {isSyncing && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center', 
+          padding: '0.75rem', marginBottom: '1.5rem', 
+          background: 'var(--bg-elevated)', borderRadius: '12px',
+          border: '1px solid var(--border-color)', opacity: 0.8,
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+        }}>
+          <div style={{
+            width: '16px', height: '16px', border: '2px solid var(--primary-color)',
+            borderTopColor: 'transparent', borderRadius: '50%',
+            animation: 'spin 1s linear infinite', marginRight: '10px'
+          }}></div>
+          <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            Syncing latest whispers...
+          </span>
         </div>
       )}
 
