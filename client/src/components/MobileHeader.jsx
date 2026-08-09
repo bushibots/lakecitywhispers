@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, TrendingUp, Shield } from 'lucide-react';
+import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, TrendingUp, Shield, LogIn } from 'lucide-react';
+import AuthModal from './AuthModal';
 
 export default function MobileHeader() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const location = useLocation();
+  const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
 
   // Close drawer when route changes
   useEffect(() => {
@@ -65,8 +68,34 @@ export default function MobileHeader() {
               <span>Admin Panel</span>
             </Link>
           )}
+
+          {!isRegistered && (
+            <button 
+              onClick={() => { setIsOpen(false); setIsAuthOpen(true); }}
+              className="drawer-link"
+              style={{
+                width: '100%',
+                marginTop: '1rem',
+                backgroundColor: 'rgba(var(--accent-rgb), 0.15)',
+                color: 'var(--accent-color)',
+                border: '1px solid var(--accent-color)',
+                borderRadius: '10px',
+                padding: '0.8rem',
+                justifyContent: 'center',
+                fontWeight: 'bold'
+              }}
+            >
+              <LogIn size={20} /> Log In / Register
+            </button>
+          )}
         </div>
       </div>
+
+      <AuthModal 
+        isOpen={isAuthOpen} 
+        onClose={() => setIsAuthOpen(false)} 
+        onSuccess={() => window.location.reload()} 
+      />
     </>
   );
 }

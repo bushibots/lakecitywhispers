@@ -1,9 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield } from 'lucide-react';
+import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield, LogIn } from 'lucide-react';
+import { useState } from 'react';
+import AuthModal from './AuthModal';
 
 export default function LeftSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
 
   const navItems = [
     { path: '/feed', label: 'Feed', icon: Home },
@@ -42,6 +46,35 @@ export default function LeftSidebar() {
       <button className="btn-glow sidebar-fab">
         <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>+</span> Whisper
       </button>
+
+      {!isRegistered && (
+        <button 
+          onClick={() => setIsAuthOpen(true)}
+          style={{
+            marginTop: '1rem',
+            width: '100%',
+            padding: '0.75rem',
+            borderRadius: '12px',
+            background: 'var(--bg-elevated)',
+            border: '1px solid var(--accent-color)',
+            color: 'var(--accent-color)',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            cursor: 'pointer'
+          }}
+        >
+          <LogIn size={18} /> Log In / Register
+        </button>
+      )}
+
+      <AuthModal 
+        isOpen={isAuthOpen} 
+        onClose={() => setIsAuthOpen(false)} 
+        onSuccess={() => window.location.reload()} 
+      />
     </aside>
   );
 }
