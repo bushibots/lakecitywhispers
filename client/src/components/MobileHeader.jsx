@@ -16,9 +16,11 @@ export default function MobileHeader() {
   }, [location.pathname]);
 
   const [siteLogo, setSiteLogo] = useState('');
+  const [siteName, setSiteName] = useState('JLU Whisper');
   useEffect(() => {
     fetchPublicConfig().then(cfg => {
       if (cfg && cfg.site_logo) setSiteLogo(cfg.site_logo);
+      if (cfg && cfg.site_name) setSiteName(cfg.site_name);
     });
   }, []);
 
@@ -45,7 +47,7 @@ export default function MobileHeader() {
         ) : (
           <div className="logo-flame" style={{ fontSize: '1.5rem', marginRight: '5px' }}><Flame size={20}/></div>
         )}
-        <h2 style={{ fontSize: '1.2rem', margin: 0 }}>JLU Whisper</h2>
+        <h2 style={{ fontSize: '1.2rem', margin: 0 }}>{siteName}</h2>
         <div style={{ flex: 1 }} />
       </header>
 

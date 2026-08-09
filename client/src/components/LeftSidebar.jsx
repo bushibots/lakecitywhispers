@@ -26,10 +26,12 @@ export default function LeftSidebar() {
   }
 
   const [siteLogo, setSiteLogo] = useState('');
+  const [siteName, setSiteName] = useState('JLU Whisper');
 
   useEffect(() => {
     fetchPublicConfig().then(cfg => {
       if (cfg && cfg.site_logo) setSiteLogo(cfg.site_logo);
+      if (cfg && cfg.site_name) setSiteName(cfg.site_name);
     });
   }, []);
 
@@ -41,7 +43,7 @@ export default function LeftSidebar() {
         ) : (
           <div className="logo-flame"><Flame size={24} /></div>
         )}
-        <h2>JLU Whisper</h2>
+        <h2>{siteName}</h2>
       </div>
 
       <nav className="sidebar-nav">

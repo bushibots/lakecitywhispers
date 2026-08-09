@@ -437,6 +437,17 @@ export default function AdminDashboard() {
               <h2 style={{ marginBottom: '1.5rem' }}>Global System Toggles (Killswitches)</h2>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+                  <div style={{ flex: 1, marginRight: '1rem' }}>
+                      <h3 style={{ marginBottom: '0.5rem' }}>Global Site Name</h3>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Change the display text for the site across the header/sidebar.</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input type="text" className="composer-textarea border-input" style={{ width: '200px', height: '40px', padding: '0.5rem' }} value={sysSettings.site_name || ''} onChange={(e) => setSysSettings(prev => ({ ...prev, site_name: e.target.value }))} placeholder="JLU Whisper" />
+                      <button className="btn-glow" onClick={() => handleSettingChange('site_name', sysSettings.site_name || 'JLU Whisper')}>Save</button>
+                  </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div>
                       <h3 style={{ marginBottom: '0.5rem' }}>Global Site Logo</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Upload a custom logo to replace the default JLU Whisper text globally. (Max 500KB)</p>
