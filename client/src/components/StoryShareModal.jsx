@@ -22,23 +22,23 @@ export default function StoryShareModal({ post, onClose }) {
     glass: {
       background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
       cardBg: 'rgba(255, 255, 255, 0.05)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
+      border: '3px solid rgba(255, 255, 255, 0.1)',
       textColor: '#E7E9EA',
-      backdropFilter: 'blur(20px)'
+      backdropFilter: 'blur(60px)'
     },
     neon: {
       background: '#09090b',
       cardBg: '#09090b',
-      border: '2px solid #1D9BF0',
-      boxShadow: '0 0 30px rgba(29, 155, 240, 0.3)',
+      border: '6px solid #1D9BF0',
+      boxShadow: '0 0 90px rgba(29, 155, 240, 0.3)',
       textColor: '#E7E9EA',
     },
     minimal: {
       background: '#E7E9EA',
       cardBg: '#ffffff',
-      border: '1px solid #cfd9de',
+      border: '3px solid #cfd9de',
       textColor: '#0f1419',
-      boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+      boxShadow: '0 30px 90px rgba(0,0,0,0.05)',
     }
   };
 
@@ -49,10 +49,11 @@ export default function StoryShareModal({ post, onClose }) {
     setIsGenerating(true);
     
     try {
+      // By resetting scale to 1 during capture, html-to-image generates exactly 1080x1920
       const blob = await toBlob(previewRef.current, { 
           quality: 0.95,
-          pixelRatio: 3, // 360 * 3 = 1080, 640 * 3 = 1920 (Exact IG Story Size)
-          style: { transform: 'scale(1)', margin: 0 }
+          pixelRatio: 1, 
+          style: { transform: 'scale(1)', transformOrigin: 'top left', margin: 0 }
       });
       
       if (!blob) throw new Error('Failed to generate image');
@@ -89,61 +90,67 @@ export default function StoryShareModal({ post, onClose }) {
         <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}><X size={32} /></button>
       </div>
 
-      {/* Capture Container */}
-      <div 
-        ref={previewRef}
-        style={{
-          width: '360px',
-          height: '640px',
-          background: currentStyle.background,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '2rem',
-          borderRadius: '24px',
-          overflow: 'hidden',
-          position: 'relative',
-          fontFamily: "'Inter', sans-serif"
-        }}
-      >
-        <div style={{
-          width: '100%',
-          background: currentStyle.cardBg,
-          border: currentStyle.border,
-          boxShadow: currentStyle.boxShadow || '0 8px 32px rgba(0,0,0,0.2)',
-          backdropFilter: currentStyle.backdropFilter || 'none',
-          WebkitBackdropFilter: currentStyle.backdropFilter || 'none',
-          borderRadius: '24px',
-          padding: '2rem',
-          color: currentStyle.textColor
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
-            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #1D9BF0, #35D6E7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', color: '#000' }}>
-               {(post.author_avatar || post.author_display || post.author_username || 'A').charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{post.is_admin_post ? '👑 Admin' : (post.author_display || post.author_username || 'Anonymous')}</div>
-              <div style={{ opacity: 0.6, fontSize: '0.9rem' }}>{formatTime(post.created_at)}</div>
-            </div>
-          </div>
+      {/* Visual Scaler Wrapper */}
+      <div style={{ width: '360px', height: '640px', position: 'relative', overflow: 'hidden', borderRadius: '24px' }}>
           
-          <div style={{ 
-            fontSize: post.content.length > 300 ? '0.9rem' : (post.content.length > 150 ? '1.05rem' : '1.25rem'), 
-            lineHeight: 1.6, 
-            whiteSpace: 'pre-wrap', 
-            wordBreak: 'break-word',
-            display: '-webkit-box',
-            WebkitLineClamp: 14,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden'
+        {/* Actual 1080x1920 Capture Container */}
+        <div 
+          ref={previewRef}
+          style={{
+            width: '1080px',
+            height: '1920px',
+            background: currentStyle.background,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '6rem',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            transform: 'scale(0.333333)',
+            transformOrigin: 'top left',
+            fontFamily: "'Inter', sans-serif"
+          }}
+        >
+          <div style={{
+            width: '100%',
+            background: currentStyle.cardBg,
+            border: currentStyle.border,
+            boxShadow: currentStyle.boxShadow || '0 24px 96px rgba(0,0,0,0.2)',
+            backdropFilter: currentStyle.backdropFilter || 'none',
+            WebkitBackdropFilter: currentStyle.backdropFilter || 'none',
+            borderRadius: '72px',
+            padding: '6rem',
+            color: currentStyle.textColor
           }}>
-            {post.content}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '36px', marginBottom: '4.5rem' }}>
+              <div style={{ width: '144px', height: '144px', borderRadius: '36px', background: 'linear-gradient(135deg, #1D9BF0, #35D6E7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4.5rem', fontWeight: 'bold', color: '#000' }}>
+                 {(post.author_avatar || post.author_display || post.author_username || 'A').charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <div style={{ fontWeight: 'bold', fontSize: '3.3rem' }}>{post.is_admin_post ? '👑 Admin' : (post.author_display || post.author_username || 'Anonymous')}</div>
+                <div style={{ opacity: 0.6, fontSize: '2.7rem', marginTop: '1rem' }}>{formatTime(post.created_at)}</div>
+              </div>
+            </div>
+            
+            <div style={{ 
+              fontSize: post.content.length > 300 ? '2.7rem' : (post.content.length > 150 ? '3.15rem' : '3.75rem'), 
+              lineHeight: 1.6, 
+              whiteSpace: 'pre-wrap', 
+              wordBreak: 'break-word',
+              display: '-webkit-box',
+              WebkitLineClamp: 14,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}>
+              {post.content}
+            </div>
           </div>
-        </div>
 
-        <div style={{ position: 'absolute', bottom: '2rem', opacity: 0.5, color: currentStyle.textColor, fontWeight: '800', letterSpacing: '1px', fontSize: '0.9rem', textAlign: 'center' }}>
-          {siteName.toUpperCase()} • {window.location.host}
+          <div style={{ position: 'absolute', bottom: '6rem', opacity: 0.5, color: currentStyle.textColor, fontWeight: '800', letterSpacing: '3px', fontSize: '2.7rem', textAlign: 'center' }}>
+            {siteName.toUpperCase()} • {window.location.host}
+          </div>
         </div>
       </div>
 
