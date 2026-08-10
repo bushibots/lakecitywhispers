@@ -5,6 +5,7 @@ import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, create
 import { socket } from '../socket';
 import { formatTime } from '../utils';
 import StoryShareModal from '../components/StoryShareModal';
+import CustomDropdown from '../components/CustomDropdown';
 
 const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'Advice', 'Events'];
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
@@ -658,14 +659,11 @@ export default function Feed() {
               </div>
               
               <div className="toolbar-right" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                <select 
-                  className="select-pill"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                  style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
-                >
-                  {CATEGORIES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <CustomDropdown 
+                  value={topic} 
+                  onChange={(val) => setTopic(val)} 
+                  options={CATEGORIES}
+                />
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <span className="char-count" style={{ color: content.length > 250 ? 'red' : 'var(--text-muted)', fontSize: '0.8rem' }}>
