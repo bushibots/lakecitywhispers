@@ -51,7 +51,7 @@ export default function StoryShareModal({ post, onClose }) {
     try {
       const blob = await toBlob(previewRef.current, { 
           quality: 0.95,
-          pixelRatio: 2,
+          pixelRatio: 3, // 360 * 3 = 1080, 640 * 3 = 1920 (Exact IG Story Size)
           style: { transform: 'scale(1)', margin: 0 }
       });
       
@@ -128,7 +128,16 @@ export default function StoryShareModal({ post, onClose }) {
             </div>
           </div>
           
-          <div style={{ fontSize: '1.25rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+          <div style={{ 
+            fontSize: post.content.length > 300 ? '0.9rem' : (post.content.length > 150 ? '1.05rem' : '1.25rem'), 
+            lineHeight: 1.6, 
+            whiteSpace: 'pre-wrap', 
+            wordBreak: 'break-word',
+            display: '-webkit-box',
+            WebkitLineClamp: 14,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden'
+          }}>
             {post.content}
           </div>
         </div>
