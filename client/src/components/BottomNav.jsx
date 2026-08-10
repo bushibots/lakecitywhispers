@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Compass, Heart, Bell, Settings as SettingsIcon } from 'lucide-react';
+import { Home, Compass, Heart, Bell, User } from 'lucide-react';
 
 export default function BottomNav() {
   const location = useLocation();
@@ -10,7 +10,7 @@ export default function BottomNav() {
     { path: '/explore', label: 'Explore', icon: Compass },
     { path: '/dating', label: 'Dating', icon: Heart, special: true },
     { path: '/notifications', label: 'Alerts', icon: Bell },
-    { path: '/settings', label: 'Settings', icon: SettingsIcon },
+    { path: '/profile', label: 'Profile', icon: User },
   ];
 
   return (

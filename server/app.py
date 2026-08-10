@@ -382,6 +382,39 @@ def get_me():
         "created_at": user.created_at.isoformat() + 'Z'
     })
 
+@app.route('/api/users/<username>', methods=['GET'])
+def get_user_profile(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+        
+    posts = Post.query.filter_by(user_id=user.id, parent_id=None, is_deleted=False).order_by(Post.created_at.desc()).all()
+    posts_data = []
+    for p in posts:
+        posts_data.append({
+            "id": p.id,
+            "content": p.content,
+            "author_username": user.username,
+            "author_display": user.display_name,
+            "author_avatar": user.avatar,
+            "created_at": p.created_at.isoformat() + 'Z',
+            "upvotes": p.upvotes,
+            "replies_count": Post.query.filter_by(parent_id=p.id, is_deleted=False).count(),
+            "topic": p.topic
+        })
+        
+    return jsonify({
+        "username": user.username,
+        "display_name": user.display_name,
+        "avatar": user.avatar,
+        "is_registered": user.is_registered,
+        "posts": posts_data,
+        "stats": {
+            "whispers": len(posts),
+            "reactions": sum(p.upvotes for p in posts)
+        }
+    })
+
 @app.route('/api/me/identity', methods=['POST'])
 def regenerate_identity():
     session_token = request.headers.get('Authorization')

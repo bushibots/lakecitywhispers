@@ -1,21 +1,28 @@
-import { Award, Shield, Settings, Bookmark, LogOut, HelpCircle } from 'lucide-react';
+import { Award, Shield, Settings, Bookmark, LogOut, HelpCircle, ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import AuthModal from '../components/AuthModal';
-import { requestSupportMessage, fetchMe } from '../api';
+import { requestSupportMessage, fetchMe, fetchUserProfile } from '../api';
+import { formatTime } from '../utils';
 
 export default function Profile() {
+  const { username } = useParams();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const isMyProfile = !username;
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [username]);
 
   const loadProfile = async () => {
-    const data = await fetchMe();
+    setLoading(true);
+    const data = username ? await fetchUserProfile(username) : await fetchMe();
     if (data && !data.error) {
       setProfile(data);
+    } else {
+      setProfile(null);
     }
     setLoading(false);
   };
@@ -48,6 +55,12 @@ export default function Profile() {
 
   return (
     <div className="page-content">
+      {!isMyProfile && (
+          <Link to="/feed" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', textDecoration: 'none', marginBottom: '1rem' }}>
+              <ArrowLeft size={16} /> Back to Feed
+          </Link>
+      )}
+      
       {/* Auth Modal */}
       <AuthModal 
         isOpen={isAuthModalOpen} 
@@ -72,7 +85,7 @@ export default function Profile() {
         </span>
         <p className="bio">"Just here for the tea."</p>
         
-        {!profile.is_registered && (
+        {isMyProfile && !profile.is_registered && (
           <div className="guest-warning mt-4">
             <p>You are currently a Guest. Your account will expire in 7 days if inactive.</p>
             <button className="btn-glow mt-2" onClick={() => setIsAuthModalOpen(true)}>Secure Your Account</button>
@@ -82,16 +95,16 @@ export default function Profile() {
 
       <div className="stats-grid">
         <div className="stat-box">
-          <h3>142</h3>
+          <h3>{profile.stats ? profile.stats.whispers : '0'}</h3>
           <p>Whispers</p>
         </div>
         <div className="stat-box">
-          <h3>2.1K</h3>
+          <h3>{profile.stats ? profile.stats.reactions : '0'}</h3>
           <p>Reactions</p>
         </div>
         <div className="stat-box">
-          <h3>18</h3>
-          <p>Saved</p>
+          <h3>{profile.is_registered ? '∞' : '7'}</h3>
+          <p>Days Left</p>
         </div>
       </div>
 
@@ -109,15 +122,34 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="profile-section">
-        <h3>Options</h3>
-        <ul className="settings-list">
-          <li><Bookmark size={18} /> Saved Whispers</li>
-          <li><Settings size={18} /> Account Settings</li>
-          <li onClick={handleSupport}><HelpCircle size={18} /> Get Help from Admin Forum</li>
-          <li className="text-danger" onClick={handleLogout}><LogOut size={18} /> Log Out (Reset Identity)</li>
-        </ul>
-      </div>
+      {isMyProfile && (
+        <div className="profile-section">
+          <h3>Options</h3>
+          <ul className="settings-list">
+            <li><Bookmark size={18} /> Saved Whispers</li>
+            <Link to="/settings" style={{ color: 'inherit', textDecoration: 'none' }}><li><Settings size={18} /> Account Settings</li></Link>
+            <li onClick={handleSupport}><HelpCircle size={18} /> Get Help from Admin Forum</li>
+            <li className="text-danger" onClick={handleLogout}><LogOut size={18} /> Log Out (Reset Identity)</li>
+          </ul>
+        </div>
+      )}
+
+      {profile.posts && profile.posts.length > 0 && (
+          <div className="profile-section">
+              <h3>Recent Whispers</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                  {profile.posts.map(post => (
+                      <div key={post.id} className="feed-card" style={{ padding: '1rem' }}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
+                              <span>{post.topic}</span>
+                              <span>{formatTime(post.created_at)}</span>
+                          </div>
+                          <p>{post.content}</p>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      )}
     </div>
   );
 }

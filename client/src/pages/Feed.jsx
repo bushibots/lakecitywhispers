@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail, MoreVertical, Bookmark } from 'lucide-react';
 import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
@@ -354,9 +355,11 @@ export default function Feed() {
         </div>
         <div className="reply-content" style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="name" style={{ fontSize: '0.85rem', ...(comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}) }}>
-              {comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous')}
-            </span>
+            <Link to={`/profile/${comment.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <span className="name" style={{ fontSize: '0.85rem', ...(comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}) }}>
+                {comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous')}
+              </span>
+            </Link>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
               {formatTime(comment.created_at)}
             </span>
@@ -428,7 +431,9 @@ export default function Feed() {
             )}
           </div>
           <div className="card-meta">
-            <span className="name" style={post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}}>{post.is_admin_post ? '👑 Admin' : identity}</span>
+            <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <span className="name" style={post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}}>{post.is_admin_post ? '👑 Admin' : identity}</span>
+            </Link>
             <span className="time">{formatTime(post.created_at)}</span>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>

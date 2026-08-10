@@ -635,6 +635,16 @@ export const fetchMe = async () => {
     }
 };
 
+export const fetchUserProfile = async (username) => {
+    try {
+        const res = await fetch(`${API_URL}/users/${username}`);
+        return await res.json();
+    } catch (error) {
+        console.error("Error fetching user profile:", error);
+        return null;
+    }
+};
+
 export const regenerateIdentity = async () => {
     const token = await getSessionToken();
     try {
