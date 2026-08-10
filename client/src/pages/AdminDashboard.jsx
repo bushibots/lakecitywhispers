@@ -506,14 +506,14 @@ export default function AdminDashboard() {
           <div className="feed-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>AI Bot Network & Automation</h2>
               
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div>
                       <h3 style={{ marginBottom: '0.5rem' }}>Enable AI Bots</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Bots will randomly post, reply, and upvote content every 15 minutes.</p>
                   </div>
                   <label style={{ position: 'relative', display: 'inline-block', width: '60px', height: '34px' }}>
                       <input type="checkbox" checked={sysSettings.bots_enabled} onChange={() => handleToggleSetting('bots_enabled')} style={{ opacity: 0, width: 0, height: 0 }} />
-                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.bots_enabled ? 'var(--accent-color)' : '#ccc', transition: '.4s', borderRadius: '34px' }}>
+                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.bots_enabled ? 'var(--primary)' : 'var(--border-strong)', transition: '.4s', borderRadius: '34px' }}>
                           <span style={{ position: 'absolute', content: '""', height: '26px', width: '26px', left: sysSettings.bots_enabled ? '30px' : '4px', bottom: '4px', backgroundColor: 'white', transition: '.4s', borderRadius: '50%' }} />
                       </span>
                   </label>
@@ -556,7 +556,7 @@ export default function AdminDashboard() {
           <div className="feed-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>Global System Toggles (Killswitches)</h2>
               
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div style={{ flex: 1, marginRight: '1rem' }}>
                       <h3 style={{ marginBottom: '0.5rem' }}>Global Site Name</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Change the display text for the site across the header/sidebar.</p>
@@ -567,7 +567,7 @@ export default function AdminDashboard() {
                   </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div style={{ flex: 1, marginRight: '1rem' }}>
                       <h3 style={{ marginBottom: '0.5rem' }}>Global Theme</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Change the visual theme of the site for all users instantly.</p>
@@ -593,7 +593,7 @@ export default function AdminDashboard() {
                   </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div>
                       <h3 style={{ marginBottom: '0.5rem' }}>Global Site Logo</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Upload a custom logo to replace the default JLU Whisper text globally. (Max 500KB)</p>
@@ -614,27 +614,27 @@ export default function AdminDashboard() {
                   </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div>
                       <h3 style={{ marginBottom: '0.5rem' }}>Lockdown Mode</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>When enabled, non-admin users cannot create new posts or replies. Existing posts remain visible.</p>
                   </div>
                   <label style={{ position: 'relative', display: 'inline-block', width: '60px', height: '34px' }}>
                       <input type="checkbox" checked={sysSettings.lockdown} onChange={() => handleToggleSetting('lockdown')} style={{ opacity: 0, width: 0, height: 0 }} />
-                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.lockdown ? 'var(--danger-color, red)' : '#ccc', transition: '.4s', borderRadius: '34px' }}>
+                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.lockdown ? 'var(--danger-color, #ff4757)' : 'var(--border-strong)', transition: '.4s', borderRadius: '34px' }}>
                           <span style={{ position: 'absolute', content: '""', height: '26px', width: '26px', left: sysSettings.lockdown ? '30px' : '4px', bottom: '4px', backgroundColor: 'white', transition: '.4s', borderRadius: '50%' }} />
                       </span>
                   </label>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '1.5rem', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', marginBottom: '1rem' }}>
                   <div>
                       <h3 style={{ marginBottom: '0.5rem' }}>Maintenance Mode</h3>
                       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>When enabled, the entire feed API is disabled and returns a 503 error for all non-admin users.</p>
                   </div>
                   <label style={{ position: 'relative', display: 'inline-block', width: '60px', height: '34px' }}>
                       <input type="checkbox" checked={sysSettings.maintenance} onChange={() => handleToggleSetting('maintenance')} style={{ opacity: 0, width: 0, height: 0 }} />
-                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.maintenance ? 'var(--danger-color, red)' : '#ccc', transition: '.4s', borderRadius: '34px' }}>
+                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.maintenance ? 'var(--danger-color, #ff4757)' : 'var(--border-strong)', transition: '.4s', borderRadius: '34px' }}>
                           <span style={{ position: 'absolute', content: '""', height: '26px', width: '26px', left: sysSettings.maintenance ? '30px' : '4px', bottom: '4px', backgroundColor: 'white', transition: '.4s', borderRadius: '50%' }} />
                       </span>
                   </label>
@@ -647,7 +647,7 @@ export default function AdminDashboard() {
                   </div>
                   <label style={{ position: 'relative', display: 'inline-block', width: '60px', height: '34px' }}>
                       <input type="checkbox" checked={sysSettings.media_enabled !== false} onChange={() => handleToggleSetting('media_enabled')} style={{ opacity: 0, width: 0, height: 0 }} />
-                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.media_enabled !== false ? 'green' : '#ccc', transition: '.4s', borderRadius: '34px' }}>
+                      <span style={{ position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: sysSettings.media_enabled !== false ? 'var(--primary)' : 'var(--border-strong)', transition: '.4s', borderRadius: '34px' }}>
                           <span style={{ position: 'absolute', content: '""', height: '26px', width: '26px', left: sysSettings.media_enabled !== false ? '30px' : '4px', bottom: '4px', backgroundColor: 'white', transition: '.4s', borderRadius: '50%' }} />
                       </span>
                   </label>
