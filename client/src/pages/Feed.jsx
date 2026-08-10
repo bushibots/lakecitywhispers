@@ -4,6 +4,7 @@ import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Squa
 import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
 import { formatTime } from '../utils';
+import StoryShareModal from '../components/StoryShareModal';
 
 const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'Advice', 'Events'];
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
@@ -19,6 +20,7 @@ export default function Feed() {
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [votedPolls, setVotedPolls] = useState({});
   const [selectedOptions, setSelectedOptions] = useState({});
+  const [sharePost, setSharePost] = useState(null);
   
   const [activeReplyId, setActiveReplyId] = useState(null);
   const [replies, setReplies] = useState({});
@@ -545,7 +547,7 @@ export default function Feed() {
             <button className="icon-btn-minimal" onClick={(e) => handleSavePost(post.id, e)} style={{ color: savedPosts[post.id] ? 'var(--accent-color)' : 'inherit' }} title={savedPosts[post.id] ? "Remove from Watchlist" : "Add to Watchlist"}>
                 <Bookmark size={16} fill={savedPosts[post.id] ? 'var(--accent-color)' : 'none'} />
             </button>
-            <button className="icon-btn-minimal"><Share size={16} /></button>
+            <button className="icon-btn-minimal" onClick={() => setSharePost(post)}><Share size={16} /></button>
           </div>
         </div>
 
@@ -781,6 +783,8 @@ export default function Feed() {
           posts.filter(p => !dailyPrompt || p.id !== dailyPrompt.id).map(p => renderPost(p))
         )}
       </div>
+      
+      {sharePost && <StoryShareModal post={sharePost} onClose={() => setSharePost(null)} />}
     </div>
   );
 }
