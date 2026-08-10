@@ -736,24 +736,3 @@ body.t-india .btn-glow:hover {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
-
-/* Mobile Composer Sticky */
-@media (max-width: 768px) {
-  .composer-box {
-    position: fixed;
-    bottom: 56px; /* Just above BottomNav */
-    left: 0;
-    right: 0;
-    margin-bottom: 0 !important;
-    border-radius: 24px 24px 0 0 !important;
-    z-index: 90;
-    padding: 1rem !important;
-    background: var(--bg-secondary);
-    border-bottom: none !important;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-  }
-  
-  .feed-list {
-    padding-bottom: 240px !important; /* Ensure last posts aren't hidden behind composer */
-  }
-}

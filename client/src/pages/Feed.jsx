@@ -21,6 +21,7 @@ export default function Feed() {
   const [votedPolls, setVotedPolls] = useState({});
   const [selectedOptions, setSelectedOptions] = useState({});
   const [sharePost, setSharePost] = useState(null);
+  const [isComposerFocused, setIsComposerFocused] = useState(false);
   
   const [activeReplyId, setActiveReplyId] = useState(null);
   const [replies, setReplies] = useState({});
@@ -612,13 +613,16 @@ export default function Feed() {
           <div style={{ flex: 1 }}>
             <textarea 
               className="composer-textarea" 
-              rows="2" 
+              rows={isComposerFocused || content ? "5" : "2"}
               placeholder="What's on your mind? Share your whisper anonymously..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onFocus={() => setIsComposerFocused(true)}
+              onBlur={() => setIsComposerFocused(false)}
+              style={{ transition: 'all 0.3s ease' }}
             ></textarea>
             
-            <div className="composer-toolbar">
+            <div className="composer-toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
               <div className="toolbar-actions">
                 <input 
                   type="file" 
@@ -653,27 +657,29 @@ export default function Feed() {
                 <button className={`icon-btn tooltip ${showPollInputs ? 'active' : ''}`} data-tip="Poll" onClick={() => setShowPollInputs(!showPollInputs)}><BarChart2 size={20} /></button>
               </div>
               
-              <div className="toolbar-right">
+              <div className="toolbar-right" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                 <select 
                   className="select-pill"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
-                  style={{ marginRight: '1rem', padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
+                  style={{ padding: '0.4rem 0.75rem', fontSize: '0.8rem' }}
                 >
                   {CATEGORIES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
                 
-                <span className="char-count" style={{ color: content.length > 250 ? 'red' : 'var(--text-muted)', fontSize: '0.8rem', marginRight: '1rem' }}>
-                  {content.length}/300
-                </span>
-                
-                <button 
-                  className="btn-glow" 
-                  onClick={handlePost} 
-                  disabled={isPosting || (!content.trim() && !imageFile && !audioBlob) || content.length > 300 || isRecording}
-                >
-                  Whisper
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span className="char-count" style={{ color: content.length > 250 ? 'red' : 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    {content.length}/300
+                  </span>
+                  
+                  <button 
+                    className="btn-glow" 
+                    onClick={handlePost} 
+                    disabled={isPosting || (!content.trim() && !imageFile && !audioBlob) || content.length > 300 || isRecording}
+                  >
+                    Whisper
+                  </button>
+                </div>
               </div>
             </div>
             
