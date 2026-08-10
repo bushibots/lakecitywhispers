@@ -147,7 +147,7 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 .feed-card {
-  background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 1.25rem; margin-bottom: 1rem; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  background: transparent; border: none; border-bottom: 1px solid var(--border); border-radius: 0; padding: 1.25rem 0; margin-bottom: 0; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: none;
 }
 .card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
 .avatar-flame { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent-glow)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #000; font-size: 1.1rem; }
@@ -159,7 +159,7 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 .category-badge { font-size: 0.75rem; padding: 0.2rem 0.6rem; background: rgba(53, 214, 231, 0.1); color: var(--accent-glow); border-radius: 8px; border: 1px solid rgba(53, 214, 231, 0.2); font-weight: 600; }
 .card-text { font-size: 1rem; margin-bottom: 1rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
 
-.reactions-bar { display: flex; gap: 1rem; align-items: center; border-top: 1px solid var(--border); padding-top: 0.75rem; flex-wrap: wrap; }
+.reactions-bar { display: flex; gap: 1rem; align-items: center; padding-top: 0.5rem; flex-wrap: wrap; }
 .reaction-btn { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-muted); background: transparent; border: none; cursor: pointer; transition: 0.2s; white-space: nowrap; }
 .reaction-btn:hover { color: var(--text-main); transform: scale(1.05); }
 .reaction-stats { display: flex; align-items: center; gap: 1rem; margin-left: auto; color: var(--text-muted); font-size: 0.85rem; flex-wrap: wrap; }
