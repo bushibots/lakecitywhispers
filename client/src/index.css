@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap');
 
 :root {
-  --bg-color: #0B0F14;
-  --bg-secondary: #111820;
-  --card-bg: rgba(255, 255, 255, 0.03);
-  --primary: #0F8FA8;
-  --accent-glow: #35D6E7;
-  --text-main: #F5F7FA;
-  --text-muted: #95A3B3;
-  --border: rgba(255, 255, 255, 0.04);
-  --border-strong: rgba(255, 255, 255, 0.1);
+  --bg-color: #000000;
+  --bg-secondary: #16181C;
+  --card-bg: transparent;
+  --primary: #1D9BF0;
+  --accent-glow: #1D9BF0;
+  --text-main: #E7E9EA;
+  --text-muted: #71767B;
+  --border: #2F3336;
+  --border-strong: #3E4144;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -27,18 +27,7 @@ body {
 
 /* Background Layers */
 body::before, body::after {
-  content: ""; position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; pointer-events: none;
-}
-body::before {
-  width: 45vw; height: 45vw; background: var(--primary); top: -10%; left: -10%; opacity: 0.15; animation: float 25s infinite ease-in-out alternate;
-}
-body::after {
-  width: 50vw; height: 50vw; background: var(--accent-glow); bottom: -20%; right: -10%; opacity: 0.08; animation: float 20s infinite ease-in-out alternate-reverse;
-}
-@keyframes float {
-  0% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(5%, 10%) scale(1.1); }
-  100% { transform: translate(-5%, -5%) scale(0.9); }
+  display: none;
 }
 
 h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
@@ -111,11 +100,11 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 
 /* Buttons & Inputs */
 .btn-glow {
-  background-color: var(--primary); color: #000; border: none; border-radius: 24px; padding: 0.75rem 1.5rem; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(53, 214, 231, 0.2);
+  background-color: var(--primary); color: #FFF; border: none; border-radius: 24px; padding: 0.75rem 1.5rem; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.2s ease; box-shadow: none;
 }
-.btn-glow:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(53, 214, 231, 0.6); background-color: var(--accent-glow); }
+.btn-glow:hover { background-color: #1A8CD8; transform: none; box-shadow: none; }
 .btn-glow:active { transform: scale(0.95); }
-.btn-glow:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; transform: none; }
+.btn-glow:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-glow.small { padding: 0.4rem 1rem; font-size: 0.85rem; }
 
 .icon-btn, .icon-btn-teal, .icon-btn-minimal {
