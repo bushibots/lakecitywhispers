@@ -3,13 +3,13 @@
 :root {
   --bg-color: #0B0F14;
   --bg-secondary: #111820;
-  --card-bg: #171F28;
+  --card-bg: rgba(255, 255, 255, 0.03);
   --primary: #0F8FA8;
   --accent-glow: #35D6E7;
   --text-main: #F5F7FA;
   --text-muted: #95A3B3;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.15);
+  --border: rgba(255, 255, 255, 0.04);
+  --border-strong: rgba(255, 255, 255, 0.1);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -94,8 +94,8 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 .right-sidebar {
   position: sticky; top: 0; height: 100vh; padding: 1.5rem 0; overflow-y: auto; scrollbar-width: none;
 }
-.widget { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem; }
-.widget h3 { display: flex; align-items: center; gap: 8px; font-size: 1rem; margin-bottom: 1rem; }
+.widget { background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; margin-bottom: 1.25rem; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.widget h3 { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; margin-bottom: 1rem; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .trending-tag { background: rgba(255,255,255,0.05); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
 .trending-tag:hover { background: rgba(255,255,255,0.1); }
@@ -111,7 +111,7 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 
 /* Buttons & Inputs */
 .btn-glow {
-  background-color: var(--primary); color: #000; border: none; border-radius: 14px; padding: 0.6rem 1.5rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 0 15px rgba(53, 214, 231, 0.3);
+  background-color: var(--primary); color: #000; border: none; border-radius: 24px; padding: 0.75rem 1.5rem; font-weight: 700; font-size: 1rem; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(53, 214, 231, 0.2);
 }
 .btn-glow:hover { transform: translateY(-2px); box-shadow: 0 0 25px rgba(53, 214, 231, 0.6); background-color: var(--accent-glow); }
 .btn-glow:active { transform: scale(0.95); }
@@ -130,7 +130,7 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 
 /* Feed & Composer */
 .composer-box {
-  background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; padding: 1.25rem; margin-bottom: 2rem;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; margin-bottom: 2rem; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
 }
 .composer-inner { display: flex; gap: 1rem; }
 .composer-toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.75rem; flex-wrap: wrap; gap: 1rem; }
@@ -147,9 +147,9 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 .feed-card {
-  background: transparent; border: none; border-bottom: 1px solid var(--border); border-radius: 0; padding: 1.25rem 0; margin-bottom: 0; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: none;
+  background: var(--card-bg); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; margin-bottom: 1.5rem; animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: 0 8px 32px rgba(0,0,0,0.15); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
 }
-.card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
+.card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
 .avatar-flame { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--primary), var(--accent-glow)); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #000; font-size: 1.1rem; }
 .avatar-flame.small { width: 28px; height: 28px; font-size: 0.9rem; border-radius: 8px; }
 .avatar-flame.large { width: 64px; height: 64px; font-size: 2rem; border-radius: 16px; }
