@@ -623,7 +623,7 @@ export default function Feed() {
               style={{ transition: 'all 0.3s ease' }}
             ></textarea>
             
-            <div className="composer-toolbar" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+            <div className="composer-toolbar">
               <div className="toolbar-actions">
                 <input 
                   type="file" 
@@ -658,7 +658,7 @@ export default function Feed() {
                 <button className={`icon-btn tooltip ${showPollInputs ? 'active' : ''}`} data-tip="Poll" onClick={() => setShowPollInputs(!showPollInputs)}><BarChart2 size={20} /></button>
               </div>
               
-              <div className="toolbar-right" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+              <div className="toolbar-right">
                 <CustomDropdown 
                   value={topic} 
                   onChange={(val) => setTopic(val)} 
