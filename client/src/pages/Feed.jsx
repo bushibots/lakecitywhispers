@@ -478,65 +478,48 @@ export default function Feed() {
               const totalVotes = post.poll.options.reduce((sum, o) => sum + o.votes, 0);
               const percent = totalVotes === 0 ? 0 : Math.round((opt.votes / totalVotes) * 100);
               const hasVoted = votedPolls[post.id] || post.poll.has_voted;
-              const isSelected = selectedOptions[post.id] === opt.id;
+              const isSelected = (votedPolls[post.id] === opt.id) || (post.poll.voted_option_id === opt.id);
               
               return (
                 <div 
                   key={opt.id} 
-                  className={`poll-option ${isSelected ? 'selected' : ''}`}
                   style={{
                     position: 'relative',
                     padding: '0.75rem 1rem',
-                    borderRadius: '8px',
-                    border: `1px solid ${isSelected ? 'var(--accent-color)' : 'var(--border-color)'}`,
+                    borderRadius: '12px',
+                    border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
                     cursor: hasVoted ? 'default' : 'pointer',
                     overflow: 'hidden',
-                    backgroundColor: isSelected && !hasVoted ? 'rgba(var(--accent-rgb), 0.1)' : 'var(--bg-card)'
+                    backgroundColor: isSelected && !hasVoted ? 'rgba(29, 155, 240, 0.1)' : 'var(--bg-secondary)',
+                    transition: 'all 0.2s ease'
                   }}
-                  onClick={() => !hasVoted && setSelectedOptions(prev => ({ ...prev, [post.id]: opt.id }))}
+                  onMouseEnter={(e) => { if(!hasVoted) e.currentTarget.style.transform = 'scale(1.02)'; }}
+                  onMouseLeave={(e) => { if(!hasVoted) e.currentTarget.style.transform = 'scale(1)'; }}
+                  onClick={() => {
+                      if(!hasVoted) handlePollVote(post.id, opt.id);
+                  }}
                 >
                   {hasVoted && (
                     <div 
                       style={{
                         position: 'absolute', top: 0, left: 0, bottom: 0,
                         width: `${percent}%`,
-                        backgroundColor: 'var(--accent-color)',
-                        opacity: 0.2,
-                        transition: 'width 0.5s ease-out'
+                        backgroundColor: 'var(--primary)',
+                        opacity: 0.15,
+                        transition: 'width 0.8s cubic-bezier(0.16, 1, 0.3, 1)'
                       }}
                     />
                   )}
                   <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      {!hasVoted && (
-                        <input 
-                          type="radio" 
-                          checked={isSelected}
-                          onChange={() => !hasVoted && setSelectedOptions(prev => ({ ...prev, [post.id]: opt.id }))}
-                          style={{ accentColor: 'var(--accent-color)', cursor: 'pointer' }}
-                        />
-                      )}
-                      <span>{opt.text}</span>
+                      <span style={{ fontWeight: isSelected ? 'bold' : 'normal' }}>{opt.text}</span>
+                      {isSelected && hasVoted && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                     </div>
                     {hasVoted && <span style={{ fontWeight: 'bold' }}>{percent}%</span>}
                   </div>
                 </div>
               );
             })}
-            
-            {/* Submit Vote Button */}
-            {!(votedPolls[post.id] || post.poll.has_voted) && selectedOptions[post.id] && (
-              <button 
-                className="btn-glow" 
-                style={{ alignSelf: 'flex-start', marginTop: '0.5rem', padding: '0.4rem 1rem', fontSize: '0.9rem' }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePollVote(post.id, selectedOptions[post.id]);
-                }}
-              >
-                Submit Vote
-              </button>
-            )}
           </div>
         )}
         
