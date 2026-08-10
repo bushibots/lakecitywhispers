@@ -1,12 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { toBlob } from 'html-to-image';
 import { X, Share2 } from 'lucide-react';
 import { formatTime } from '../utils';
+import { fetchPublicConfig } from '../api';
 
 export default function StoryShareModal({ post, onClose }) {
   const [theme, setTheme] = useState('glass');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [siteName, setSiteName] = useState('JLU Whisper');
   const previewRef = useRef(null);
+
+  useEffect(() => {
+    fetchPublicConfig().then(cfg => {
+      if (cfg && cfg.site_name) setSiteName(cfg.site_name);
+    });
+  }, []);
 
   if (!post) return null;
 
@@ -125,8 +133,8 @@ export default function StoryShareModal({ post, onClose }) {
           </div>
         </div>
 
-        <div style={{ position: 'absolute', bottom: '2rem', opacity: 0.5, color: currentStyle.textColor, fontWeight: '800', letterSpacing: '2px', fontSize: '1rem' }}>
-          JLU WHISPER
+        <div style={{ position: 'absolute', bottom: '2rem', opacity: 0.5, color: currentStyle.textColor, fontWeight: '800', letterSpacing: '1px', fontSize: '0.9rem', textAlign: 'center' }}>
+          {siteName.toUpperCase()} • {window.location.host}
         </div>
       </div>
 
