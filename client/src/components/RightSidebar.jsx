@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Flame, Users, Activity, BarChart2 } from 'lucide-react';
 import { fetchSidebarStats, fetchSidebarPolls, votePoll } from '../api';
 import { socket } from '../socket';
 
 export default function RightSidebar() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
   const [stats, setStats] = useState({ total_posts_today: 0, online_users: 0, trending_tags: [] });
   const [polls, setPolls] = useState([]);
   const [votedPolls, setVotedPolls] = useState({});
@@ -55,10 +58,23 @@ export default function RightSidebar() {
     }));
   };
 
+  const handleSearch = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate(`/feed?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <aside className="right-sidebar">
       <div className="widget search-widget">
-        <input type="text" placeholder="Search whispers, tags..." className="composer-textarea search-input" />
+        <input 
+          type="text" 
+          placeholder="Search whispers, tags..." 
+          className="composer-textarea search-input" 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={handleSearch}
+        />
       </div>
 
       <div className="widget">

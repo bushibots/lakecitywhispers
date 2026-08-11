@@ -679,10 +679,14 @@ def get_posts():
             return jsonify({"error": "Maintenance Mode: The app is currently under maintenance. We'll be right back!"}), 503
 
     topic_filter = request.args.get('topic')
+    search_query = request.args.get('q')
     query = Post.query.filter_by(parent_id=None, is_deleted=False)
     
     if topic_filter:
         query = query.filter_by(topic=topic_filter)
+        
+    if search_query:
+        query = query.filter(Post.content.ilike(f'%{search_query}%'))
         
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first() if session_token else None

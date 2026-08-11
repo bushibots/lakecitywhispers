@@ -103,10 +103,13 @@ export const recoverAccount = async (username, recoveryKey, newPassword) => {
     }
 };
 
-export const fetchPosts = async (topic = '') => {
+export const fetchPosts = async (topic = '', searchQuery = '') => {
     const token = await getSessionToken();
     try {
-        const url = topic ? `${API_URL}/posts?topic=${encodeURIComponent(topic)}` : `${API_URL}/posts`;
+        let url = `${API_URL}/posts?`;
+        if (topic) url += `topic=${encodeURIComponent(topic)}&`;
+        if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
+        
         const res = await fetch(url, {
             headers: { 'Authorization': token }
         });

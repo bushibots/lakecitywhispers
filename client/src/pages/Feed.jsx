@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail, MoreVertical, Bookmark } from 'lucide-react';
 import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
@@ -11,6 +11,10 @@ const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'A
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
 
 export default function Feed() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const searchQuery = searchParams.get('q') || '';
+
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
   const [topic, setTopic] = useState('Confessions');
@@ -86,7 +90,7 @@ export default function Feed() {
   useEffect(() => {
     getSessionToken().then(() => {
       setMyIdentity(localStorage.getItem('jluwhisper_identity') || '?');
-      loadPosts(filterTopic);
+      loadPosts(filterTopic, searchQuery);
     });
     fetchDailyPrompt().then(p => setDailyPrompt(p));
 
@@ -104,11 +108,11 @@ export default function Feed() {
 
     socket.on('new_post', handleNewPost);
     return () => socket.off('new_post', handleNewPost);
-  }, [filterTopic]);
+  }, [filterTopic, searchQuery]);
 
-  const loadPosts = async (t) => {
+  const loadPosts = async (t, sq = '') => {
     // 1. Instant load from local cache if on main feed
-    if (!t) {
+    if (!t && !sq) {
       const cached = localStorage.getItem('jluwhisper_feed_cache');
       if (cached) {
         try { setPosts(JSON.parse(cached)); } catch (e) {}
@@ -118,7 +122,7 @@ export default function Feed() {
     // 2. Fetch fresh data
     setIsSyncing(true);
     const backendTopic = t === 'Watchlist' ? '' : t;
-    let data = await fetchPosts(backendTopic);
+    let data = await fetchPosts(backendTopic, sq);
     
     if (t === 'Watchlist') {
       const saved = JSON.parse(localStorage.getItem('jluwhisper_saved_posts')) || {};
@@ -129,7 +133,7 @@ export default function Feed() {
     setIsSyncing(false);
     
     // 3. Update cache
-    if (!t && data && data.length > 0) {
+    if (!t && !sq && data && data.length > 0) {
       localStorage.setItem('jluwhisper_feed_cache', JSON.stringify(data));
     }
   };
