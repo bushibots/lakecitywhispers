@@ -180,9 +180,10 @@ export default function Messages() {
 
   return (
     <div className={`page-content messages-layout ${activeConvId ? 'chat-active' : ''}`} style={{ padding: '0', overflow: 'hidden', backgroundColor: 'var(--bg-secondary)' }}>
-      
-      {/* LEFT PANE - INBOX */}
-      <div className="inbox-pane" style={{ background: 'var(--bg-color)', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="messages-sliding-container" style={{ display: 'flex', width: '100%', height: '100%' }}>
+        
+        {/* LEFT PANE - INBOX */}
+        <div className="inbox-pane" style={{ background: 'var(--bg-color)', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
         <div style={{ padding: '1.5rem 1.5rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <h2 style={{ marginBottom: '1.5rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Messages</h2>
           
@@ -270,18 +271,11 @@ export default function Messages() {
         {/* Subtle background pattern */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.03, pointerEvents: 'none', backgroundImage: 'radial-gradient(var(--text-main) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
         
-        {!activeConvId || !activeConvData ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', position: 'relative', zIndex: 1 }}>
-                <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
-                    <MailPlus size={40} style={{ color: 'var(--accent-color)' }} />
-                </div>
-                <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: 'var(--text-main)' }}>Your Messages</h3>
-                <p style={{ maxWidth: '250px', textAlign: 'center', fontSize: '0.9rem', lineHeight: '1.5' }}>Select a conversation or send a new request from the feed.</p>
-            </div>
-        ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', position: 'relative', zIndex: 1 }}>
+        
+        {activeConvId && activeConvData ? (
+            <>
                 {/* Chat Header */}
-                <div style={{ padding: '1.2rem 1.5rem', background: 'rgba(11, 15, 20, 0.8)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
+                <div className="chat-header" style={{ padding: '1.2rem 1.5rem', background: 'rgba(11, 15, 20, 0.8)', backdropFilter: 'blur(10px)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <button className="icon-btn-minimal back-btn mobile-only" onClick={() => setActiveConvId(null)} style={{ marginRight: '15px' }}>
                             <ArrowLeft size={22} />
@@ -325,14 +319,15 @@ export default function Messages() {
 
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: msg.is_mine ? 'flex-end' : 'flex-start' }}>
                                 <div style={{ 
-                                    background: msg.is_mine ? 'linear-gradient(135deg, var(--primary), var(--accent-glow))' : 'var(--bg-color)', 
+                                    background: msg.is_mine ? 'linear-gradient(135deg, var(--primary), var(--accent-glow))' : '#262626', 
                                     color: msg.is_mine ? 'white' : 'var(--text-main)',
-                                    padding: '0.8rem 1.2rem', 
-                                    borderRadius: msg.is_mine ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                                    padding: '0.7rem 1.1rem', 
+                                    borderRadius: msg.is_mine ? '22px 22px 4px 22px' : '22px 22px 22px 4px',
                                     fontSize: '0.95rem',
                                     lineHeight: '1.4',
-                                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                                    border: msg.is_mine ? 'none' : '1px solid rgba(255,255,255,0.05)'
+                                    boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                                    border: 'none',
+                                    animation: 'slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards'
                                 }}>
                                     {msg.content}
                                 </div>
@@ -362,62 +357,82 @@ export default function Messages() {
                         </div>
                     </div>
                 ) : (
-                    <div style={{ padding: '1.2rem 1.5rem', background: 'var(--bg-color)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '1rem', alignItems: 'flex-end', zIndex: 10 }}>
-                        <textarea 
-                            className="composer-textarea"
-                            style={{ 
-                                flex: 1, 
-                                minHeight: '48px', 
-                                maxHeight: '120px',
-                                padding: '12px 16px', 
-                                borderRadius: '24px',
-                                background: 'var(--bg-elevated)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                color: 'var(--text-main)',
-                                fontSize: '0.95rem',
-                                resize: 'none',
-                                overflowY: 'auto'
-                            }}
-                            placeholder="Type a message..."
-                            value={newMessage}
-                            onChange={(e) => {
-                                setNewMessage(e.target.value);
-                                e.target.style.height = 'auto';
-                                e.target.style.height = (e.target.scrollHeight < 120 ? e.target.scrollHeight : 120) + 'px';
-                            }}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
+                    <div style={{ padding: '1rem 1.5rem', background: 'var(--bg-color)', borderTop: '1px solid rgba(255,255,255,0.05)', zIndex: 10 }}>
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'flex-end', 
+                            background: 'var(--bg-elevated)', 
+                            border: '1px solid rgba(255,255,255,0.05)', 
+                            borderRadius: '24px', 
+                            padding: '4px 12px 4px 16px',
+                            transition: 'all 0.3s ease'
+                        }}>
+                            <textarea 
+                                className="composer-textarea"
+                                style={{ 
+                                    flex: 1, 
+                                    minHeight: '40px', 
+                                    maxHeight: '120px',
+                                    padding: '10px 0', 
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'var(--text-main)',
+                                    fontSize: '0.95rem',
+                                    resize: 'none',
+                                    overflowY: 'auto',
+                                    outline: 'none',
+                                    lineHeight: '1.4'
+                                }}
+                                placeholder="Message..."
+                                value={newMessage}
+                                onChange={(e) => {
+                                    setNewMessage(e.target.value);
                                     e.target.style.height = 'auto';
-                                }
-                            }}
-                        />
-                        <button 
-                            className="icon-btn" 
-                            style={{ 
-                                background: newMessage.trim() ? 'var(--primary)' : 'rgba(255,255,255,0.05)', 
-                                color: newMessage.trim() ? 'white' : 'var(--text-muted)', 
-                                border: 'none',
-                                width: '48px',
-                                height: '48px',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'all 0.3s ease',
-                                cursor: newMessage.trim() ? 'pointer' : 'not-allowed',
-                                boxShadow: newMessage.trim() ? '0 4px 15px rgba(15, 143, 168, 0.4)' : 'none'
-                            }} 
-                            onClick={() => { handleSend(); }} 
-                            disabled={loading || !newMessage.trim()}
-                        >
-                            <Send size={20} style={{ marginLeft: '2px' }} />
-                        </button>
+                                    e.target.style.height = (e.target.scrollHeight < 120 ? e.target.scrollHeight : 120) + 'px';
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                        e.target.style.height = 'auto';
+                                    }
+                                }}
+                            />
+                            {newMessage.trim() && (
+                                <button 
+                                    onClick={() => { handleSend(); }} 
+                                    disabled={loading}
+                                    style={{ 
+                                        background: 'transparent', 
+                                        color: 'var(--primary)', 
+                                        border: 'none',
+                                        padding: '10px 8px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
+                                        fontSize: '0.95rem',
+                                        animation: 'fadeIn 0.2s ease',
+                                        marginBottom: '2px'
+                                    }} 
+                                >
+                                    Send
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
+            </>
+          ) : (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+              <div style={{ textAlign: 'center' }}>
+                <MailPlus size={48} style={{ opacity: 0.2, margin: '0 auto 1rem' }} />
+                <p>Select a conversation to start messaging</p>
+              </div>
             </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

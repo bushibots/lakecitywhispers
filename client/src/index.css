@@ -409,22 +409,25 @@ input, select, textarea, button { font-size: 16px !important; }
   .messages-layout {
     height: calc(100vh - 130px);
     gap: 0;
+    overflow: hidden;
+    position: relative;
   }
   .inbox-pane {
-    width: 100%;
+    width: 100vw;
     border-radius: 0;
     border: none;
+    flex-shrink: 0;
   }
   .chat-pane {
-    display: none;
-    width: 100%;
+    width: 100vw;
     border-radius: 0;
+    flex-shrink: 0;
   }
-  .messages-layout.chat-active .inbox-pane {
-    display: none;
+  .messages-sliding-container {
+    transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  .messages-layout.chat-active .chat-pane {
-    display: flex;
+  .messages-layout.chat-active .messages-sliding-container {
+    transform: translateX(-100vw);
   }
   .mobile-only { display: block; }
   
@@ -601,6 +604,16 @@ input, select, textarea, button { font-size: 16px !important; }
 .nested-replies {
   max-width: 100%;
   overflow-x: hidden;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 @keyframes shimmerLine {
