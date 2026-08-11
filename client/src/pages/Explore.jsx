@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, TrendingUp, Flame, MessageSquare, ArrowRight } from 'lucide-react';
+import { Search, TrendingUp, Flame, MessageSquare, ArrowRight, BarChart2 } from 'lucide-react';
 import { fetchTrending, searchPosts, fetchDailyPrompt } from '../api';
+import CampusPolls from '../components/CampusPolls';
 
 export default function Explore() {
   const [query, setQuery] = useState('');
@@ -102,6 +103,10 @@ export default function Explore() {
               <h3>"{dailyPrompt ? dailyPrompt.content : "Loading..."}"</h3>
               <p className="mt-2 text-muted">Join the conversation on the Feed page!</p>
             </div>
+          </section>
+
+          <section className="explore-section mt-4">
+            <CampusPolls className="w-100" />
           </section>
         </>
       )}

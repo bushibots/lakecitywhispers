@@ -680,7 +680,7 @@ def get_posts():
 
     topic_filter = request.args.get('topic')
     search_query = request.args.get('q')
-    query = Post.query.filter_by(parent_id=None, is_deleted=False).filter(~Post.poll.has())
+    query = Post.query.filter_by(parent_id=None, is_deleted=False)
     
     if topic_filter:
         query = query.filter_by(topic=topic_filter)
@@ -1382,7 +1382,7 @@ def get_sidebar_stats():
 
 @app.route('/api/sidebar/polls', methods=['GET'])
 def get_sidebar_polls():
-    polls = Poll.query.join(Post).order_by(Post.created_at.desc()).limit(3).all()
+    polls = Poll.query.join(Post).order_by(Post.created_at.desc()).limit(10).all()
     
     from datetime import datetime, timedelta
     # Generate new poll if none exist or latest is > 24 hours old
