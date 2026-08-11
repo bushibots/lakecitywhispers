@@ -571,8 +571,11 @@ def serialize_post(p, user=None, user_votes=None):
 def get_or_create_prompt_post(text):
     sys_user = User.query.filter_by(username='system_oracle').first()
     if not sys_user:
-        sys_user = User(username='system_oracle', display_name='🌟 JLU Oracle', avatar='🌟', is_registered=True)
+        sys_user = User(username='system_oracle', display_name='🌟 JLU Oracle', avatar='🌟', is_registered=True, role='admin')
         db.session.add(sys_user)
+        db.session.commit()
+    elif sys_user.role != 'admin':
+        sys_user.role = 'admin'
         db.session.commit()
         
     post = Post(content=f"✨ Prompt of the Day ✨\n\n{text}", user_id=sys_user.id, topic="Events")
@@ -592,11 +595,20 @@ def get_daily_prompt():
         return _server_cache['daily_prompt']['data']
 
     prompt_setting = SystemSetting.query.filter_by(key='daily_prompt_id').first()
+    prompt_date_setting = SystemSetting.query.filter_by(key='daily_prompt_date').first()
+    
+    from datetime import date
+    today_str = date.today().isoformat()
+    
     post = None
     if prompt_setting:
         post = Post.query.get(int(prompt_setting.value))
         
-    if not post or post.is_deleted:
+    should_regenerate = False
+    if not prompt_date_setting or prompt_date_setting.value != today_str:
+        should_regenerate = True
+        
+    if not post or post.is_deleted or should_regenerate:
         text = generate_daily_prompt()
         post = get_or_create_prompt_post(text)
         
@@ -613,6 +625,12 @@ def get_daily_prompt():
         else:
             raw_setting = SystemSetting(key='daily_prompt', value=text)
             db.session.add(raw_setting)
+            
+        if prompt_date_setting:
+            prompt_date_setting.value = today_str
+        else:
+            prompt_date_setting = SystemSetting(key='daily_prompt_date', value=today_str)
+            db.session.add(prompt_date_setting)
             
         db.session.commit()
         
