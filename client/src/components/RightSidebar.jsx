@@ -1,20 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Flame, Users, Activity, BarChart2 } from 'lucide-react';
-import { fetchSidebarStats, fetchSidebarPolls, votePoll } from '../api';
+import { fetchSidebarStats } from '../api';
 import { socket } from '../socket';
+import CampusPolls from './CampusPolls';
 
 export default function RightSidebar() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [stats, setStats] = useState({ total_posts_today: 0, online_users: 0, trending_tags: [] });
-  const [polls, setPolls] = useState([]);
-  const [votedPolls, setVotedPolls] = useState({});
   const [activities, setActivities] = useState(["Waiting for live activity..."]);
 
   useEffect(() => {
     fetchSidebarStats().then(data => setStats(data));
-    fetchSidebarPolls().then(data => setPolls(data));
 
     const handleNewPost = (post) => {
       addActivity(`"${post.author}" just posted in ${post.topic || 'General'}`);
@@ -99,52 +97,7 @@ export default function RightSidebar() {
         </ul>
       </div>
 
-      <div className="widget poll-widget" style={{ paddingBottom: '1rem' }}>
-        <h3><BarChart2 size={18} color="var(--primary)" /> Campus Polls</h3>
-        {polls.length === 0 ? (
-          <p className="poll-q">AI is generating new polls...</p>
-        ) : (
-          <div style={{ display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory', gap: '1rem', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', paddingBottom: '0.5rem' }}>
-            {polls.map((poll, index) => (
-              <div key={poll.id} style={{ minWidth: '100%', scrollSnapAlign: 'start', position: 'relative' }}>
-                <p className="poll-q">{poll.question}</p>
-                <div className="poll-options">
-                  {poll.options.map(opt => {
-                    const pct = poll.total_votes > 0 ? Math.round((opt.votes / poll.total_votes) * 100) : 0;
-                    const isVoted = votedPolls[poll.id] !== undefined;
-                    const isMyVote = votedPolls[poll.id] === opt.id;
-                    return (
-                      <div 
-                        key={opt.id} 
-                        className="poll-option" 
-                        onClick={() => handleVote(poll.id, opt.id)}
-                        style={{
-                          background: isMyVote ? 'rgba(108, 92, 231, 0.2)' : 'var(--bg-elevated)',
-                          borderColor: isMyVote ? 'var(--accent-color)' : 'var(--border-color)',
-                          cursor: isVoted ? 'default' : 'pointer',
-                          position: 'relative',
-                          overflow: 'hidden'
-                        }}
-                      >
-                        {isVoted && (
-                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'rgba(108, 92, 231, 0.1)', zIndex: 0 }}></div>
-                        )}
-                        <span style={{ position: 'relative', zIndex: 1 }}>{opt.text}</span>
-                        {isVoted && <span style={{ position: 'relative', zIndex: 1, float: 'right', fontWeight: 'bold' }}>{pct}%</span>}
-                      </div>
-                    );
-                  })}
-                </div>
-                {polls.length > 1 && index < polls.length - 1 && (
-                  <div style={{ textAlign: 'center', marginTop: '0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                    Swipe left for more ➔
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      <CampusPolls />
 
       <div className="widget stats-widget">
         <h3><Users size={18} /> Community</h3>

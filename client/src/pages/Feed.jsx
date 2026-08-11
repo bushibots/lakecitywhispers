@@ -6,6 +6,7 @@ import { socket } from '../socket';
 import { formatTime } from '../utils';
 import StoryShareModal from '../components/StoryShareModal';
 import CustomDropdown from '../components/CustomDropdown';
+import CampusPolls from '../components/CampusPolls';
 
 const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'Advice', 'Events'];
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
@@ -621,6 +622,9 @@ export default function Feed() {
 
   return (
     <div className="page-content">
+      <div className="mobile-only" style={{ marginBottom: '1rem' }}>
+        <CampusPolls />
+      </div>
 
       {/* Categories */}
       <div className="pill-menu">

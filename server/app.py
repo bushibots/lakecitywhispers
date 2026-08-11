@@ -680,7 +680,7 @@ def get_posts():
 
     topic_filter = request.args.get('topic')
     search_query = request.args.get('q')
-    query = Post.query.filter_by(parent_id=None, is_deleted=False)
+    query = Post.query.filter_by(parent_id=None, is_deleted=False).filter(~Post.poll.has())
     
     if topic_filter:
         query = query.filter_by(topic=topic_filter)
