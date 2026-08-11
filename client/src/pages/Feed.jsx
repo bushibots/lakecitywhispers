@@ -24,6 +24,38 @@ export default function Feed() {
   const [sharePost, setSharePost] = useState(null);
   const [isComposerFocused, setIsComposerFocused] = useState(false);
   
+  const observerRef = useRef(null);
+  const viewedPosts = useRef(new Set());
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const postId = entry.target.dataset.postid;
+          if (postId && !viewedPosts.current.has(postId)) {
+            viewedPosts.current.add(postId);
+            recordView(postId).then(res => {
+              if (res && res.views) {
+                setPosts(prev => prev.map(p => p.id == postId ? {...p, views: res.views} : p));
+              }
+            }).catch(console.error);
+          }
+        }
+      });
+    }, { threshold: 0.5 }); // 50% visibility required
+
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    const elements = document.querySelectorAll('.feed-card[data-postid]');
+    if (observerRef.current) {
+      elements.forEach(el => observerRef.current.observe(el));
+    }
+  }, [posts]);
+  
   const [activeReplyId, setActiveReplyId] = useState(null);
   const [replies, setReplies] = useState({});
   const [replyContent, setReplyContent] = useState('');
@@ -426,7 +458,7 @@ export default function Feed() {
     }
 
     return (
-      <div key={post.id} className="feed-card" style={cardStyle}>
+      <div key={post.id} className="feed-card" style={cardStyle} data-postid={post.id}>
         {post.is_pinned && <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>📌 PINNED</div>}
         {isDailyPrompt && <div style={{ position: 'absolute', top: '-12px', left: '1.5rem', backgroundColor: 'var(--accent-color)', color: 'white', padding: '0.2rem 0.8rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}><Flame size={12}/> Prompt of the Day</div>}
         <div className="card-header">

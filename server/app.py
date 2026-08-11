@@ -14,7 +14,7 @@ from flask_apscheduler import APScheduler
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification
+from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification, PostView
 import json
 import random
 import string
@@ -543,8 +543,8 @@ def serialize_post(p, user=None, user_votes=None):
         else:
             has_voted = PollVote.query.filter_by(poll_id=p.poll.id, user_id=user.id).first() is not None
         
-    author_name = p.author.display_name if p.author.username == 'system_oracle' else ('Admin' if p.author.role == 'admin' else p.author.display_name)
-    is_oracle_post = (p.author.username == 'system_oracle')
+    author_name = p.author.display_name if 'oracle' in p.author.username.lower() else ('Admin' if p.author.role == 'admin' else p.author.display_name)
+    is_oracle_post = ('oracle' in p.author.username.lower())
     is_admin_post = (p.author.role == 'admin') and not is_oracle_post
 
     return {
@@ -856,8 +856,20 @@ def vote_post(post_id):
 @app.route('/api/posts/<int:post_id>/view', methods=['POST'])
 def view_post(post_id):
     post = Post.query.get_or_404(post_id)
-    post.views += 1
-    db.session.commit()
+    session_token = request.headers.get('Authorization')
+    user = User.query.filter_by(session_token=session_token).first() if session_token else None
+    
+    if user:
+        existing_view = PostView.query.filter_by(post_id=post_id, user_id=user.id).first()
+        if not existing_view:
+            new_view = PostView(post_id=post_id, user_id=user.id)
+            db.session.add(new_view)
+            post.views += 1
+            db.session.commit()
+    else:
+        post.views += 1
+        db.session.commit()
+        
     return jsonify({"message": "View recorded", "views": post.views})
 
 @app.route('/api/posts/<int:post_id>/reply', methods=['POST'])
@@ -895,8 +907,8 @@ def reply_post(post_id):
     return jsonify({"message": "Reply posted successfully", "reply_id": new_reply.id}), 201
 
 def serialize_reply(r):
-    author_name = r.author.display_name if r.author.username == 'system_oracle' else ('Admin' if r.author.role == 'admin' else r.author.display_name)
-    is_oracle_post = (r.author.username == 'system_oracle')
+    author_name = r.author.display_name if 'oracle' in r.author.username.lower() else ('Admin' if r.author.role == 'admin' else r.author.display_name)
+    is_oracle_post = ('oracle' in r.author.username.lower())
     is_admin_post = (r.author.role == 'admin') and not is_oracle_post
     
     return {
