@@ -544,7 +544,8 @@ def serialize_post(p, user=None, user_votes=None):
             has_voted = PollVote.query.filter_by(poll_id=p.poll.id, user_id=user.id).first() is not None
         
     author_name = p.author.display_name if p.author.username == 'system_oracle' else ('Admin' if p.author.role == 'admin' else p.author.display_name)
-    is_admin_post = (p.author.role == 'admin')
+    is_oracle_post = (p.author.username == 'system_oracle')
+    is_admin_post = (p.author.role == 'admin') and not is_oracle_post
 
     return {
         "id": p.id,
@@ -560,6 +561,7 @@ def serialize_post(p, user=None, user_votes=None):
         "author_username": author_name,
         "author_avatar": p.author.avatar,
         "is_admin_post": is_admin_post,
+        "is_oracle_post": is_oracle_post,
         "is_pinned": p.is_pinned,
         "poll": {
             "id": p.poll.id,
@@ -894,7 +896,8 @@ def reply_post(post_id):
 
 def serialize_reply(r):
     author_name = r.author.display_name if r.author.username == 'system_oracle' else ('Admin' if r.author.role == 'admin' else r.author.display_name)
-    is_admin_post = (r.author.role == 'admin')
+    is_oracle_post = (r.author.username == 'system_oracle')
+    is_admin_post = (r.author.role == 'admin') and not is_oracle_post
     
     return {
         "id": r.id,
@@ -905,6 +908,7 @@ def serialize_reply(r):
         "author_username": author_name,
         "author_avatar": r.author.avatar,
         "is_admin_post": is_admin_post,
+        "is_oracle_post": is_oracle_post,
         "replies": [serialize_reply(child) for child in r.replies if not child.is_deleted]
     }
 
