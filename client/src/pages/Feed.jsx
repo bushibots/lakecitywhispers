@@ -361,7 +361,7 @@ export default function Feed() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Link to={`/profile/${comment.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <span className="name" style={{ fontSize: '0.85rem', ...(comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}) }}>
-                {comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous')}
+                {comment.is_admin_post ? (comment.author_username === '🌟 JLU Oracle' ? '🌟 JLU Oracle' : '👑 Admin') : (comment.author_username || 'Anonymous')}
               </span>
             </Link>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
@@ -436,7 +436,7 @@ export default function Feed() {
           </div>
           <div className="card-meta">
             <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <span className="name" style={post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}}>{post.is_admin_post ? '👑 Admin' : identity}</span>
+              <span className="name" style={post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {}}>{post.is_admin_post ? (post.author_username === '🌟 JLU Oracle' ? '🌟 JLU Oracle' : '👑 Admin') : identity}</span>
             </Link>
             <span className="time">{formatTime(post.created_at)}</span>
           </div>

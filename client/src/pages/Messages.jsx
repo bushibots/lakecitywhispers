@@ -105,7 +105,19 @@ export default function Messages() {
     if (!newMessage.trim() || !activeConvId) return;
     const textToSend = newMessage.trim();
     setNewMessage('');
-    setLoading(true);
+    
+    // Create optimistic message
+    const tempId = 'temp-' + Date.now();
+    const optimisticMsg = {
+        id: tempId,
+        content: textToSend,
+        created_at: new Date().toISOString(),
+        is_mine: true,
+        conversation_id: activeConvId
+    };
+    
+    // Instantly show in chat
+    setChatMessages(prev => [...prev, optimisticMsg]);
     
     // Optimistic UI update for the sidebar
     setConversations(prev => {
@@ -123,12 +135,13 @@ export default function Messages() {
 
     const msg = await sendMessage(activeConvId, textToSend);
     if (msg && !msg.error) {
-      setChatMessages(prev => [...prev, msg]);
+      // Replace temp message with real one
+      setChatMessages(prev => prev.map(m => m.id === tempId ? msg : m));
     } else if (msg && msg.error) {
         alert(msg.error);
         loadConversations(); // Revert on failure
+        setChatMessages(prev => prev.filter(m => m.id !== tempId));
     }
-    setLoading(false);
   };
 
   const handleAccept = async () => {
@@ -180,7 +193,7 @@ export default function Messages() {
 
   return (
     <div className={`page-content messages-layout ${activeConvId ? 'chat-active' : ''}`} style={{ padding: '0', overflow: 'hidden', backgroundColor: 'var(--bg-secondary)' }}>
-      <div className="messages-sliding-container" style={{ display: 'flex', width: '100%', height: '100%' }}>
+      <div className="messages-sliding-container">
         
         {/* LEFT PANE - INBOX */}
         <div className="inbox-pane" style={{ background: 'var(--bg-color)', borderRight: '1px solid rgba(255,255,255,0.05)' }}>

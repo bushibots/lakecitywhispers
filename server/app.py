@@ -543,7 +543,7 @@ def serialize_post(p, user=None, user_votes=None):
         else:
             has_voted = PollVote.query.filter_by(poll_id=p.poll.id, user_id=user.id).first() is not None
         
-    author_name = 'Admin' if p.author.role == 'admin' else p.author.display_name
+    author_name = p.author.display_name if p.author.username == 'system_oracle' else ('Admin' if p.author.role == 'admin' else p.author.display_name)
     is_admin_post = (p.author.role == 'admin')
 
     return {
@@ -893,7 +893,7 @@ def reply_post(post_id):
     return jsonify({"message": "Reply posted successfully", "reply_id": new_reply.id}), 201
 
 def serialize_reply(r):
-    author_name = 'Admin' if r.author.role == 'admin' else r.author.display_name
+    author_name = r.author.display_name if r.author.username == 'system_oracle' else ('Admin' if r.author.role == 'admin' else r.author.display_name)
     is_admin_post = (r.author.role == 'admin')
     
     return {

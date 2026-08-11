@@ -187,6 +187,11 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 .chat-header .status { font-size: 0.8rem; color: var(--accent-glow); }
 .chat-history { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
 .date-separator { text-align: center; position: relative; margin: 1rem 0; }
+.messages-sliding-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
 .date-separator span { background: var(--card-bg); padding: 0 1rem; font-size: 0.8rem; color: var(--text-muted); position: relative; z-index: 1; }
 .date-separator::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid var(--border); }
 .message { max-width: 70%; padding: 0.75rem 1rem; border-radius: 16px; position: relative; }
@@ -424,6 +429,9 @@ input, select, textarea, button { font-size: 16px !important; }
     flex-shrink: 0;
   }
   .messages-sliding-container {
+    display: flex;
+    width: 200vw;
+    height: 100%;
     transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .messages-layout.chat-active .messages-sliding-container {
