@@ -5,6 +5,7 @@ import {
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser
 } from '../api';
+import IPLookupWidget from '../components/IPLookupWidget';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('moderation');
