@@ -1,14 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, MapPin } from 'lucide-react';
 
-export default function IPLookupWidget() {
-    const [ip, setIp] = useState('');
+export default function IPLookupWidget({ initialIp = '' }) {
+    const [ip, setIp] = useState(initialIp);
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleLookup = async () => {
-        if (!ip.trim()) return;
+    useEffect(() => {
+        if (initialIp) {
+            setIp(initialIp);
+            handleLookup(initialIp);
+        }
+    }, [initialIp]);
+
+    const handleLookup = async (lookupTarget = ip) => {
+        const target = typeof lookupTarget === 'string' ? lookupTarget : ip;
+        if (!target.trim()) return;
         setLoading(true);
         setError('');
         setData(null);
@@ -37,10 +45,10 @@ export default function IPLookupWidget() {
                     placeholder="Enter IP address (e.g. 8.8.8.8)" 
                     value={ip}
                     onChange={(e) => setIp(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
+                    onKeyDown={(e) => e.key === 'Enter' && handleLookup(ip)}
                 />
             </div>
-            <button className="btn-glow w-100" onClick={handleLookup} disabled={loading}>
+            <button className="btn-glow w-100" onClick={() => handleLookup(ip)} disabled={loading}>
                 {loading ? 'Looking up...' : 'Lookup IP'}
             </button>
             

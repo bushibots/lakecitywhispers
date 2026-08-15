@@ -15,6 +15,7 @@ class User(db.Model):
     recovery_key_hash = db.Column(db.String(255), nullable=True)
     role = db.Column(db.String(20), default='user') # 'user' or 'admin'
     is_banned = db.Column(db.Boolean, default=False)
+    ip_address = db.Column(db.String(45), nullable=True)
     
     # Anonymous Identity
     display_name = db.Column(db.String(50), nullable=False)
@@ -36,6 +37,7 @@ class Post(db.Model):
     upvotes = db.Column(db.Integer, default=0)
     downvotes = db.Column(db.Integer, default=0)
     views = db.Column(db.Integer, default=0)
+    ip_address = db.Column(db.String(45), nullable=True)
     
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     

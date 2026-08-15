@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [allPosts, setAllPosts] = useState([]);
   const [adminChats, setAdminChats] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [lookupIp, setLookupIp] = useState('');
   
   // Bot spawning state
   const [botSpawnCount, setBotSpawnCount] = useState(1);
@@ -412,6 +413,15 @@ export default function AdminDashboard() {
                               {u.is_banned ? <span style={{ padding: '4px 8px', backgroundColor: 'rgba(231, 76, 60, 0.15)', color: 'var(--danger-color, red)', borderRadius: '4px', fontWeight: 'bold' }}>Banned</span> : <span style={{ padding: '4px 8px', backgroundColor: 'rgba(46, 204, 113, 0.15)', color: '#2ecc71', borderRadius: '4px', fontWeight: 'bold' }}>Active</span>}
                               <span style={{ padding: '4px 8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', color: 'var(--text-muted)' }}>{u.post_count} Posts</span>
                               <span style={{ padding: '4px 8px', backgroundColor: 'var(--bg-card)', borderRadius: '4px', color: 'var(--text-muted)' }}>{u.created_at !== "Unknown" ? new Date(u.created_at).toLocaleDateString() : 'Unknown'}</span>
+                              {u.ip_address && (
+                                  <button 
+                                      style={{ padding: '4px 8px', backgroundColor: 'rgba(53, 214, 231, 0.15)', color: 'var(--accent-color)', borderRadius: '4px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.85rem' }}
+                                      onClick={() => { setLookupIp(u.ip_address); setActiveTab('settings'); }}
+                                      title="Lookup IP"
+                                  >
+                                      <Search size={12}/> {u.ip_address}
+                                  </button>
+                              )}
                           </div>
                           
                           <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', flexWrap: 'wrap' }}>
@@ -469,8 +479,16 @@ export default function AdminDashboard() {
                               </div>
                               <p style={{ margin: '0.5rem 0', wordBreak: 'break-word', fontSize: '0.95rem' }}>{post.content}</p>
                               
-                              <div style={{ fontSize: '0.85rem', color: 'var(--accent-color)', marginBottom: '0.5rem' }}>
-                                  Display Identity: {post.author_display}
+                              <div style={{ fontSize: '0.85rem', color: 'var(--accent-color)', marginBottom: '0.5rem', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                  <span>Display Identity: {post.author_display}</span>
+                                  {post.ip_address && (
+                                      <button 
+                                          style={{ padding: '2px 6px', backgroundColor: 'rgba(53, 214, 231, 0.15)', color: 'var(--accent-color)', borderRadius: '4px', border: '1px solid rgba(53, 214, 231, 0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                                          onClick={() => { setLookupIp(post.ip_address); setActiveTab('settings'); }}
+                                      >
+                                          <Search size={10}/> IP: {post.ip_address}
+                                      </button>
+                                  )}
                               </div>
 
                               {revealedAuthors[post.id] && (

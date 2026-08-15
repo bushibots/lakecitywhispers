@@ -223,11 +223,13 @@ def create_session():
     guest_num = random.randint(1000, 99999)
     display_name = f"Guest_{guest_num}"
     username = f"guest_{guest_num}_{random.randint(1000,9999)}"
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     
     new_user = User(
         display_name=display_name,
         username=username,
-        avatar=display_name[0]
+        avatar=display_name[0],
+        ip_address=client_ip
     )
     db.session.add(new_user)
     db.session.commit()
@@ -729,13 +731,15 @@ def create_post():
         
     data = request.json
     user.last_active = datetime.utcnow()
+    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     
     new_post = Post(
         content=data.get('content'),
         image_url=data.get('image_url'),
         audio_url=data.get('audio_url'),
         topic=data.get('topic', 'General'),
-        user_id=user.id
+        user_id=user.id,
+        ip_address=client_ip
     )
     db.session.add(new_post)
     db.session.flush() # get post.id
@@ -1603,6 +1607,7 @@ def admin_get_users():
             "created_at": u.created_at.isoformat() + 'Z' if u.created_at else "Unknown",
             "post_count": post_counts.get(u.id, 0),
             "is_banned": u.is_banned,
+            "ip_address": u.ip_address,
             "is_registered": u.is_registered
         })
     return jsonify(user_data)
@@ -1689,7 +1694,8 @@ def admin_get_all_posts():
             "author_username": author.username if author else "Unknown",
             "created_at": p.created_at.isoformat() + 'Z',
             "is_deleted": p.is_deleted,
-            "upvotes": p.upvotes
+            "upvotes": p.upvotes,
+            "ip_address": p.ip_address
         })
     return jsonify(posts_data)
 
