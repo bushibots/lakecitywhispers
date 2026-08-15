@@ -107,6 +107,19 @@ with app.app_context():
     except Exception:
         db.session.rollback()
 
+    # Safely add ip_address columns
+    try:
+        db.session.execute(db.text('ALTER TABLE "user" ADD COLUMN ip_address VARCHAR(45);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        
+    try:
+        db.session.execute(db.text('ALTER TABLE post ADD COLUMN ip_address VARCHAR(45);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to jluWhisper API", "status": "Running"})
