@@ -236,7 +236,9 @@ def create_session():
     guest_num = random.randint(1000, 99999)
     display_name = f"Guest_{guest_num}"
     username = f"guest_{guest_num}_{random.randint(1000,9999)}"
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    
+    raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    client_ip = raw_ip.split(',')[0].strip() if raw_ip else None
     
     new_user = User(
         display_name=display_name,
@@ -744,7 +746,9 @@ def create_post():
         
     data = request.json
     user.last_active = datetime.utcnow()
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    
+    raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+    client_ip = raw_ip.split(',')[0].strip() if raw_ip else None
     
     new_post = Post(
         content=data.get('content'),
