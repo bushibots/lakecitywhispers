@@ -42,10 +42,7 @@ export default function Dating() {
     if (b) url += `block=${encodeURIComponent(b)}&`;
     if (c) url += `course=${encodeURIComponent(c)}&`;
     const data = await apiFetch(url);
-    if (data && data.locked) {
-      setWaitlist(data);
-    } else if (data && !data.error) {
-      setWaitlist(null);
+    if (data && !data.error) {
       setProfiles(data);
       setCurrentIndex(0);
     }
@@ -153,22 +150,10 @@ export default function Dating() {
                         Keep Swiping
                     </button>
                 </div>
-            ) : waitlist ? (
-                <div className="feed-card" style={{ padding: '3rem 2rem', textAlign: 'center', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '1px solid var(--border-color)', background: 'var(--bg-elevated)', borderRadius: '24px' }}>
-                    <div style={{ width: '80px', height: '80px', background: 'rgba(255, 94, 91, 0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', border: '1px solid rgba(255, 94, 91, 0.3)' }}>
-                        <Lock size={36} color="#FF5E5B" />
-                    </div>
-                    <h2 style={{ fontSize: '1.8rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--text-main)' }}>Matchmaking Locked</h2>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '1.05rem', lineHeight: '1.5' }}>
-                        Campus Crush unlocks automatically when <strong>{waitlist.required}</strong> real students join the app. Spread the word to unlock swiping for everyone!
-                    </p>
-                    
-                    <div style={{ width: '100%', maxWidth: '300px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '20px', padding: '4px', position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ width: `${Math.min(100, (waitlist.current / waitlist.required) * 100)}%`, height: '12px', background: 'linear-gradient(90deg, #FF5E5B, #FF2A55)', borderRadius: '20px', transition: 'width 1s ease-out' }}></div>
-                    </div>
-                    <div style={{ marginTop: '1rem', fontWeight: 'bold', color: 'var(--accent-color)' }}>
-                        {waitlist.current} / {waitlist.required} Registered Students
-                    </div>
+            ) : profiles.length === 0 ? (
+                <div className="feed-card" style={{ padding: '3rem 2rem', textAlign: 'center', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                    <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--text-main)' }}>No Profiles Found</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>Check back later or try removing your filters.</p>
                 </div>
             ) : currentProfile ? (
                 <div key={currentProfile.user_id} className="feed-card dating-card-anim" style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: '32px', backgroundColor: '#111', marginBottom: 0 }}>

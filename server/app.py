@@ -1964,13 +1964,7 @@ def dating_discover():
     active_profiles = db.session.query(DatingProfile, User).join(User, DatingProfile.user_id == User.id).filter(DatingProfile.is_active == True).all()
     real_count = len([u for dp, u in active_profiles if u.is_registered and not (u.username and (u.username.startswith('bot_') or u.username.startswith('permbot_')))])
     
-    if real_count < 20:
-        return jsonify({
-            "locked": True,
-            "current": real_count,
-            "required": 20
-        })
-        
+    
     from datetime import datetime, timedelta, timezone
     cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     
