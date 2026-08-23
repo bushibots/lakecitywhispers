@@ -5,7 +5,7 @@ import os
 import uuid
 import random
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
@@ -102,7 +102,7 @@ def cleanup_old_bots():
     with app.app_context():
         # Delete bots older than 24 hours
         bot_users = User.query.filter(User.username.like('bot_%')).all()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         deleted_count = 0
         for bot in bot_users:
             if not bot.created_at or (now - bot.created_at).total_seconds() > 86400:
@@ -189,7 +189,7 @@ def run_cleanup_cmd():
     """Delete expired guest and registered accounts."""
     import click
     with app.app_context():
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         guest_threshold = now - timedelta(days=7)
         reg_threshold = now - timedelta(days=60)
         
@@ -236,7 +236,7 @@ def async_generate_identity(app_obj, user_id):
         from models import User, db
         try:
             display_name, new_username = generate_creative_identity()
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             if user and not user.is_registered:
                 user.display_name = display_name
                 user.username = new_username
@@ -252,7 +252,7 @@ def create_session():
     if req_token:
         user = User.query.filter_by(session_token=req_token).first()
         if user:
-            user.last_active = datetime.utcnow()
+            user.last_active = datetime.now(timezone.utc)
             db.session.commit()
             return jsonify({
                 "session_token": user.session_token, 
@@ -353,7 +353,7 @@ def login():
     
     user = User.query.filter_by(username=username).first()
     if user and user.password_hash and check_password_hash(user.password_hash, password):
-        user.last_active = datetime.utcnow()
+        user.last_active = datetime.now(timezone.utc)
         user.session_token = str(uuid.uuid4())
         db.session.commit()
         return jsonify({
@@ -380,7 +380,7 @@ def recover():
         new_recovery_key = '-'.join([''.join(random.choices(string.ascii_uppercase + string.digits, k=4)) for _ in range(3)])
         user.recovery_key_hash = generate_password_hash(new_recovery_key)
         
-        user.last_active = datetime.utcnow()
+        user.last_active = datetime.now(timezone.utc)
         user.session_token = str(uuid.uuid4())
         db.session.commit()
         
@@ -668,7 +668,7 @@ def get_daily_prompt():
     
     post = None
     if prompt_setting:
-        post = Post.query.get(int(prompt_setting.value))
+        post = db.session.get(Post, int(prompt_setting.value))
         
     should_regenerate = False
     if not prompt_date_setting or prompt_date_setting.value != today_str:
@@ -718,7 +718,7 @@ def get_daily_prompt():
 def regenerate_daily_prompt():
     prompt_setting = SystemSetting.query.filter_by(key='daily_prompt_id').first()
     if prompt_setting:
-        old_post = Post.query.get(int(prompt_setting.value))
+        old_post = db.session.get(Post, int(prompt_setting.value))
         if old_post:
             db.session.delete(old_post)
             db.session.commit()
@@ -808,7 +808,7 @@ def create_post():
     if contains_blocked_word(data.get('content', '')):
         return jsonify({"error": "Your message contains blocked content."}), 400
         
-    user.last_active = datetime.utcnow()
+    user.last_active = datetime.now(timezone.utc)
     
     raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     client_ip = raw_ip.split(',')[0].strip() if raw_ip else None
@@ -854,7 +854,7 @@ def delete_post(post_id):
     user = User.query.filter_by(session_token=session_token).first()
     if not user: return jsonify({"error": "Unauthorized"}), 401
     
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     
     is_manager = Manager.query.filter_by(user_id=user.id, handle=post.handle).first()
     
@@ -872,7 +872,7 @@ def edit_post(post_id):
     user = User.query.filter_by(session_token=session_token).first()
     if not user: return jsonify({"error": "Unauthorized"}), 401
     
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     if post.user_id != user.id and user.role != 'admin':
         return jsonify({"error": "Forbidden"}), 403
         
@@ -892,7 +892,7 @@ def pin_post(post_id):
     user = User.query.filter_by(session_token=session_token).first()
     if not user or user.role != 'admin': return jsonify({"error": "Unauthorized"}), 403
     
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     post.is_pinned = not post.is_pinned
     db.session.commit()
     return jsonify({"message": "Pin status toggled", "is_pinned": post.is_pinned})
@@ -939,7 +939,7 @@ def vote_post(post_id):
     data = request.json
     vote_type = data.get('type')
     
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     if vote_type == 'up':
         post.upvotes += 1
     elif vote_type == 'down':
@@ -956,7 +956,7 @@ def vote_post(post_id):
 
 @app.route('/api/posts/<int:post_id>/view', methods=['POST'])
 def view_post(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first() if session_token else None
     
@@ -993,12 +993,12 @@ def reply_post(post_id):
     if lockdown and lockdown.value == 'true' and user.role != 'admin':
         return jsonify({"error": "Lockdown Mode: New replies are temporarily disabled."}), 403
         
-    parent_post = Post.query.get_or_404(post_id)
+    parent_post = db.get_or_404(Post, post_id)
     
     if contains_blocked_word(data.get('content', '')):
         return jsonify({"error": "Your message contains blocked content."}), 400
         
-    user.last_active = datetime.utcnow()
+    user.last_active = datetime.now(timezone.utc)
     
     new_reply = Post(
         content=data.get('content'),
@@ -1031,7 +1031,7 @@ def serialize_reply(r):
 
 @app.route('/api/posts/<int:post_id>/replies', methods=['GET'])
 def get_replies(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     replies_data = [serialize_reply(r) for r in post.replies if not r.is_deleted]
     return jsonify({"replies": replies_data})
 
@@ -1051,7 +1051,7 @@ def vote_poll(post_id):
     existing_vote = PollVote.query.filter_by(poll_id=poll.id, user_id=user.id).first()
     if existing_vote: return jsonify({"error": "Already voted"}), 400
     
-    option = PollOption.query.get(option_id)
+    option = db.session.get(PollOption, option_id)
     if not option or option.poll_id != poll.id:
         return jsonify({"error": "Invalid option"}), 400
         
@@ -1095,7 +1095,7 @@ def support_request():
         
     msg = Message(conversation_id=conv.id, sender_id=user.id, content=content)
     db.session.add(msg)
-    conv.updated_at = datetime.utcnow()
+    conv.updated_at = datetime.now(timezone.utc)
     db.session.commit()
     
     return jsonify({"message": "Support request sent!"})
@@ -1111,7 +1111,7 @@ def message_request():
     user = User.query.filter_by(session_token=session_token).first()
     if not user: return jsonify({"error": "Invalid session"}), 401
     
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     recipient_id = post.user_id
     
     if user.id == recipient_id:
@@ -1131,7 +1131,7 @@ def message_request():
     if content:
         msg = Message(conversation_id=conv.id, sender_id=user.id, content=content)
         db.session.add(msg)
-        conv.updated_at = datetime.utcnow()
+        conv.updated_at = datetime.now(timezone.utc)
         
     db.session.commit()
     return jsonify({"message": "Request sent", "conversation_id": conv.id}), 201
@@ -1163,7 +1163,7 @@ def get_conversations():
             continue
             
         # Determine the other user's display name
-        other_user = User.query.get(other_user_id)
+        other_user = db.session.get(User, other_user_id)
         other_name = other_user.display_name if other_user else "Unknown"
         
         last_msg = Message.query.filter_by(conversation_id=c.id).order_by(Message.created_at.desc()).first()
@@ -1195,7 +1195,7 @@ def get_conversations():
 def accept_request(conv_id):
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first()
-    conv = Conversation.query.get_or_404(conv_id)
+    conv = db.get_or_404(Conversation, conv_id)
     
     if conv.user2_id != user.id:
         return jsonify({"error": "Unauthorized"}), 403
@@ -1208,7 +1208,7 @@ def accept_request(conv_id):
 def reject_request(conv_id):
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first()
-    conv = Conversation.query.get_or_404(conv_id)
+    conv = db.get_or_404(Conversation, conv_id)
     
     if conv.user2_id != user.id:
         return jsonify({"error": "Unauthorized"}), 403
@@ -1221,7 +1221,7 @@ def reject_request(conv_id):
 def get_messages(conv_id):
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first()
-    conv = Conversation.query.get_or_404(conv_id)
+    conv = db.get_or_404(Conversation, conv_id)
     
     if user.id not in [conv.user1_id, conv.user2_id]:
         return jsonify({"error": "Unauthorized"}), 403
@@ -1237,7 +1237,7 @@ def get_messages(conv_id):
         })
         
     other_user_id = conv.user2_id if conv.user1_id == user.id else conv.user1_id
-    other_user = User.query.get(other_user_id)
+    other_user = db.session.get(User, other_user_id)
         
     return jsonify({
         "status": conv.status,
@@ -1255,7 +1255,7 @@ def send_message(conv_id):
         
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first()
-    conv = Conversation.query.get_or_404(conv_id)
+    conv = db.get_or_404(Conversation, conv_id)
     
     if user.id not in [conv.user1_id, conv.user2_id]:
         return jsonify({"error": "Unauthorized"}), 403
@@ -1273,7 +1273,7 @@ def send_message(conv_id):
         return jsonify({"error": "Cannot send message. User is blocked."}), 403
         
     msg = Message(conversation_id=conv.id, sender_id=user.id, content=content)
-    conv.updated_at = datetime.utcnow()
+    conv.updated_at = datetime.now(timezone.utc)
     db.session.add(msg)
     db.session.commit()
     
@@ -1309,7 +1309,7 @@ def block_user(conv_id):
     user = User.query.filter_by(session_token=session_token).first()
     if not user: return jsonify({"error": "Unauthorized"}), 401
     
-    conv = Conversation.query.get_or_404(conv_id)
+    conv = db.get_or_404(Conversation, conv_id)
     if user.id not in [conv.user1_id, conv.user2_id]:
         return jsonify({"error": "Unauthorized"}), 403
         
@@ -1332,7 +1332,7 @@ def delete_conversation(conv_id):
     user = User.query.filter_by(session_token=session_token).first()
     if not user: return jsonify({"error": "Unauthorized"}), 401
     
-    conv = Conversation.query.get_or_404(conv_id)
+    conv = db.get_or_404(Conversation, conv_id)
     if user.id not in [conv.user1_id, conv.user2_id]:
         return jsonify({"error": "Unauthorized"}), 403
         
@@ -1346,7 +1346,7 @@ def unsend_message(msg_id):
     user = User.query.filter_by(session_token=session_token).first()
     if not user: return jsonify({"error": "Unauthorized"}), 401
     
-    msg = Message.query.get_or_404(msg_id)
+    msg = db.get_or_404(Message, msg_id)
     if msg.sender_id != user.id:
         return jsonify({"error": "Unauthorized"}), 403
         
@@ -1421,7 +1421,7 @@ def explore_search():
     # We must format posts exactly like fetchPosts does
     result = []
     for p in posts:
-        author = User.query.get(p.author_id)
+        author = db.session.get(User, p.author_id)
         
         upvotes = PollVote.query.filter_by(post_id=p.id, is_upvote=True).count()
         downvotes = PollVote.query.filter_by(post_id=p.id, is_upvote=False).count()
@@ -1451,8 +1451,8 @@ def get_sidebar_stats():
     if time.time() - _server_cache['sidebar_stats']['time'] < 60:
         return _server_cache['sidebar_stats']['data']
         
-    from datetime import datetime, timedelta
-    today = datetime.utcnow() - timedelta(days=1)
+    from datetime import datetime, timedelta, timezone
+    today = datetime.now(timezone.utc) - timedelta(days=1)
     
     # Total posts today
     total_posts = Post.query.filter(Post.created_at >= today).count()
@@ -1488,9 +1488,9 @@ def get_sidebar_stats():
 def get_sidebar_polls():
     polls = Poll.query.join(Post).order_by(Post.created_at.desc()).limit(10).all()
     
-    from datetime import datetime, timedelta
+    from datetime import datetime, timedelta, timezone
     # Generate new poll if none exist or latest is > 24 hours old
-    if not polls or polls[0].post.created_at < datetime.utcnow() - timedelta(days=1):
+    if not polls or polls[0].post.created_at < datetime.now(timezone.utc) - timedelta(days=1):
         from ai import generate_campus_poll
         poll_data = generate_campus_poll()
         if poll_data:
@@ -1645,7 +1645,7 @@ def admin_dashboard():
 @app.route('/api/admin/posts/<int:post_id>/delete', methods=['POST'])
 @admin_required
 def admin_delete_post(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     post.is_deleted = True
     db.session.commit()
     return jsonify({"message": "Post softly deleted"})
@@ -1653,7 +1653,7 @@ def admin_delete_post(post_id):
 @app.route('/api/admin/posts/<int:post_id>/edit_stats', methods=['POST'])
 @admin_required
 def admin_edit_stats(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = db.get_or_404(Post, post_id)
     data = request.json
     
     if 'views' in data:
@@ -1715,7 +1715,7 @@ def admin_get_users():
 @app.route('/api/admin/users/<int:user_id>/toggle_ban', methods=['POST'])
 @admin_required
 def admin_toggle_ban(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     if user.role == 'admin':
         return jsonify({"error": "Cannot ban an admin"}), 403
         
@@ -1727,7 +1727,7 @@ def admin_toggle_ban(user_id):
 @app.route('/api/admin/users/<int:user_id>/toggle_permanent', methods=['POST'])
 @admin_required
 def admin_toggle_permanent(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     if not user.username or not (user.username.startswith("bot_") or user.username.startswith("permbot_")):
         return jsonify({"error": "Can only make bots permanent"}), 400
         
@@ -1808,7 +1808,7 @@ def admin_add_blocked_word():
 @app.route('/api/admin/blocked_words/<int:word_id>', methods=['DELETE'])
 @admin_required
 def admin_delete_blocked_word(word_id):
-    word = BlockedWord.query.get(word_id)
+    word = db.session.get(BlockedWord, word_id)
     if not word:
         return jsonify({"error": "Word not found"}), 404
         
@@ -1837,8 +1837,8 @@ def admin_get_all_posts():
 @app.route('/api/admin/posts/<int:post_id>/author', methods=['GET'])
 @admin_required
 def admin_get_post_author(post_id):
-    post = Post.query.get_or_404(post_id)
-    author = User.query.get(post.user_id)
+    post = db.get_or_404(Post, post_id)
+    author = db.session.get(User, post.user_id)
     if not author:
         return jsonify({"error": "Author not found"}), 404
         
@@ -1942,8 +1942,8 @@ def dating_discover():
             "required": 20
         })
         
-    from datetime import datetime, timedelta
-    cutoff = datetime.utcnow() - timedelta(hours=24)
+    from datetime import datetime, timedelta, timezone
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     
     liked = SwipeInteraction.query.filter_by(swiper_id=user.id, action='like').all()
     recent_passes = SwipeInteraction.query.filter(
@@ -2002,7 +2002,7 @@ def dating_swipe():
     interaction = SwipeInteraction.query.filter_by(swiper_id=user.id, target_id=target_id).first()
     if interaction:
         interaction.action = action
-        interaction.created_at = datetime.utcnow()
+        interaction.created_at = datetime.now(timezone.utc)
     else:
         interaction = SwipeInteraction(swiper_id=user.id, target_id=target_id, action=action)
         db.session.add(interaction)
