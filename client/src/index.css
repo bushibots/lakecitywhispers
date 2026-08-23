@@ -197,7 +197,7 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Space Grotesk', sans-serif; }
 .avatar-flame.small { width: 28px; height: 28px; font-size: 0.9rem; border-radius: 8px; }
 .avatar-flame.large { width: 64px; height: 64px; font-size: 2rem; border-radius: 16px; }
 .card-meta { flex: 1; display: flex; flex-direction: column; }
-.card-meta .name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+.card-meta .name { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 0.95rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; display: inline-block; vertical-align: bottom; }
 .card-meta .time { font-size: 0.75rem; color: var(--text-muted); }
 .category-badge { font-size: 0.75rem; padding: 0.2rem 0.6rem; background: rgba(53, 214, 231, 0.1); color: var(--accent-glow); border-radius: 8px; border: 1px solid rgba(53, 214, 231, 0.2); font-weight: 600; }
 .card-text { font-size: 1rem; margin-bottom: 1rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
