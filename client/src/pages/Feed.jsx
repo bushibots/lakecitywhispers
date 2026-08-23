@@ -13,16 +13,16 @@ const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'A
 const HANDLES = ['global', ...Object.keys(CAMPUS_STRUCTURE)];
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
 
-export default function Feed() {
+export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get('q') || '';
 
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
-  const [topic, setTopic] = useState('Confessions');
-  const [activeHandle, setActiveHandle] = useState('global');
-  const [filterTopic, setFilterTopic] = useState('');
+  const [topic, setTopic] = useState(forcedTopic || 'Confessions');
+  const [activeHandle, setActiveHandle] = useState(forcedHandle || 'global');
+  const [filterTopic, setFilterTopic] = useState(forcedTopic || '');
   const [isPosting, setIsPosting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showPollInputs, setShowPollInputs] = useState(false);
@@ -112,7 +112,7 @@ export default function Feed() {
 
     socket.on('new_post', handleNewPost);
     return () => socket.off('new_post', handleNewPost);
-  }, [filterTopic, searchQuery, activeHandle]);
+  }, [filterTopic, searchQuery, activeHandle, forcedTopic]);
 
   const loadPosts = async (t, sq = '', handle = 'global') => {
     // 1. Instant load from local cache if on main feed
@@ -625,35 +625,37 @@ export default function Feed() {
   };
 
   return (
-    <div className="feed-container">
-      {/* Category Tabs */}
-      <div className="pill-menu">
-        <div 
-          className={`pill-tab ${filterTopic === '' ? 'active' : ''}`}
-          onClick={() => setFilterTopic('')}
-        >
-          Trending
+    <div className="page-content">
+      {onLeaveRoom && (
+        <div style={{ padding: '1rem', background: 'var(--bg-elevated)', borderRadius: '16px', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border)' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-main)' }}>{forcedTopic}</h2>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{forcedHandle} Room</span>
+          </div>
+          <button onClick={onLeaveRoom} className="btn-secondary" style={{ fontSize: '0.85rem', padding: '0.5rem 1rem', background: 'rgba(255, 94, 91, 0.1)', color: '#FF5E5B', border: '1px solid rgba(255, 94, 91, 0.3)' }}>
+            Leave Room
+          </button>
         </div>
-        <div 
-          className={`pill-tab ${filterTopic === 'Watchlist' ? 'active' : ''}`}
-          onClick={() => setFilterTopic('Watchlist')}
-          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
-        >
-          <Bookmark size={14} /> Watchlist
-        </div>
-        {CATEGORIES.map(t => (
+      )}
+
+      {/* Choice Bar */}
+      {!forcedHandle && (
+      <div className="choice-bar hide-scrollbar" style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+        {['Watchlist', ...CATEGORIES].map(t => (
           <div 
             key={t}
-            className={`pill-tab ${filterTopic === t ? 'active' : ''}`}
-            onClick={() => setFilterTopic(t)}
+            onClick={() => setFilterTopic(t === filterTopic ? '' : t)}
+            className={`choice-pill ${filterTopic === t ? 'active' : ''}`}
           >
             {t}
           </div>
         ))}
       </div>
+      )}
 
       {/* Advanced Composer */}
       <div className="composer-box">
+        {!forcedHandle && (
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', alignSelf: 'center', marginRight: '0.5rem', fontWeight: 'bold' }}>Posting to:</span>
             {HANDLES.map(h => (
@@ -680,6 +682,7 @@ export default function Feed() {
                 </button>
             ))}
         </div>
+        )}
         <div className="composer-inner">
           <div className="avatar-flame" style={{ width: 40, height: 40, flexShrink: 0 }}>{myIdentity.charAt(0)}</div>
           <div style={{ flex: 1 }}>
@@ -730,6 +733,7 @@ export default function Feed() {
               </div>
               
               <div className="toolbar-right">
+                {!forcedHandle && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <select 
@@ -743,6 +747,7 @@ export default function Feed() {
                         </select>
                     </div>
                 </div>
+                )}
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
                   <span className="char-count" style={{ color: content.length > 250 ? 'red' : 'var(--text-muted)', fontSize: '0.8rem' }}>

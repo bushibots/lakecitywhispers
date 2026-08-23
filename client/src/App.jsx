@@ -10,7 +10,6 @@ import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import Dating from './pages/Dating';
 import Settings from './pages/Settings';
-import Rooms from './pages/Rooms';
 import AuthModal from './components/AuthModal';
 import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
@@ -34,7 +33,7 @@ function App() {
     else if (path.startsWith('/guide')) pageName = 'Guide';
     else if (path.startsWith('/admin')) pageName = 'Admin';
     else if (path.startsWith('/settings')) pageName = 'Settings';
-    
+
     document.title = `${pageName} | JLU Whisper`;
   }, [location.pathname]);
 
@@ -49,9 +48,9 @@ function App() {
     // 1b. Fetch global configuration for theme
     fetchPublicConfig().then(cfg => {
       if (cfg && cfg.global_theme) {
-          document.body.className = cfg.global_theme;
+        document.body.className = cfg.global_theme;
       } else {
-          document.body.className = 't-default';
+        document.body.className = 't-default';
       }
     });
 
@@ -81,34 +80,34 @@ function App() {
       <Toaster position="top-center" reverseOrder={false} />
       <EasterEggs />
       <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Navigate to="/feed" replace />} />
-        <Route path="feed" element={<Feed />} />
-        <Route path="rooms" element={<Rooms />} />
-        <Route path="explore" element={<Explore />} />
-        <Route path="notifications" element={<Notifications />} />
-        <Route path="messages" element={<Messages />} />
-        <Route path="profile" element={<Profile />} />
-        <Route path="profile/:username" element={<Profile />} />
-        <Route path="guide" element={<Guide />} />
-        <Route path="settings" element={<Settings />} />
-        <Route path="admin" element={<AdminDashboard />} />
-        <Route path="manager" element={<ManagerDashboard />} />
-        <Route path="login" element={
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Navigate to="/feed" replace />} />
+          <Route path="feed" element={<Feed />} />
+          <Route path="rooms" element={<Feed isRoomsMode={true} />} />
+          <Route path="explore" element={<Explore />} />
+          <Route path="notifications" element={<Notifications />} />
+          <Route path="messages" element={<Messages />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="profile/:username" element={<Profile />} />
+          <Route path="guide" element={<Guide />} />
+          <Route path="settings" element={<Settings />} />
+          <Route path="admin" element={<AdminDashboard />} />
+          <Route path="manager" element={<ManagerDashboard />} />
+          <Route path="login" element={
             <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-                <AuthModal isOpen={true} initialMode="login" onClose={() => window.location.href='/feed'} onSuccess={() => window.location.href='/feed'} />
+              <AuthModal isOpen={true} initialMode="login" onClose={() => window.location.href = '/feed'} onSuccess={() => window.location.href = '/feed'} />
             </div>
-        } />
-        <Route path="register" element={
+          } />
+          <Route path="register" element={
             <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
-                <AuthModal isOpen={true} initialMode="register" onClose={() => window.location.href='/feed'} onSuccess={() => window.location.href='/feed'} />
+              <AuthModal isOpen={true} initialMode="register" onClose={() => window.location.href = '/feed'} onSuccess={() => window.location.href = '/feed'} />
             </div>
-        } />
-        <Route path="dating" element={<Dating />} />
-        {/* Placeholders for others */}
-        <Route path="*" element={<div className="page-content"><h2>Coming Soon</h2><p>This page is under construction.</p></div>} />
-      </Route>
-    </Routes>
+          } />
+          <Route path="dating" element={<Dating />} />
+          {/* Placeholders for others */}
+          <Route path="*" element={<div className="page-content"><h2>Coming Soon</h2><p>This page is under construction.</p></div>} />
+        </Route>
+      </Routes>
     </>
   );
 }
