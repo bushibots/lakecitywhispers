@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 
-if (localStorage.getItem('theme') === 'dark') {
+if (localStorage.getItem('theme') === 'dark' || !localStorage.getItem('theme')) {
   document.body.classList.add('dark-mode');
 }
 

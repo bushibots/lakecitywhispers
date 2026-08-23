@@ -11,7 +11,7 @@ export default function LeftSidebar() {
   const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
 
   const [isDarkMode, setIsDarkMode] = useState(
-    document.body.classList.contains('dark-mode')
+    localStorage.getItem('theme') === 'dark' || !localStorage.getItem('theme')
   );
 
   const toggleTheme = () => {

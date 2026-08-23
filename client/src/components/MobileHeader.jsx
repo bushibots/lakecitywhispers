@@ -11,7 +11,7 @@ export default function MobileHeader() {
   const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
 
   const [isDarkMode, setIsDarkMode] = useState(
-    document.body.classList.contains('dark-mode')
+    localStorage.getItem('theme') === 'dark' || !localStorage.getItem('theme')
   );
 
   const toggleTheme = () => {
@@ -60,6 +60,13 @@ export default function MobileHeader() {
         )}
         <h2 style={{ fontSize: '1.2rem', margin: 0 }}>{siteName}</h2>
         <div style={{ flex: 1 }} />
+        <button 
+          className="icon-btn-minimal" 
+          onClick={toggleTheme}
+          style={{ padding: '0.4rem' }}
+        >
+          {isDarkMode ? <Sun size={22} color="var(--text-main)" /> : <Moon size={22} color="var(--text-main)" />}
+        </button>
       </header>
 
       {/* Drawer Overlay */}
@@ -94,15 +101,6 @@ export default function MobileHeader() {
               <span>Admin Panel</span>
             </Link>
           )}
-
-          <button 
-            onClick={toggleTheme}
-            className="drawer-link"
-            style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-          >
-            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
-          </button>
 
           {!isRegistered && (
             <button 
