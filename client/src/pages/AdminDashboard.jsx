@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3 } from 'lucide-react';
+import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3, Heart, Search } from 'lucide-react';
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser,
-    fetchAdminDatingProfiles, adminDeleteDatingProfile
+    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
 
@@ -21,6 +21,7 @@ export default function AdminDashboard() {
   const [allPosts, setAllPosts] = useState([]);
   const [adminChats, setAdminChats] = useState([]);
   const [datingProfiles, setDatingProfiles] = useState([]);
+  const [swipeHistory, setSwipeHistory] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
   
@@ -80,6 +81,13 @@ export default function AdminDashboard() {
             setDatingProfiles(data);
         } else {
             setDatingProfiles([]);
+        }
+    } else if (activeTab === 'swipes') {
+        const data = await fetchAdminSwipes();
+        if (Array.isArray(data)) {
+            setSwipeHistory(data);
+        } else {
+            setSwipeHistory([]);
         }
     }
     setLoading(false);
@@ -323,6 +331,9 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'dating' ? 'active' : ''}`} onClick={() => setActiveTab('dating')} style={{ backgroundColor: activeTab === 'dating' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'dating' ? 'white' : 'var(--text-color)' }}>
             <Flame size={16} style={{ marginRight: '8px' }}/> Dating
+        </button>
+        <button className={`pill-tab ${activeTab === 'swipes' ? 'active' : ''}`} onClick={() => setActiveTab('swipes')} style={{ backgroundColor: activeTab === 'swipes' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'swipes' ? 'white' : 'var(--text-color)' }}>
+            <Heart size={16} style={{ marginRight: '8px' }}/> Swipes
         </button>
       </div>
 
@@ -908,6 +919,42 @@ export default function AdminDashboard() {
                       No dating profiles found.
                   </div>
               )}
+          </div>
+      )}
+
+      {activeTab === 'swipes' && (
+          <div className="feed-card" style={{ padding: '1rem', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                  <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ padding: '1rem' }}>Time</th>
+                          <th style={{ padding: '1rem' }}>Swiper</th>
+                          <th style={{ padding: '1rem' }}>Action</th>
+                          <th style={{ padding: '1rem' }}>Target</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {swipeHistory.map(s => (
+                          <tr key={s.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{new Date(s.created_at).toLocaleString()}</td>
+                              <td style={{ padding: '1rem', fontWeight: 'bold' }}>{s.swiper}</td>
+                              <td style={{ padding: '1rem' }}>
+                                  <span style={{ 
+                                      color: s.action === 'like' ? '#2ecc71' : '#e74c3c',
+                                      background: s.action === 'like' ? 'rgba(46,204,113,0.1)' : 'rgba(231,76,60,0.1)',
+                                      padding: '4px 8px', borderRadius: '12px', fontSize: '0.9rem'
+                                  }}>
+                                      {s.action.toUpperCase()}
+                                  </span>
+                              </td>
+                              <td style={{ padding: '1rem', fontWeight: 'bold' }}>{s.target}</td>
+                          </tr>
+                      ))}
+                      {swipeHistory.length === 0 && (
+                          <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem' }}>No swipes recorded yet.</td></tr>
+                      )}
+                  </tbody>
+              </table>
           </div>
       )}
 

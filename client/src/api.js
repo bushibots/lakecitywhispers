@@ -324,7 +324,7 @@ export const adminForgePost = async (content, topic = 'General', authorName = ''
 
 export const fetchAdminDatingProfiles = async () => {
     try {
-        const token = getSessionToken();
+        const token = await getSessionToken();
         const res = await fetch(`${API_URL}/admin/dating_profiles`, {
             headers: {
                 'Authorization': token
@@ -338,9 +338,25 @@ export const fetchAdminDatingProfiles = async () => {
     }
 };
 
+export const fetchAdminSwipes = async () => {
+    try {
+        const token = await getSessionToken();
+        const res = await fetch(`${API_URL}/admin/swipes`, {
+            headers: {
+                'Authorization': token
+            }
+        });
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Error fetching swipes:", error);
+        return [];
+    }
+};
+
 export const adminDeleteDatingProfile = async (userId) => {
     try {
-        const token = getSessionToken();
+        const token = await getSessionToken();
         const res = await fetch(`${API_URL}/admin/dating_profiles/${userId}`, {
             method: 'DELETE',
             headers: {

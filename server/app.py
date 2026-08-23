@@ -1957,6 +1957,23 @@ def admin_delete_dating_profile(user_id):
         db.session.commit()
     return jsonify({"success": True})
 
+@app.route('/api/admin/swipes', methods=['GET'])
+@admin_required
+def admin_get_swipes():
+    swipes = SwipeInteraction.query.order_by(SwipeInteraction.created_at.desc()).limit(200).all()
+    result = []
+    for s in swipes:
+        swiper = User.query.get(s.swiper_id)
+        target = User.query.get(s.target_id)
+        result.append({
+            "id": s.id,
+            "swiper": swiper.username if swiper else "Deleted User",
+            "target": target.username if target else "Deleted User",
+            "action": s.action,
+            "created_at": s.created_at.isoformat() + 'Z' if s.created_at else None
+        })
+    return jsonify(result)
+
 # --- Dating APIs ---
 
 def get_current_user(session_token):
