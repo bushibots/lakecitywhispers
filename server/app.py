@@ -1930,6 +1930,33 @@ def admin_wipe_user(username):
     db.session.commit()
     return jsonify({"message": f"User {username} completely wiped."})
 
+@app.route('/api/admin/dating_profiles', methods=['GET'])
+@admin_required
+def admin_get_dating_profiles():
+    profiles = DatingProfile.query.all()
+    result = []
+    for p in profiles:
+        result.append({
+            "user_id": p.user_id,
+            "username": p.user.username,
+            "display_name": p.user.display_name,
+            "bio": p.bio,
+            "image_url": p.image_url,
+            "gender": p.gender,
+            "age": p.age,
+            "created_at": p.created_at.isoformat() + 'Z' if p.created_at else None
+        })
+    return jsonify(result)
+
+@app.route('/api/admin/dating_profiles/<int:user_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_dating_profile(user_id):
+    profile = DatingProfile.query.filter_by(user_id=user_id).first()
+    if profile:
+        db.session.delete(profile)
+        db.session.commit()
+    return jsonify({"success": True})
+
 # --- Dating APIs ---
 
 def get_current_user(session_token):
