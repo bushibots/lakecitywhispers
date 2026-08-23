@@ -13,16 +13,16 @@ const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'A
 const HANDLES = ['global', ...Object.keys(CAMPUS_STRUCTURE)];
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
 
-export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
+export default function Feed() {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const searchQuery = searchParams.get('q') || '';
 
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
-  const [topic, setTopic] = useState(forcedTopic || 'Confessions');
-  const [activeHandle, setActiveHandle] = useState(forcedHandle || 'global');
-  const [filterTopic, setFilterTopic] = useState(forcedTopic || '');
+  const [topic, setTopic] = useState('Confessions');
+  const [activeHandle, setActiveHandle] = useState('global');
+  const [filterTopic, setFilterTopic] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showPollInputs, setShowPollInputs] = useState(false);
@@ -110,59 +110,9 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
       });
     };
 
-    const handleNewReply = (reply) => {
-      setReplies(prev => {
-        let updated = false;
-        const newReplies = { ...prev };
-        const insertDeep = (nodes) => {
-          for (let i = 0; i < nodes.length; i++) {
-            if (nodes[i].id === reply.parent_id) {
-              if (!nodes[i].replies) nodes[i].replies = [];
-              if (!nodes[i].replies.find(r => r.id === reply.id)) {
-                nodes[i].replies = [reply, ...nodes[i].replies];
-                updated = true;
-              }
-              return true;
-            }
-            if (nodes[i].replies && insertDeep(nodes[i].replies)) return true;
-          }
-          return false;
-        };
-        for (const rootId in newReplies) {
-          if (rootId == reply.parent_id) {
-             if (!newReplies[rootId].find(r => r.id === reply.id)) {
-                newReplies[rootId] = [reply, ...newReplies[rootId]];
-                updated = true;
-             }
-             break;
-          } else {
-             if (insertDeep(newReplies[rootId])) break;
-          }
-        }
-        return updated ? newReplies : prev;
-      });
-      setPosts(currentPosts => currentPosts.map(p => 
-        p.id === reply.parent_id ? { ...p, replies_count: p.replies_count + 1 } : p
-      ));
-    };
-
     socket.on('new_post', handleNewPost);
-    socket.on('new_reply', handleNewReply);
-    return () => {
-        socket.off('new_post', handleNewPost);
-        socket.off('new_reply', handleNewReply);
-    };
+    return () => socket.off('new_post', handleNewPost);
   }, [filterTopic, searchQuery, activeHandle, forcedTopic]);
-
-  useEffect(() => {
-    if (forcedHandle && posts.length > 0) {
-      posts.forEach(p => {
-        if (!replies[p.id]) {
-          fetchReplies(p.id).then(data => setReplies(prev => ({ ...prev, [p.id]: data })));
-        }
-      });
-    }
-  }, [posts, forcedHandle]);
 
   const loadPosts = async (t, sq = '', handle = 'global') => {
     // 1. Instant load from local cache if on main feed
@@ -433,11 +383,11 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
   };
 
   const Comment = ({ comment, rootPostId, depth = 0 }) => (
-    <div className={forcedHandle ? 'room-comment-thread' : ''} style={{ 
-      marginLeft: (!forcedHandle && depth > 0) ? '1rem' : '0', 
-      paddingLeft: (!forcedHandle && depth > 0) ? '1rem' : '0',
-      borderLeft: (!forcedHandle && depth > 0) ? '2px solid var(--border-strong)' : 'none',
-      marginTop: forcedHandle ? '0' : '1rem',
+    <div style={{ 
+      marginLeft: depth > 0 ? '1rem' : '0', 
+      paddingLeft: depth > 0 ? '1rem' : '0',
+      borderLeft: depth > 0 ? '2px solid var(--border-strong)' : 'none',
+      marginTop: '1rem',
       opacity: comment.is_optimistic ? 0.6 : 1
     }}>
       <div className="reply-item" style={{ borderBottom: 'none', padding: 0 }}>
@@ -451,7 +401,7 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
         <div className="reply-content" style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Link to={`/profile/${comment.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <span className={forcedHandle ? 'room-comment-username' : 'name'} style={{ fontSize: '0.85rem', ...(comment.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})) }}>
+              <span className="name" style={{ fontSize: '0.85rem', ...(comment.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})) }}>
                 {comment.is_oracle_post ? '🌟 JLU Oracle' : (comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous'))}
               </span>
             </Link>
@@ -521,41 +471,21 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
         {post.is_pinned && <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>📌 PINNED</div>}
         {isDailyPrompt && <div style={{ position: 'absolute', top: '-12px', left: '1.5rem', backgroundColor: 'var(--accent-color)', color: 'white', padding: '0.2rem 0.8rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}><Flame size={12}/> Prompt of the Day</div>}
         <div className="card-header">
-          {forcedHandle ? (
-              <div className="room-header-pill">
-                <div className="avatar">
-                  {post.author_avatar && post.author_avatar.startsWith('http') ? (
-                    <img src={post.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    (post.is_oracle_post ? '🌟' : (post.is_admin_post ? '👑' : identity.charAt(0).toUpperCase()))
-                  )}
-                </div>
-                <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <span style={post.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})}>
-                    {post.is_oracle_post ? '🌟 JLU Oracle' : (post.is_admin_post ? '👑 Admin' : identity)}
-                  </span>
-                </Link>
-                <span className="time" style={{ marginLeft: '4px', opacity: 0.5 }}>{formatTime(post.created_at)}</span>
-              </div>
-          ) : (
-              <>
-              <div className="avatar-flame" style={post.is_oracle_post ? {background: 'linear-gradient(135deg, #35D6E7, #8B5CF6)'} : (post.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {})}>
-                {post.author_avatar && post.author_avatar.startsWith('http') ? (
-                  <img src={post.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-                ) : (
-                  post.is_oracle_post ? '🌟' : (post.is_admin_post ? '👑' : identity.charAt(0).toUpperCase())
-                )}
-              </div>
-              <div className="card-meta">
-                <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <span className="name" style={post.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})}>
-                    {post.is_oracle_post ? '🌟 JLU Oracle' : (post.is_admin_post ? '👑 Admin' : identity)}
-                  </span>
-                </Link>
-                <span className="time">{formatTime(post.created_at)}</span>
-              </div>
-              </>
-          )}
+          <div className="avatar-flame" style={post.is_oracle_post ? {background: 'linear-gradient(135deg, #35D6E7, #8B5CF6)'} : (post.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {})}>
+            {post.author_avatar && post.author_avatar.startsWith('http') ? (
+              <img src={post.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              post.is_oracle_post ? '🌟' : (post.is_admin_post ? '👑' : identity.charAt(0).toUpperCase())
+            )}
+          </div>
+          <div className="card-meta">
+            <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <span className="name" style={post.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})}>
+                {post.is_oracle_post ? '🌟 JLU Oracle' : (post.is_admin_post ? '👑 Admin' : identity)}
+              </span>
+            </Link>
+            <span className="time">{formatTime(post.created_at)}</span>
+          </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
             <span className="category-badge">{post.topic}</span>
             {isAdminUser && (
@@ -670,9 +600,8 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
         </div>
 
         {/* Inline Replies */}
-        {(activeReplyId === post.id || forcedHandle) && (
-          <div className={forcedHandle ? 'room-inline-replies' : 'replies-section'}>
-            {!forcedHandle && (
+        {activeReplyId === post.id && (
+          <div className="replies-section">
             <div className="reply-composer">
               <input 
                 className="composer-textarea reply-input" 
@@ -683,27 +612,12 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
               />
               <button className="btn-glow small" onClick={() => submitReply(post.id, post.id)} disabled={!replyContent.trim()}>Reply</button>
             </div>
-            )}
             
             <div className="comments-tree">
               {(replies[post.id] || []).map(r => (
                 <Comment key={r.id} comment={r} rootPostId={post.id} depth={0} />
               ))}
             </div>
-            
-            {forcedHandle && (
-            <div className="room-reply-input">
-              <input 
-                placeholder={`Reply to post...`} 
-                value={replyContent}
-                onChange={e => setReplyContent(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submitReply(post.id, post.id)}
-              />
-              <button className="icon-btn-minimal" onClick={() => submitReply(post.id, post.id)} disabled={!replyContent.trim()} style={{ color: 'var(--primary)' }}>
-                <Send size={16} />
-              </button>
-            </div>
-            )}
           </div>
         )}
       </div>
@@ -740,7 +654,7 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
       )}
 
       {/* Advanced Composer */}
-      <div className={forcedHandle ? "room-composer-card" : "composer-box"}>
+      <div className="composer-box">
         {!forcedHandle && (
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
             <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', alignSelf: 'center', marginRight: '0.5rem', fontWeight: 'bold' }}>Posting to:</span>
@@ -773,9 +687,9 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
           <div className="avatar-flame" style={{ width: 40, height: 40, flexShrink: 0 }}>{myIdentity.charAt(0)}</div>
           <div style={{ flex: 1 }}>
             <textarea 
-              className={forcedHandle ? "room-composer-input" : "composer-textarea"} 
-              rows={isComposerFocused || content ? "5" : (forcedHandle ? "3" : "2")}
-              placeholder={forcedHandle ? "Share your thoughts, add a poll, or a photo..." : "What's on your mind? Share your whisper anonymously..."}
+              className="composer-textarea" 
+              rows={isComposerFocused || content ? "5" : "2"}
+              placeholder="What's on your mind? Share your whisper anonymously..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onFocus={() => setIsComposerFocused(true)}
@@ -783,7 +697,7 @@ export default function Feed({ forcedHandle, forcedTopic, onLeaveRoom }) {
               style={{ transition: 'all 0.3s ease' }}
             ></textarea>
             
-            <div className={forcedHandle ? "room-composer-actions" : "composer-toolbar"}>
+            <div className="composer-toolbar">
               <div className="toolbar-actions">
                 <input 
                   type="file" 

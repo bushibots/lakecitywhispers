@@ -154,3 +154,24 @@ class BlockedWord(db.Model):
     word = db.Column(db.String(100), unique=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+class RoomPost(db.Model):
+    """Completely isolated posts for Campus Rooms. Never appear on global feed."""
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    image_url = db.Column(db.String(255), nullable=True)
+    audio_url = db.Column(db.String(255), nullable=True)
+    
+    # Room identity: block + subject
+    room_block = db.Column(db.String(50), nullable=False)  # e.g. "Block C"
+    room_subject = db.Column(db.String(150), nullable=False)  # e.g. "BCA"
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    author = db.relationship('User', backref=db.backref('room_posts', lazy=True))
+    
+    parent_id = db.Column(db.Integer, db.ForeignKey('room_post.id'), nullable=True)
+    replies = db.relationship('RoomPost', backref=db.backref('parent', remote_side=[id]), lazy=True)
+    
+    upvotes = db.Column(db.Integer, default=0)
+    is_deleted = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
