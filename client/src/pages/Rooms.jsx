@@ -48,9 +48,10 @@ export default function Rooms() {
               onClick={() => setSelectedBlock(b)}
               style={{
                 padding: '0.5rem 1.1rem', borderRadius: '20px', cursor: 'pointer', fontWeight: '600', transition: '0.2s',
-                background: selectedBlock === b ? 'rgba(53,214,231,0.15)' : 'rgba(255,255,255,0.05)',
-                border: selectedBlock === b ? '1px solid #35D6E7' : '1px solid transparent',
-                color: selectedBlock === b ? '#35D6E7' : 'var(--text-main)',
+                background: 'var(--bg-color)',
+                boxShadow: selectedBlock === b ? 'var(--neu-inset)' : 'var(--neu-shadow-sm)',
+                color: selectedBlock === b ? 'var(--primary)' : 'var(--text-main)',
+                border: 'none',
               }}
             >
               {b}
@@ -66,13 +67,13 @@ export default function Rooms() {
               onClick={() => joinRoom(selectedBlock, subject)}
               style={{
                 width: '100%', padding: '0.9rem 1rem', textAlign: 'left',
-                background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-color)',
+                background: 'var(--bg-color)', border: 'none', boxShadow: 'var(--neu-shadow-sm)',
                 borderRadius: '12px', color: 'var(--text-main)', cursor: 'pointer',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 fontSize: '0.9rem', transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(53,214,231,0.07)'; e.currentTarget.style.borderColor = 'rgba(53,214,231,0.4)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = 'var(--neu-inset-sm)'; e.currentTarget.style.color = 'var(--primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = 'var(--neu-shadow-sm)'; e.currentTarget.style.color = 'var(--text-main)'; }}
             >
               <span>{subject}</span>
               <span style={{ color: 'var(--text-muted)' }}>→</span>

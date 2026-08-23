@@ -29,7 +29,7 @@ function ChatReply({ reply, myIdentity, onDelete }) {
   
   return (
     <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', paddingLeft: '2.5rem', position: 'relative' }}>
-      <div style={{ position: 'absolute', left: '1rem', top: '-0.5rem', borderLeft: '2px solid rgba(255,255,255,0.1)', borderBottom: '2px solid rgba(255,255,255,0.1)', width: '1rem', height: '1.5rem', borderBottomLeftRadius: '8px' }}></div>
+      <div style={{ position: 'absolute', left: '1rem', top: '-0.5rem', borderLeft: '2px solid var(--border-strong)', borderBottom: '2px solid var(--border-strong)', width: '1rem', height: '1.5rem', borderBottomLeftRadius: '8px' }}></div>
       <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--bg-elevated)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: 'var(--text-muted)' }}>
         {reply.author_username.charAt(0).toUpperCase()}
       </div>
@@ -68,7 +68,7 @@ function ChatMessage({ post, onReply, onDelete, myIdentity }) {
   };
 
   return (
-    <div className="chat-message" style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem 1rem', '&:hover': { background: 'rgba(255,255,255,0.02)' } }}>
+    <div className="chat-message" style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem 1rem', background: 'var(--bg-color)', marginBottom: '0.5rem', borderRadius: '16px', boxShadow: 'var(--neu-shadow-sm)', margin: '0.5rem' }}>
       <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #35D6E7, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', fontWeight: 'bold', color: '#fff', flexShrink: 0 }}>
         {post.is_oracle_post ? '🌟' : (post.is_admin_post ? '👑' : post.author_username.charAt(0).toUpperCase())}
       </div>
@@ -118,7 +118,7 @@ function ChatMessage({ post, onReply, onDelete, myIdentity }) {
 
         {/* Inline Reply Input */}
         {showReplyInput && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', padding: '0.4rem 0.6rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem', background: 'var(--bg-color)', boxShadow: 'var(--neu-inset-sm)', borderRadius: '8px', padding: '0.4rem 0.6rem' }}>
             <input
               autoFocus
               value={replyText}
@@ -255,7 +255,7 @@ export default function RoomFeed({ block, subject, onLeave }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', background: 'var(--bg-main)', margin: '-1rem' }}>
       {/* Chat Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-card)', borderBottom: '1px solid var(--border-color)', zIndex: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-color)', borderBottom: 'none', boxShadow: 'var(--neu-shadow-sm)', zIndex: 10, margin: '0.5rem', borderRadius: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ width: 40, height: 40, borderRadius: '8px', background: 'rgba(53, 214, 231, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
             🏫
@@ -265,7 +265,7 @@ export default function RoomFeed({ block, subject, onLeave }) {
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{block} Room</div>
           </div>
         </div>
-        <button onClick={onLeave} style={{ background: 'rgba(255,94,91,0.1)', border: '1px solid rgba(255,94,91,0.3)', color: '#FF5E5B', borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
+        <button onClick={onLeave} style={{ background: 'var(--bg-color)', border: 'none', boxShadow: 'var(--neu-shadow-sm)', color: '#FF5E5B', borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}>
           Leave
         </button>
       </div>
@@ -288,7 +288,7 @@ export default function RoomFeed({ block, subject, onLeave }) {
       </div>
 
       {/* Sticky Bottom Composer */}
-      <div style={{ padding: '1rem', background: 'var(--bg-card)', borderTop: '1px solid var(--border-color)' }}>
+      <div style={{ padding: '1rem', background: 'var(--bg-color)', borderTop: 'none', boxShadow: '0 -4px 10px rgba(163, 177, 198, 0.4)', borderRadius: '24px 24px 0 0' }}>
         
         {/* Previews */}
         {(imageFile || audioBlob) && (
@@ -309,7 +309,7 @@ export default function RoomFeed({ block, subject, onLeave }) {
         )}
 
         {/* Input Bar */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', background: 'var(--bg-elevated)', borderRadius: '12px', padding: '0.5rem', border: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', background: 'var(--bg-color)', borderRadius: '12px', padding: '0.5rem', border: 'none', boxShadow: 'var(--neu-inset)' }}>
           <button onClick={() => fileInputRef.current?.click()} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.5rem' }}>
             <Image size={20} />
           </button>
@@ -343,9 +343,10 @@ export default function RoomFeed({ block, subject, onLeave }) {
             onClick={handlePost}
             disabled={isPosting || (!content.trim() && !imageFile && !audioBlob)}
             style={{
-              background: (content.trim() || imageFile || audioBlob) ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-              color: (content.trim() || imageFile || audioBlob) ? '#000' : 'var(--text-muted)',
-              border: 'none', borderRadius: '8px', padding: '0.6rem', cursor: (content.trim() || imageFile || audioBlob) ? 'pointer' : 'default', transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              background: 'var(--bg-color)',
+              color: (content.trim() || imageFile || audioBlob) ? 'var(--primary)' : 'var(--text-muted)',
+              border: 'none', borderRadius: '8px', padding: '0.6rem', cursor: (content.trim() || imageFile || audioBlob) ? 'pointer' : 'default', transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: (content.trim() || imageFile || audioBlob) ? 'var(--neu-shadow)' : 'var(--neu-inset-sm)'
             }}
           >
             <Send size={18} fill="currentColor" />

@@ -457,13 +457,11 @@ export default function Feed() {
     const canEdit = isAdminUser || isAuthor;
     
     // Distinctive styling for admin/oracle posts and pinned posts
-    let cardStyle = { ... (isDailyPrompt ? { border: '2px solid var(--accent-color)', boxShadow: '0 4px 12px rgba(108, 92, 231, 0.15)', position: 'relative' } : {}) };
+    let cardStyle = { ... (isDailyPrompt ? { border: '2px solid var(--accent-color)', boxShadow: 'var(--neu-shadow)', position: 'relative' } : {}) };
     if (post.is_oracle_post) {
-        cardStyle.border = '1px solid #35D6E7';
-        cardStyle.background = 'linear-gradient(145deg, rgba(53, 214, 231, 0.05) 0%, rgba(0,0,0,0) 100%)';
+        cardStyle.boxShadow = '0 0 15px rgba(53, 214, 231, 0.3), var(--neu-shadow)';
     } else if (post.is_admin_post) {
-        cardStyle.border = '1px solid #ffd700';
-        cardStyle.background = 'linear-gradient(145deg, rgba(255, 215, 0, 0.05) 0%, rgba(0,0,0,0) 100%)';
+        cardStyle.boxShadow = '0 0 15px rgba(255, 215, 0, 0.3), var(--neu-shadow)';
     }
     if (post.is_pinned) {
         cardStyle.borderLeft = '4px solid var(--accent-color)';
@@ -507,7 +505,7 @@ export default function Feed() {
                         <MoreVertical size={16} />
                     </button>
                     {activeMenu === post.id && (
-                        <div style={{ position: 'absolute', right: 0, top: '24px', background: 'var(--bg-elevated)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '4px', zIndex: 10, minWidth: '120px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
+                        <div style={{ position: 'absolute', right: 0, top: '24px', background: 'var(--bg-color)', border: 'none', borderRadius: '8px', padding: '4px', zIndex: 10, minWidth: '120px', boxShadow: 'var(--neu-shadow)' }}>
                             <button style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px', background: 'transparent', border: 'none', color: 'var(--text-color)', cursor: 'pointer', textAlign: 'left', borderRadius: '4px' }} onClick={() => { setActiveMenu(null); handleEdit(post.id, post.content); }}>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit
                             </button>
@@ -553,8 +551,8 @@ export default function Feed() {
                     border: `1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
                     cursor: hasVoted ? 'default' : 'pointer',
                     overflow: 'hidden',
-                    backgroundColor: isSelected && !hasVoted ? 'rgba(29, 155, 240, 0.1)' : 'var(--bg-secondary)',
-                    transition: 'all 0.2s ease'
+                    backgroundColor: 'var(--bg-color)',
+                    boxShadow: (isSelected && !hasVoted) ? 'var(--neu-inset)' : 'var(--neu-shadow-sm)',
                   }}
                   onMouseEnter={(e) => { if(!hasVoted) e.currentTarget.style.transform = 'scale(1.02)'; }}
                   onMouseLeave={(e) => { if(!hasVoted) e.currentTarget.style.transform = 'scale(1)'; }}
@@ -809,7 +807,7 @@ export default function Feed() {
             Syncing
           </span>
           <div style={{
-            width: '120px', height: '2px', background: 'rgba(255, 255, 255, 0.05)', 
+            width: '120px', height: '2px', background: 'var(--border-strong)', 
             borderRadius: '2px', overflow: 'hidden', position: 'relative'
           }}>
              <div style={{
