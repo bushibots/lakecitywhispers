@@ -845,6 +845,10 @@ def create_post():
                 
     db.session.commit()
     
+    # Emit to all connected clients for real-time feed/rooms
+    post_data = serialize_post(new_post, user)
+    socketio.emit('new_post', post_data)
+    
     return jsonify({"message": "Whisper posted successfully", "post_id": new_post.id}), 201
 
 @app.route('/api/posts/<int:post_id>', methods=['DELETE'])
