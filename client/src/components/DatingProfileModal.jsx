@@ -22,9 +22,9 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
       if (!file) return;
       setUploading(true);
       try {
-          const data = await uploadFile(file);
-          if (data && data.url) {
-              setImageUrl(data.url);
+          const url = await uploadFile(file);
+          if (url) {
+              setImageUrl(url);
           }
       } catch (err) {
           console.error("Upload failed", err);
