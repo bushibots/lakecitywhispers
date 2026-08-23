@@ -76,7 +76,11 @@ export default function AdminDashboard() {
         if (!data.error) setBlockedWords(data);
     } else if (activeTab === 'dating') {
         const data = await fetchAdminDatingProfiles();
-        setDatingProfiles(data);
+        if (Array.isArray(data)) {
+            setDatingProfiles(data);
+        } else {
+            setDatingProfiles([]);
+        }
     }
     setLoading(false);
   };
