@@ -111,14 +111,14 @@ export default function Profile() {
       <div className="profile-section">
         <h3><Award className="icon-teal" /> Badges</h3>
         <div className="badges-list">
-          <div className="badge-item">
-            <div className="badge-icon gold">🔥</div>
-            <span>Top Whisperor</span>
-          </div>
-          <div className="badge-item">
-            <div className="badge-icon silver">👻</div>
-            <span>Ghost Mode</span>
-          </div>
+          {profile.badges && profile.badges.length > 0 ? profile.badges.map((b, i) => (
+            <div key={i} className="badge-item">
+              <div className={`badge-icon ${b.color}`}>{b.icon}</div>
+              <span>{b.text}</span>
+            </div>
+          )) : (
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No badges yet.</div>
+          )}
         </div>
       </div>
 

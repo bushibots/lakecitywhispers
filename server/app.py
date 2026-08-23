@@ -426,7 +426,12 @@ def get_me():
         "avatar": user.avatar,
         "role": user.role,
         "is_registered": user.is_registered,
-        "created_at": user.created_at.isoformat() + 'Z'
+        "created_at": user.created_at.isoformat() + 'Z',
+        "badges": get_user_badges(user),
+        "stats": {
+            "whispers": Post.query.filter_by(user_id=user.id, is_deleted=False).count(),
+            "reactions": db.session.query(db.func.sum(Post.upvotes)).filter_by(user_id=user.id).scalar() or 0
+        }
     })
 
 @app.route('/api/managers/me', methods=['GET'])
@@ -597,6 +602,19 @@ def delete_account():
 
 # --- Posts (Whispers) ---
 
+def get_user_badges(user):
+    badges = []
+    if user.role == 'admin':
+        badges.append({"icon": "👑", "text": "Admin", "color": "gold"})
+    if not user.is_registered:
+        badges.append({"icon": "👻", "text": "Ghost Mode", "color": "silver"})
+    else:
+        badges.append({"icon": "🛡️", "text": "Verified Account", "color": "silver"})
+    # Only add Top Whisperer if they have > 5 posts (lazy load is okay here for small scale)
+    if len(user.posts) > 5:
+        badges.append({"icon": "🔥", "text": "Top Whisperer", "color": "gold"})
+    return badges
+
 def serialize_post(p, user=None, user_votes=None):
     has_voted = False
     if p.poll and user:
@@ -608,6 +626,7 @@ def serialize_post(p, user=None, user_votes=None):
     author_name = p.author.display_name if 'oracle' in p.author.username.lower() else ('Admin' if p.author.role == 'admin' else p.author.display_name)
     is_oracle_post = ('oracle' in p.author.username.lower())
     is_admin_post = (p.author.role == 'admin') and not is_oracle_post
+    badges = get_user_badges(p.author)
 
     return {
         "id": p.id,
@@ -622,6 +641,7 @@ def serialize_post(p, user=None, user_votes=None):
         "replies_count": len([r for r in p.replies if not r.is_deleted]),
         "author_username": author_name,
         "author_avatar": p.author.avatar,
+        "author_badges": badges,
         "is_admin_post": is_admin_post,
         "is_oracle_post": is_oracle_post,
         "is_pinned": p.is_pinned,
@@ -1031,6 +1051,7 @@ def serialize_reply(r):
         "downvotes": r.downvotes,
         "created_at": r.created_at.isoformat() + 'Z',
         "author_username": author_name,
+        "author_badges": get_user_badges(r.author),
         "author_avatar": r.author.avatar,
         "is_admin_post": is_admin_post,
         "is_oracle_post": is_oracle_post,
@@ -2060,6 +2081,7 @@ def serialize_room_post(p, depth=0):
     author_name = p.author.display_name
     is_oracle = 'oracle' in p.author.username.lower()
     is_admin = p.author.role == 'admin' and not is_oracle
+    badges = get_user_badges(p.author)
     result = {
         "id": p.id,
         "content": p.content,
@@ -2069,6 +2091,7 @@ def serialize_room_post(p, depth=0):
         "created_at": p.created_at.isoformat() + 'Z',
         "author_username": author_name,
         "author_avatar": p.author.avatar,
+        "author_badges": badges,
         "is_oracle_post": is_oracle,
         "is_admin_post": is_admin,
         "parent_id": p.parent_id,

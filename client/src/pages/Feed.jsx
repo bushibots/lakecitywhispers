@@ -400,11 +400,16 @@ export default function Feed() {
         </div>
         <div className="reply-content" style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Link to={`/profile/${comment.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <span className="name" style={{ fontSize: '0.85rem', ...(comment.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})) }}>
-                {comment.is_oracle_post ? '🌟 JLU Oracle' : (comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous'))}
-              </span>
-            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Link to={`/profile/${comment.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <span className="name" style={{ fontSize: '0.85rem', ...(comment.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (comment.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})) }}>
+                  {comment.is_oracle_post ? '🌟 JLU Oracle' : (comment.is_admin_post ? '👑 Admin' : (comment.author_username || 'Anonymous'))}
+                </span>
+              </Link>
+              {comment.author_badges && comment.author_badges.map((b, i) => (
+                <span key={i} title={b.text} style={{ fontSize: '0.75rem', marginLeft: '2px' }}>{b.icon}</span>
+              ))}
+            </div>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
               {formatTime(comment.created_at)}
             </span>
@@ -479,11 +484,16 @@ export default function Feed() {
             )}
           </div>
           <div className="card-meta">
-            <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <span className="name" style={post.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})}>
-                {post.is_oracle_post ? '🌟 JLU Oracle' : (post.is_admin_post ? '👑 Admin' : identity)}
-              </span>
-            </Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <span className="name" style={post.is_oracle_post ? {color: '#35D6E7', fontWeight: 'bold'} : (post.is_admin_post ? {color: '#ffd700', fontWeight: 'bold'} : {})}>
+                  {post.is_oracle_post ? '🌟 JLU Oracle' : (post.is_admin_post ? '👑 Admin' : identity)}
+                </span>
+              </Link>
+              {post.author_badges && post.author_badges.map((b, i) => (
+                  <span key={i} title={b.text} style={{ fontSize: '0.85rem', marginLeft: '2px' }}>{b.icon}</span>
+              ))}
+            </div>
             <span className="time">{formatTime(post.created_at)}</span>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>

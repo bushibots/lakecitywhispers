@@ -35,7 +35,12 @@ function ChatReply({ reply, myIdentity, onDelete }) {
       </div>
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{reply.author_username}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-main)' }}>{reply.author_username}</span>
+            {reply.author_badges && reply.author_badges.map((b, i) => (
+                <span key={i} title={b.text} style={{ fontSize: '0.65rem', marginLeft: '2px' }}>{b.icon}</span>
+            ))}
+          </div>
           <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>{formatTime(reply.created_at)}</span>
         </div>
         <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', marginTop: '2px' }}>{reply.content}</div>
@@ -69,9 +74,14 @@ function ChatMessage({ post, onReply, onDelete, myIdentity }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.5rem', marginBottom: '0.2rem' }}>
-          <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: post.is_oracle_post ? '#35D6E7' : (post.is_admin_post ? '#ffd700' : 'var(--text-main)') }}>
-            {post.is_oracle_post ? '🌟 JLU Oracle' : (post.is_admin_post ? '👑 Admin' : post.author_username)}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: post.is_oracle_post ? '#35D6E7' : (post.is_admin_post ? '#ffd700' : 'var(--text-main)') }}>
+              {post.is_oracle_post ? '🌟 JLU Oracle' : (post.is_admin_post ? '👑 Admin' : post.author_username)}
+            </span>
+            {post.author_badges && post.author_badges.map((b, i) => (
+                <span key={i} title={b.text} style={{ fontSize: '0.8rem', marginLeft: '2px' }}>{b.icon}</span>
+            ))}
+          </div>
           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatTime(post.created_at)}</span>
         </div>
         
