@@ -1013,6 +1013,10 @@ def reply_post(post_id):
     db.session.add(new_reply)
     db.session.commit()
     
+    reply_data = serialize_reply(new_reply)
+    reply_data['parent_id'] = parent_post.id
+    socketio.emit('new_reply', reply_data)
+    
     return jsonify({"message": "Reply posted successfully", "reply_id": new_reply.id}), 201
 
 def serialize_reply(r):
