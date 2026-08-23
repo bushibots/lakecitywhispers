@@ -60,16 +60,16 @@ export default function AdminDashboard() {
         }
     } else if (activeTab === 'users') {
         const data = await fetchAdminUsers();
-        if (data && !data.error) setAllUsers(data);
+        if (Array.isArray(data)) setAllUsers(data);
     } else if (activeTab === 'all_posts') {
         const data = await fetchAdminAllPosts();
-        if (data && !data.error) setAllPosts(data);
+        if (Array.isArray(data)) setAllPosts(data);
     } else if (activeTab === 'settings') {
         const data = await fetchAdminSettings();
         if (data && !data.error) setSysSettings(data);
     } else if (activeTab === 'all_chats') {
         const data = await fetchAdminConversations();
-        setAdminChats(data);
+        if (Array.isArray(data)) setAdminChats(data);
     } else if (activeTab === 'filters') {
         const data = await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/admin/blocked_words', {
             headers: { 'Authorization': localStorage.getItem('jluwhisper_session') }
