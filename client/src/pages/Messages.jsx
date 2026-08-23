@@ -350,7 +350,19 @@ export default function Messages() {
                                     border: 'none',
                                     animation: 'slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards'
                                 }}>
-                                    {msg.content}
+                                    {msg.content.startsWith('[IMAGE]') ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <span style={{ fontSize: '0.8rem', opacity: 0.8, fontWeight: 'bold' }}>Dating Profile Picture</span>
+                                            <img 
+                                                src={msg.content.replace('[IMAGE]', '').trim()} 
+                                                alt="Shared Media" 
+                                                style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '12px', objectFit: 'cover' }} 
+                                                crossOrigin="anonymous"
+                                            />
+                                        </div>
+                                    ) : (
+                                        msg.content
+                                    )}
                                 </div>
                                 <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '6px', padding: '0 4px', fontWeight: 500 }}>
                                     {formatTime(msg.created_at)}

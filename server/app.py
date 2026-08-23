@@ -1180,27 +1180,49 @@ def get_conversations():
         (Conversation.user1_id == user.id) | (Conversation.user2_id == user.id)
     ).order_by(Conversation.updated_at.desc()).all()
     
+    if not convs:
+        return jsonify({"active": [], "requests": []})
+        
+    other_user_ids = list(set([c.user2_id if c.user1_id == user.id else c.user1_id for c in convs]))
+    
+    # Bulk fetch blocks
+    blocks = Block.query.filter(
+        ((Block.blocker_id == user.id) & (Block.blocked_id.in_(other_user_ids))) | 
+        ((Block.blocker_id.in_(other_user_ids)) & (Block.blocked_id == user.id))
+    ).all()
+    blocked_user_ids = {b.blocked_id if b.blocker_id == user.id else b.blocker_id for b in blocks}
+    
+    # Bulk fetch users
+    users = User.query.filter(User.id.in_(other_user_ids)).all()
+    user_map = {u.id: u.display_name for u in users}
+    
+    # Bulk fetch last messages
+    conv_ids = [c.id for c in convs]
+    from sqlalchemy import func
+    subq = db.session.query(
+        Message.conversation_id, 
+        func.max(Message.created_at).label('max_date')
+    ).filter(Message.conversation_id.in_(conv_ids)).group_by(Message.conversation_id).subquery()
+    
+    latest_messages = db.session.query(Message).join(
+        subq, 
+        (Message.conversation_id == subq.c.conversation_id) & 
+        (Message.created_at == subq.c.max_date)
+    ).all()
+    
+    last_msg_map = {m.conversation_id: m.content for m in latest_messages}
+    
     active = []
     requests = []
     
     for c in convs:
         other_user_id = c.user2_id if c.user1_id == user.id else c.user1_id
         
-        # Check if blocked
-        is_blocked = Block.query.filter(
-            ((Block.blocker_id == user.id) & (Block.blocked_id == other_user_id)) | 
-            ((Block.blocker_id == other_user_id) & (Block.blocked_id == user.id))
-        ).first()
-        
-        if is_blocked:
+        if other_user_id in blocked_user_ids:
             continue
             
-        # Determine the other user's display name
-        other_user = db.session.get(User, other_user_id)
-        other_name = other_user.display_name if other_user else "Unknown"
-        
-        last_msg = Message.query.filter_by(conversation_id=c.id).order_by(Message.created_at.desc()).first()
-        last_msg_text = last_msg.content if last_msg else ""
+        other_name = user_map.get(other_user_id, "Unknown")
+        last_msg_text = last_msg_map.get(c.id, "")
         
         conv_data = {
             "id": c.id,
@@ -1214,12 +1236,9 @@ def get_conversations():
         if c.status == 'accepted':
             active.append(conv_data)
         elif c.status == 'pending':
-            # Only show in requests if they are NOT the requester
             if c.user2_id == user.id:
                 requests.append(conv_data)
             else:
-                # If they are the requester, it's still pending for them but they can view it in active (or a sent requests tab)
-                # Let's put it in active for the sender so they can see their sent requests
                 active.append(conv_data)
                 
     return jsonify({"active": active, "requests": requests})
@@ -2057,8 +2076,43 @@ def dating_swipe():
                     content="💖 It's a Match! You both swiped right. Say hi!"
                 )
                 db.session.add(sys_msg)
-                existing = conv
                 
+                # Fetch dating profiles for pictures
+                user_dp = DatingProfile.query.filter_by(user_id=user.id).first()
+                target_dp = DatingProfile.query.filter_by(user_id=target_id).first()
+                
+                if user_dp and user_dp.image_url:
+                    msg1 = Message(conversation_id=conv.id, sender_id=user.id, content=f"[IMAGE] {user_dp.image_url}")
+                    db.session.add(msg1)
+                
+                if target_dp and target_dp.image_url:
+                    msg2 = Message(conversation_id=conv.id, sender_id=target_id, content=f"[IMAGE] {target_dp.image_url}")
+                    db.session.add(msg2)
+                
+                # Notifications
+                from models import Notification
+                target_user = db.session.get(User, target_id)
+                target_name = target_user.display_name if target_user else "Someone"
+                
+                notif1 = Notification(user_id=target_id, type="message", message=f"New match with {user.display_name}!")
+                notif2 = Notification(user_id=user.id, type="message", message=f"New match with {target_name}!")
+                db.session.add(notif1)
+                db.session.add(notif2)
+                db.session.flush()
+                
+                try:
+                    from add_socketio import emit_to_user
+                    if target_user:
+                        emit_to_user(target_user.session_token, 'new_notification', {
+                            'id': notif1.id, 'type': 'message', 'message': notif1.message, 'created_at': notif1.created_at.isoformat() + 'Z'
+                        })
+                    emit_to_user(user.session_token, 'new_notification', {
+                        'id': notif2.id, 'type': 'message', 'message': notif2.message, 'created_at': notif2.created_at.isoformat() + 'Z'
+                    })
+                except Exception as e:
+                    pass
+                
+                existing = conv
     db.session.commit()
     
     return jsonify({
