@@ -4,7 +4,7 @@ import {
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser,
-    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes
+    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
 
@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [adminChats, setAdminChats] = useState([]);
   const [datingProfiles, setDatingProfiles] = useState([]);
   const [swipeHistory, setSwipeHistory] = useState([]);
+  const [allMedia, setAllMedia] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
   
@@ -88,6 +89,13 @@ export default function AdminDashboard() {
             setSwipeHistory(data);
         } else {
             setSwipeHistory([]);
+        }
+    } else if (activeTab === 'media') {
+        const data = await fetchAdminMedia();
+        if (Array.isArray(data)) {
+            setAllMedia(data);
+        } else {
+            setAllMedia([]);
         }
     }
     setLoading(false);
@@ -334,6 +342,9 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'swipes' ? 'active' : ''}`} onClick={() => setActiveTab('swipes')} style={{ backgroundColor: activeTab === 'swipes' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'swipes' ? 'white' : 'var(--text-color)' }}>
             <Heart size={16} style={{ marginRight: '8px' }}/> Swipes
+        </button>
+        <button className={`pill-tab ${activeTab === 'media' ? 'active' : ''}`} onClick={() => setActiveTab('media')} style={{ backgroundColor: activeTab === 'media' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'media' ? 'white' : 'var(--text-color)' }}>
+            <Eye size={16} style={{ marginRight: '8px' }}/> Media Gallery
         </button>
       </div>
 
@@ -955,6 +966,36 @@ export default function AdminDashboard() {
                       )}
                   </tbody>
               </table>
+          </div>
+      )}
+
+      {activeTab === 'media' && (
+          <div className="feed-card" style={{ padding: '1.5rem' }}>
+              <h2 style={{ marginBottom: '1.5rem' }}>Global Media Gallery</h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>Viewing all media uploaded to posts and dating profiles.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                  {allMedia.map(m => (
+                      <div key={m.id} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-elevated)', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                          {m.type === 'image' ? (
+                              <div style={{ height: '200px', width: '100%', backgroundColor: '#000' }}>
+                                  <img src={m.url} alt="Uploaded Media" style={{ width: '100%', height: '100%', objectFit: 'contain' }} loading="lazy" />
+                              </div>
+                          ) : (
+                              <div style={{ height: '200px', width: '100%', backgroundColor: 'var(--bg-card)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                                  <audio src={m.url} controls style={{ width: '100%' }} />
+                              </div>
+                          )}
+                          <div style={{ padding: '1rem' }}>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--accent-color)', fontWeight: 'bold' }}>{m.source}</div>
+                              {m.created_at && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '5px' }}>{new Date(m.created_at).toLocaleString()}</div>}
+                              <a href={m.url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: '10px', fontSize: '0.85rem', color: 'white', backgroundColor: 'var(--bg-card)', padding: '4px 12px', borderRadius: '4px', textDecoration: 'none' }}>Open Original</a>
+                          </div>
+                      </div>
+                  ))}
+                  {allMedia.length === 0 && (
+                      <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No media found on the server.</div>
+                  )}
+              </div>
           </div>
       )}
 

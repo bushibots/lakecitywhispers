@@ -354,6 +354,22 @@ export const fetchAdminSwipes = async () => {
     }
 };
 
+export const fetchAdminMedia = async () => {
+    try {
+        const token = await getSessionToken();
+        const res = await fetch(`${API_URL}/admin/media`, {
+            headers: {
+                'Authorization': token
+            }
+        });
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Error fetching media:", error);
+        return [];
+    }
+};
+
 export const adminDeleteDatingProfile = async (userId) => {
     try {
         const token = await getSessionToken();
