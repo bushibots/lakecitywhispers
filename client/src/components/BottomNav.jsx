@@ -8,7 +8,6 @@ export default function BottomNav() {
   const navItems = [
     { path: '/feed', label: 'Feed', icon: Home },
     { path: '/explore', label: 'Explore', icon: Compass },
-    { path: '/messages', label: 'Messages', icon: MessageSquare },
     { path: '/dating', label: 'Dating', icon: Heart, special: true },
     { path: '/notifications', label: 'Alerts', icon: Bell },
     { path: '/profile', label: 'Profile', icon: User },
