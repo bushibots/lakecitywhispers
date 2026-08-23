@@ -73,24 +73,25 @@ export default function Dating() {
 
     const targetId = profiles[currentIndex].user_id;
     
-    setTimeout(async () => {
-        setActiveBtn(null);
-        
-        // Optimistic UI update
+    const fetchPromise = apiFetch('/dating/swipe', {
+        method: 'POST',
+        body: JSON.stringify({ target_id: targetId, action })
+    });
+    
+    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 300));
+    
+    const [data] = await Promise.all([fetchPromise, timeoutPromise]);
+    
+    setActiveBtn(null);
+    
+    if (data && data.match) {
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+        setMatchPopup({ name: "Your Match", conversation_id: data.conversation_id });
+    } else {
         setCurrentIndex(prev => prev + 1);
         setGlimpse(false); // Reset glimpse
         setHasGlimpsed(false); // Reset view-once state
-
-        const data = await apiFetch('/dating/swipe', {
-            method: 'POST',
-            body: JSON.stringify({ target_id: targetId, action })
-        });
-
-        if (data && data.match) {
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-            setMatchPopup({ name: "Your Match", conversation_id: data.conversation_id });
-        }
-    }, 300); // Wait for button animation to finish
+    }
   };
 
   if (loading) {

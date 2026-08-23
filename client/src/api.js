@@ -322,6 +322,39 @@ export const adminForgePost = async (content, topic = 'General', authorName = ''
     }
 };
 
+export const fetchAdminDatingProfiles = async () => {
+    try {
+        const token = getSessionToken();
+        const res = await fetch(`${API_URL}/admin/dating_profiles`, {
+            headers: {
+                'Authorization': token
+            }
+        });
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Error fetching dating profiles:", error);
+        return [];
+    }
+};
+
+export const adminDeleteDatingProfile = async (userId) => {
+    try {
+        const token = getSessionToken();
+        const res = await fetch(`${API_URL}/admin/dating_profiles/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': token
+            }
+        });
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Error deleting dating profile:", error);
+        return { error: 'Failed to delete' };
+    }
+};
+
 export const sendAdminBroadcast = async (message) => {
     const token = await getSessionToken();
     try {

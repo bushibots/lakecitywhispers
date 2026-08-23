@@ -3,7 +3,8 @@ import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3 } fro
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
-    sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser
+    sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser,
+    fetchAdminDatingProfiles, adminDeleteDatingProfile
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
 
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
   const [userTab, setUserTab] = useState('real'); // 'real' or 'bots'
   const [allPosts, setAllPosts] = useState([]);
   const [adminChats, setAdminChats] = useState([]);
+  const [datingProfiles, setDatingProfiles] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
   
@@ -72,6 +74,9 @@ export default function AdminDashboard() {
             headers: { 'Authorization': localStorage.getItem('jluwhisper_session') }
         }).then(r => r.json());
         if (!data.error) setBlockedWords(data);
+    } else if (activeTab === 'dating') {
+        const data = await fetchAdminDatingProfiles();
+        setDatingProfiles(data);
     }
     setLoading(false);
   };
@@ -311,6 +316,9 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'filters' ? 'active' : ''}`} onClick={() => setActiveTab('filters')} style={{ backgroundColor: activeTab === 'filters' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'filters' ? 'white' : 'var(--text-color)' }}>
             <Ban size={16} style={{ marginRight: '8px' }}/> Filters
+        </button>
+        <button className={`pill-tab ${activeTab === 'dating' ? 'active' : ''}`} onClick={() => setActiveTab('dating')} style={{ backgroundColor: activeTab === 'dating' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'dating' ? 'white' : 'var(--text-color)' }}>
+            <Flame size={16} style={{ marginRight: '8px' }}/> Dating
         </button>
       </div>
 
@@ -866,6 +874,39 @@ export default function AdminDashboard() {
           </div>
       )}
       
+      {activeTab === 'dating' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
+              {datingProfiles.map(dp => (
+                  <div key={dp.user_id} className="feed-card" style={{ padding: 0, overflow: 'hidden', borderRadius: '16px' }}>
+                      <img src={dp.image_url} alt="Profile" style={{ width: '100%', height: '250px', objectFit: 'cover' }} />
+                      <div style={{ padding: '1rem' }}>
+                          <h3 style={{ margin: '0 0 0.5rem 0' }}>{dp.display_name} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({dp.username})</span></h3>
+                          <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>{dp.bio}</p>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                              <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', fontSize: '0.8rem' }}>{dp.gender}</span>
+                              <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', fontSize: '0.8rem' }}>{dp.age} yrs</span>
+                          </div>
+                          <button 
+                              onClick={async () => {
+                                  if (window.confirm("Delete this dating profile?")) {
+                                      await adminDeleteDatingProfile(dp.user_id);
+                                      setDatingProfiles(prev => prev.filter(p => p.user_id !== dp.user_id));
+                                  }
+                              }} 
+                              style={{ width: '100%', padding: '0.7rem', background: '#FF4757', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                              <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }}/> Delete Profile
+                          </button>
+                      </div>
+                  </div>
+              ))}
+              {datingProfiles.length === 0 && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                      No dating profiles found.
+                  </div>
+              )}
+          </div>
+      )}
+
     </div>
   );
 }
