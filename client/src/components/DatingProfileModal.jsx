@@ -187,9 +187,13 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
             </div>
           )}
 
+        </div>
+        
+        {/* Sticky Footer */}
+        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-elevated)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <button 
             className="btn-glow" 
-            style={{ width: '100%', padding: '1rem', marginTop: '1rem', backgroundColor: '#FF5E5B', fontSize: '1.1rem' }}
+            style={{ width: '100%', padding: '1rem', backgroundColor: '#FF5E5B', fontSize: '1.1rem' }}
             onClick={handleSave}
             disabled={loading}
           >
@@ -198,7 +202,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           
           {initialProfile && (
               <button 
-                  style={{ width: '100%', padding: '1rem', marginTop: '0.5rem', fontSize: '0.9rem', color: '#FF5E5B', border: '1px solid #FF5E5B', background: 'transparent', borderRadius: '24px', cursor: 'pointer' }}
+                  style={{ width: '100%', padding: '1rem', fontSize: '0.9rem', color: '#FF5E5B', border: '1px solid rgba(255, 94, 91, 0.3)', background: 'transparent', borderRadius: '24px', cursor: 'pointer', transition: 'all 0.2s' }}
                   onClick={async () => {
                       if (window.confirm("Are you sure you want to withdraw your profile? You will no longer be visible in Dating.")) {
                           setLoading(true);
