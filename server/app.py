@@ -73,6 +73,22 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16 MB max limit
 db.init_app(app)
 migrate = Migrate(app, db)
 
+with app.app_context():
+    db.create_all()
+    from sqlalchemy import inspect
+    inspector = inspect(db.engine)
+    if 'post' in inspector.get_table_names():
+        columns = [col['name'] for col in inspector.get_columns('post')]
+        if 'handle' not in columns:
+            try:
+                db.session.execute(db.text("ALTER TABLE post ADD COLUMN handle VARCHAR(50) DEFAULT 'global'"))
+            except: pass
+        if 'is_announcement' not in columns:
+            try:
+                db.session.execute(db.text("ALTER TABLE post ADD COLUMN is_announcement BOOLEAN DEFAULT FALSE"))
+            except: pass
+        db.session.commit()
+
 # Setup AI Bot Scheduler
 class Config:
     SCHEDULER_API_ENABLED = True
