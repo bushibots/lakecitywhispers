@@ -10,6 +10,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import Dating from './pages/Dating';
 import Settings from './pages/Settings';
+import Rooms from './pages/Rooms';
 import AuthModal from './components/AuthModal';
 import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
@@ -83,7 +84,7 @@ function App() {
       <Route path="/" element={<Layout />}>
         <Route index element={<Navigate to="/feed" replace />} />
         <Route path="feed" element={<Feed />} />
-        <Route path="rooms" element={<Feed isRoomsMode={true} />} />
+        <Route path="rooms" element={<Rooms />} />
         <Route path="explore" element={<Explore />} />
         <Route path="notifications" element={<Notifications />} />
         <Route path="messages" element={<Messages />} />
