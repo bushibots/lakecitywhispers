@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield, LogIn, Flame } from 'lucide-react';
+import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield, LogIn, Flame, Moon, Sun } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import AuthModal from './AuthModal';
 import { fetchPublicConfig, apiFetch } from '../api';
@@ -9,6 +9,16 @@ export default function LeftSidebar() {
   const currentPath = location.pathname;
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
+
+  const [isDarkMode, setIsDarkMode] = useState(
+    document.body.classList.contains('dark-mode')
+  );
+
+  const toggleTheme = () => {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    setIsDarkMode(isDark);
+  };
 
   const navItems = [
     { path: '/feed', label: 'Feed', icon: Home },
@@ -133,6 +143,15 @@ export default function LeftSidebar() {
           <LogIn size={18} /> Log In / Register
         </button>
       )}
+
+      <button 
+        onClick={toggleTheme}
+        className="nav-link"
+        style={{ marginTop: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', gap: '1rem' }}
+      >
+        {isDarkMode ? <Sun size={24} /> : <Moon size={24} />}
+        <span className="nav-label">{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+      </button>
 
       <AuthModal 
         isOpen={isAuthOpen} 

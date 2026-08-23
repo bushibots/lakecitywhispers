@@ -18,6 +18,22 @@
   --neu-inset-sm: inset 3px 3px 6px 0 rgba(163, 177, 198, 0.7), inset -3px -3px 6px 0 rgba(255, 255, 255, 0.8);
 }
 
+body.dark-mode {
+  --bg-color: #26292e;
+  --bg-secondary: #26292e;
+  --card-bg: #26292e;
+  --primary: #35D6E7;
+  --text-main: #F3F4F6;
+  --text-muted: #9CA3AF;
+  --border: transparent;
+  --border-strong: #374151;
+  
+  --neu-shadow: 7px 7px 15px rgba(0, 0, 0, 0.5), -7px -7px 15px rgba(60, 65, 75, 0.3);
+  --neu-shadow-sm: 4px 4px 8px rgba(0, 0, 0, 0.5), -4px -4px 8px rgba(60, 65, 75, 0.3);
+  --neu-inset: inset 5px 5px 10px 0 rgba(0, 0, 0, 0.6), inset -5px -5px 10px 0 rgba(60, 65, 75, 0.2);
+  --neu-inset-sm: inset 2px 2px 5px 0 rgba(0, 0, 0, 0.6), inset -2px -2px 5px 0 rgba(60, 65, 75, 0.2);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {

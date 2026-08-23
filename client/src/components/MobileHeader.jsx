@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, TrendingUp, Shield, LogIn, Flame } from 'lucide-react';
+import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, TrendingUp, Shield, LogIn, Flame, Moon, Sun } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { fetchPublicConfig } from '../api';
 
@@ -9,6 +9,17 @@ export default function MobileHeader() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const location = useLocation();
   const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
+
+  const [isDarkMode, setIsDarkMode] = useState(
+    document.body.classList.contains('dark-mode')
+  );
+
+  const toggleTheme = () => {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    setIsDarkMode(isDark);
+    setIsOpen(false);
+  };
 
   // Close drawer when route changes
   useEffect(() => {
@@ -83,6 +94,15 @@ export default function MobileHeader() {
               <span>Admin Panel</span>
             </Link>
           )}
+
+          <button 
+            onClick={toggleTheme}
+            className="drawer-link"
+            style={{ width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+          >
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+            <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
 
           {!isRegistered && (
             <button 
