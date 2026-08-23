@@ -12,7 +12,6 @@ export default function LeftSidebar() {
 
   const navItems = [
     { path: '/feed', label: 'Feed', icon: Home },
-    { path: '/rooms', label: 'Rooms', icon: MessageSquare },
     { path: '/explore', label: 'Explore', icon: Compass },
     { path: '/messages', label: 'Messages', icon: MessageSquare },
     { path: '/notifications', label: 'Notifications', icon: Bell },

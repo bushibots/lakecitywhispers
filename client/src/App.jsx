@@ -83,7 +83,7 @@ function App() {
         <Route path="/" element={<Layout />}>
           <Route index element={<Navigate to="/feed" replace />} />
           <Route path="feed" element={<Feed />} />
-          <Route path="rooms" element={<Feed isRoomsMode={true} />} />
+
           <Route path="explore" element={<Explore />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="messages" element={<Messages />} />

@@ -14,7 +14,7 @@ from flask_apscheduler import APScheduler
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification, PostView, DatingProfile, SwipeInteraction, Manager, BlockedWord, RoomPost
+from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification, PostView, DatingProfile, SwipeInteraction, Manager, BlockedWord
 import json
 import random
 import string
@@ -2073,142 +2073,7 @@ def health():
     return jsonify({"status": "ok"})
 
 
-# ──────────────────────────────────────────
-# ROOMS — Completely isolated from global feed
-# ──────────────────────────────────────────
 
-def serialize_room_post(p, depth=0):
-    author_name = p.author.display_name
-    is_oracle = 'oracle' in p.author.username.lower()
-    is_admin = p.author.role == 'admin' and not is_oracle
-    badges = get_user_badges(p.author)
-    result = {
-        "id": p.id,
-        "content": p.content,
-        "image_url": p.image_url,
-        "audio_url": p.audio_url,
-        "upvotes": p.upvotes,
-        "created_at": p.created_at.isoformat() + 'Z',
-        "author_username": author_name,
-        "author_avatar": p.author.avatar,
-        "author_badges": badges,
-        "is_oracle_post": is_oracle,
-        "is_admin_post": is_admin,
-        "parent_id": p.parent_id,
-        "replies": [serialize_room_post(r, depth+1) for r in p.replies if not r.is_deleted] if depth < 3 else []
-    }
-    return result
-
-@app.route('/api/rooms/posts', methods=['GET'])
-def get_room_posts():
-    block = request.args.get('block', '')
-    subject = request.args.get('subject', '')
-    if not block or not subject:
-        return jsonify({"error": "block and subject are required"}), 400
-    posts = RoomPost.query.filter_by(
-        room_block=block, room_subject=subject, parent_id=None, is_deleted=False
-    ).order_by(RoomPost.created_at.desc()).limit(50).all()
-    return jsonify({"posts": [serialize_room_post(p) for p in posts]})
-
-@app.route('/api/rooms/posts', methods=['POST'])
-def create_room_post():
-    session_token = request.headers.get('Authorization')
-    if not session_token:
-        return jsonify({"error": "Unauthorized"}), 401
-    user = User.query.filter_by(session_token=session_token).first()
-    if not user or user.is_banned:
-        return jsonify({"error": "Unauthorized"}), 401
-    
-    lockdown = SystemSetting.query.filter_by(key='lockdown').first()
-    if lockdown and lockdown.value == 'true' and user.role != 'admin':
-        return jsonify({"error": "Lockdown Mode active."}), 403
-
-    data = request.json
-    if contains_blocked_word(data.get('content', '')):
-        return jsonify({"error": "Your message contains blocked content."}), 400
-
-    post = RoomPost(
-        content=data.get('content', ''),
-        image_url=data.get('image_url'),
-        audio_url=data.get('audio_url'),
-        room_block=data.get('room_block'),
-        room_subject=data.get('room_subject'),
-        user_id=user.id
-    )
-    db.session.add(post)
-    db.session.commit()
-    
-    post_data = serialize_room_post(post)
-    room_key = f"room_{data.get('room_block')}|{data.get('room_subject')}"
-    socketio.emit('room_new_post', post_data, room=room_key)
-    
-    return jsonify({"message": "Posted", "post": post_data}), 201
-
-@app.route('/api/rooms/posts/<int:post_id>/reply', methods=['POST'])
-def create_room_reply(post_id):
-    session_token = request.headers.get('Authorization')
-    if not session_token:
-        return jsonify({"error": "Unauthorized"}), 401
-    user = User.query.filter_by(session_token=session_token).first()
-    if not user or user.is_banned:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    parent = db.get_or_404(RoomPost, post_id)
-    data = request.json
-    if contains_blocked_word(data.get('content', '')):
-        return jsonify({"error": "Your message contains blocked content."}), 400
-
-    reply = RoomPost(
-        content=data.get('content', ''),
-        room_block=parent.room_block,
-        room_subject=parent.room_subject,
-        user_id=user.id,
-        parent_id=parent.id
-    )
-    db.session.add(reply)
-    db.session.commit()
-    
-    reply_data = serialize_room_post(reply)
-    room_key = f"room_{parent.room_block}|{parent.room_subject}"
-    socketio.emit('room_new_reply', reply_data, room=room_key)
-    
-    return jsonify({"message": "Reply posted", "reply": reply_data}), 201
-
-@app.route('/api/rooms/posts/<int:post_id>/upvote', methods=['POST'])
-def upvote_room_post(post_id):
-    post = db.get_or_404(RoomPost, post_id)
-    post.upvotes += 1
-    db.session.commit()
-    return jsonify({"upvotes": post.upvotes})
-
-@app.route('/api/rooms/posts/<int:post_id>', methods=['DELETE'])
-def delete_room_post(post_id):
-    session_token = request.headers.get('Authorization')
-    if not session_token:
-        return jsonify({"error": "Unauthorized"}), 401
-    user = User.query.filter_by(session_token=session_token).first()
-    if not user:
-        return jsonify({"error": "Unauthorized"}), 401
-    post = db.get_or_404(RoomPost, post_id)
-    if post.user_id != user.id and user.role != 'admin':
-        return jsonify({"error": "Forbidden"}), 403
-    post.is_deleted = True
-    db.session.commit()
-    return jsonify({"message": "Deleted"})
-
-@socketio.on('join_room_channel')
-def on_join_room_channel(data):
-    block = data.get('block', '')
-    subject = data.get('subject', '')
-    if block and subject:
-        join_room(f"room_{block}|{subject}")
-
-@socketio.on('leave_room_channel')
-def on_leave_room_channel(data):
-    block = data.get('block', '')
-    subject = data.get('subject', '')
-    if block and subject:
-        leave_room(f"room_{block}|{subject}")
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)
