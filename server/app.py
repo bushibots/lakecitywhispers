@@ -2059,7 +2059,12 @@ def dating_profile():
             pass
         profile.image_url = data.get('image_url', profile.image_url)
         profile.is_active = data.get('is_active', True)
-        db.session.commit()
+        
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({"error": f"Database Error: {str(e)}"}), 500
     
     if not profile:
         return jsonify(None)
