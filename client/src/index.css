@@ -714,90 +714,97 @@ input, select, textarea, button { font-size: 16px !important; }
   100% { transform: rotate(360deg); }
 }
 
-/* --- THEME OVERRIDES --- */
+/* --- THEME OVERRIDES (NEUMORPHISM) --- */
 
-/* Aurora (Premium Glassmorphism) */
+/* Aurora (Dark Purple) */
 body.t-aurora {
   --bg-color: #1a1025;
-  --bg-secondary: rgba(255,255,255,0.02);
-  --card-bg: rgba(255, 255, 255, 0.05);
+  --bg-secondary: #1a1025;
+  --card-bg: #1a1025;
   --primary: #00ffcc;
   --accent-glow: #ff00cc;
   --text-main: #ffffff;
-  --text-muted: rgba(255,255,255,0.6);
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.2);
+  --text-muted: #b09dc2;
+  --border: transparent;
+  --border-strong: #3b2554;
+  
+  --neu-shadow: 7px 7px 15px rgba(0, 0, 0, 0.6), -7px -7px 15px rgba(60, 40, 90, 0.4);
+  --neu-shadow-sm: 4px 4px 8px rgba(0, 0, 0, 0.6), -4px -4px 8px rgba(60, 40, 90, 0.4);
+  --neu-inset: inset 5px 5px 10px 0 rgba(0, 0, 0, 0.7), inset -5px -5px 10px 0 rgba(60, 40, 90, 0.3);
+  --neu-inset-sm: inset 2px 2px 5px 0 rgba(0, 0, 0, 0.7), inset -2px -2px 5px 0 rgba(60, 40, 90, 0.3);
 }
-body.t-aurora::before { background: var(--accent-glow); opacity: 0.15; }
-body.t-aurora::after { background: var(--primary); opacity: 0.15; }
-body.t-aurora .feed-card, body.t-aurora .chat-pane {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 0 10px rgba(255,255,255,0.05);
-  border-radius: 20px;
-}
-body.t-aurora .btn-glow { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
-body.t-aurora .btn-glow:hover { background: rgba(255,255,255,0.2); }
 
-/* Cyberpunk (Neon) */
+/* Cyberpunk (Charcoal Neon) */
 body.t-cyber {
-  --bg-color: #0a0015;
-  --bg-secondary: #050010;
-  --card-bg: rgba(15, 0, 25, 0.9);
+  --bg-color: #141414;
+  --bg-secondary: #141414;
+  --card-bg: #141414;
   --primary: #f0f;
   --accent-glow: #0ff;
-  --text-main: #fff;
-  --text-muted: #a0a0a0;
-  --border: #f0f;
-  --border-strong: #0ff;
+  --text-main: #ffffff;
+  --text-muted: #888888;
+  --border: transparent;
+  --border-strong: #2a2a2a;
+  
+  --neu-shadow: 7px 7px 15px rgba(0, 0, 0, 0.8), -7px -7px 15px rgba(45, 45, 45, 0.3);
+  --neu-shadow-sm: 4px 4px 8px rgba(0, 0, 0, 0.8), -4px -4px 8px rgba(45, 45, 45, 0.3);
+  --neu-inset: inset 5px 5px 10px 0 rgba(0, 0, 0, 0.9), inset -5px -5px 10px 0 rgba(45, 45, 45, 0.2);
+  --neu-inset-sm: inset 2px 2px 5px 0 rgba(0, 0, 0, 0.9), inset -2px -2px 5px 0 rgba(45, 45, 45, 0.2);
 }
-body.t-cyber::before, body.t-cyber::after { display: none; }
-body.t-cyber .feed-card { border: 2px solid var(--border); box-shadow: 0 0 10px rgba(255, 0, 255, 0.3); border-radius: 0; }
-body.t-cyber .btn-glow { border-radius: 0; border: 1px solid var(--accent-glow); box-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
 
-/* Space (Deep Nebula) */
+/* Space (Midnight Blue) */
 body.t-space {
-  --bg-color: #020205;
-  --bg-secondary: #05050a;
-  --card-bg: rgba(10, 15, 30, 0.7);
-  --primary: #0044ff;
-  --accent-glow: #00d4ff;
+  --bg-color: #0b1120;
+  --bg-secondary: #0b1120;
+  --card-bg: #0b1120;
+  --primary: #00d4ff;
+  --accent-glow: #0044ff;
   --text-main: #e0e0e0;
-  --text-muted: #8899aa;
-  --border: rgba(100, 200, 255, 0.15);
-  --border-strong: rgba(100, 200, 255, 0.3);
+  --text-muted: #6a82a3;
+  --border: transparent;
+  --border-strong: #1a2a44;
+  
+  --neu-shadow: 7px 7px 15px rgba(0, 0, 0, 0.7), -7px -7px 15px rgba(30, 45, 75, 0.4);
+  --neu-shadow-sm: 4px 4px 8px rgba(0, 0, 0, 0.7), -4px -4px 8px rgba(30, 45, 75, 0.4);
+  --neu-inset: inset 5px 5px 10px 0 rgba(0, 0, 0, 0.8), inset -5px -5px 10px 0 rgba(30, 45, 75, 0.3);
+  --neu-inset-sm: inset 2px 2px 5px 0 rgba(0, 0, 0, 0.8), inset -2px -2px 5px 0 rgba(30, 45, 75, 0.3);
 }
-body.t-space::before, body.t-space::after { animation: none; opacity: 0.1; filter: blur(80px); }
-body.t-space .feed-card { box-shadow: 0 0 30px rgba(0, 100, 255, 0.05), inset 0 0 10px rgba(255,255,255,0.02); }
 
-/* Inverted (Light Mode) */
+/* Inverted (Pure Light Mode) */
 body.t-inverted {
-  --bg-color: #f8f9fc;
-  --bg-secondary: #edf2f7;
-  --card-bg: #ffffff;
-  --primary: #2b6cb0;
-  --accent-glow: #4299e1;
-  --text-main: #1a202c;
+  --bg-color: #E0E5EC;
+  --bg-secondary: #E0E5EC;
+  --card-bg: #E0E5EC;
+  --primary: #35D6E7;
+  --accent-glow: #8B5CF6;
+  --text-main: #2D3748;
   --text-muted: #718096;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e0;
+  --border: transparent;
+  --border-strong: #A3B1C6;
+  
+  --neu-shadow: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+  --neu-shadow-sm: 5px 5px 10px rgba(163, 177, 198, 0.6), -5px -5px 10px rgba(255, 255, 255, 0.5);
+  --neu-inset: inset 6px 6px 10px 0 rgba(163, 177, 198, 0.7), inset -6px -6px 10px 0 rgba(255, 255, 255, 0.8);
+  --neu-inset-sm: inset 3px 3px 6px 0 rgba(163, 177, 198, 0.7), inset -3px -3px 6px 0 rgba(255, 255, 255, 0.8);
 }
-body.t-inverted::before, body.t-inverted::after { display: none; }
-body.t-inverted .feed-card { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 
-/* Retro (Arcade) */
+/* Retro (Dark Green) */
 body.t-retro {
-  --bg-color: #000;
-  --bg-secondary: #111;
-  --card-bg: #000;
+  --bg-color: #111811;
+  --bg-secondary: #111811;
+  --card-bg: #111811;
   --primary: #0f0;
   --accent-glow: #0f0;
   --text-main: #0f0;
-  --text-muted: #005500;
-  --border: #0f0;
-  --border-strong: #0f0;
+  --text-muted: #2f6f2f;
+  --border: transparent;
+  --border-strong: #1f3f1f;
+  
+  --neu-shadow: 7px 7px 15px rgba(0, 0, 0, 0.8), -7px -7px 15px rgba(35, 55, 35, 0.3);
+  --neu-shadow-sm: 4px 4px 8px rgba(0, 0, 0, 0.8), -4px -4px 8px rgba(35, 55, 35, 0.3);
+  --neu-inset: inset 5px 5px 10px 0 rgba(0, 0, 0, 0.9), inset -5px -5px 10px 0 rgba(35, 55, 35, 0.2);
+  --neu-inset-sm: inset 2px 2px 5px 0 rgba(0, 0, 0, 0.9), inset -2px -2px 5px 0 rgba(35, 55, 35, 0.2);
 }
-body.t-retro::before, body.t-retro::after { display: none; }
 body.t-retro .feed-card { border: 4px solid #0f0; border-radius: 0; box-shadow: 8px 8px 0 rgba(0, 255, 0, 0.2); }
 body.t-retro .btn-glow { border-radius: 0; background: #000; border: 2px solid #0f0; color: #0f0; }
 body.t-retro .btn-glow:hover { background: #0f0; color: #000; }

@@ -47,10 +47,18 @@ function App() {
 
     // 1b. Fetch global configuration for theme
     fetchPublicConfig().then(cfg => {
-      if (cfg && cfg.global_theme) {
-        document.body.className = cfg.global_theme;
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || !savedTheme) {
+        document.body.classList.add('dark-mode');
       } else {
-        document.body.className = 't-default';
+        document.body.classList.remove('dark-mode');
+      }
+
+      const themeClasses = ['t-aurora', 't-cyber', 't-space', 't-inverted', 't-retro', 't-default'];
+      document.body.classList.remove(...themeClasses);
+
+      if (cfg && cfg.global_theme && cfg.global_theme !== 't-default') {
+        document.body.classList.add(cfg.global_theme);
       }
     });
 
