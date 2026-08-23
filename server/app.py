@@ -141,6 +141,24 @@ with app.app_context():
     except Exception:
         db.session.rollback()
 
+    try:
+        db.session.execute(db.text('ALTER TABLE dating_profile ADD COLUMN block VARCHAR(10);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        
+    try:
+        db.session.execute(db.text('ALTER TABLE dating_profile ADD COLUMN course VARCHAR(100);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        
+    try:
+        db.session.execute(db.text('ALTER TABLE dating_profile ADD COLUMN image_url VARCHAR(255);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to jluWhisper API", "status": "Running"})
@@ -1973,6 +1991,44 @@ def admin_get_swipes():
             "created_at": s.created_at.isoformat() + 'Z' if s.created_at else None
         })
     return jsonify(result)
+
+@app.route('/api/admin/media', methods=['GET'])
+@admin_required
+def admin_get_media():
+    media_list = []
+    
+    posts = Post.query.filter((Post.image_url != None) | (Post.audio_url != None)).all()
+    for p in posts:
+        if p.image_url:
+            media_list.append({
+                "id": f"post_img_{p.id}",
+                "type": "image",
+                "url": p.image_url,
+                "source": f"Post #{p.id}",
+                "created_at": p.created_at.isoformat() + 'Z' if p.created_at else ""
+            })
+        if p.audio_url:
+            media_list.append({
+                "id": f"post_aud_{p.id}",
+                "type": "audio",
+                "url": p.audio_url,
+                "source": f"Post #{p.id}",
+                "created_at": p.created_at.isoformat() + 'Z' if p.created_at else ""
+            })
+            
+    profiles = DatingProfile.query.filter(DatingProfile.image_url != None).all()
+    for p in profiles:
+        if p.image_url:
+            media_list.append({
+                "id": f"dating_img_{p.id}",
+                "type": "image",
+                "url": p.image_url,
+                "source": f"Dating Profile #{p.user_id}",
+                "created_at": p.created_at.isoformat() + 'Z' if p.created_at else ""
+            })
+            
+    media_list.sort(key=lambda x: x["created_at"], reverse=True)
+    return jsonify(media_list)
 
 # --- Dating APIs ---
 
