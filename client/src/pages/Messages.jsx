@@ -5,7 +5,10 @@ import { Send, Check, X as RejectIcon, Search, MailPlus, MoreVertical, Trash2, A
 import { formatTime } from '../utils';
 
 export default function Messages() {
-  const [conversations, setConversations] = useState({ active: [], requests: [] });
+  const [conversations, setConversations] = useState(() => {
+      const cached = localStorage.getItem('whispers_cached_conversations');
+      return cached ? JSON.parse(cached) : { active: [], requests: [] };
+  });
   const [activeTab, setActiveTab] = useState('active'); // 'active' or 'requests'
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -26,6 +29,7 @@ export default function Messages() {
     const data = await getConversations();
     if (data && data.active !== undefined) {
       setConversations(data);
+      localStorage.setItem('whispers_cached_conversations', JSON.stringify(data));
     }
   }, []);
 
