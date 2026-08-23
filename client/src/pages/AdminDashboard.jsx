@@ -22,6 +22,9 @@ export default function AdminDashboard() {
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
   
+  const [blockedWords, setBlockedWords] = useState([]);
+  const [newWord, setNewWord] = useState('');
+  
   // Bot spawning state
   const [botSpawnCount, setBotSpawnCount] = useState(1);
   const [botSpawnTopic, setBotSpawnTopic] = useState('');
@@ -64,6 +67,11 @@ export default function AdminDashboard() {
     } else if (activeTab === 'all_chats') {
         const data = await fetchAdminConversations();
         setAdminChats(data);
+    } else if (activeTab === 'filters') {
+        const data = await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/admin/blocked_words', {
+            headers: { 'Authorization': localStorage.getItem('jluwhisper_session') }
+        }).then(r => r.json());
+        if (!data.error) setBlockedWords(data);
     }
     setLoading(false);
   };
@@ -147,6 +155,32 @@ export default function AdminDashboard() {
     setBroadcastMsg('');
     alert('Broadcast sent!');
   };
+
+  const handleAddBlockedWord = async () => {
+    if (!newWord.trim()) return;
+    const res = await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/admin/blocked_words', {
+        method: 'POST',
+        headers: { 
+            'Authorization': localStorage.getItem('jluwhisper_session'),
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ word: newWord })
+    }).then(r => r.json());
+    if (res.error) alert(res.error);
+    else {
+        setNewWord('');
+        loadData();
+    }
+  };
+
+  const handleDeleteBlockedWord = async (id) => {
+    await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/admin/blocked_words/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': localStorage.getItem('jluwhisper_session') }
+    });
+    loadData();
+  };
+
 
   const handleSpawnBots = async () => {
     setIsSpawning(true);
@@ -274,6 +308,9 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'settings' ? 'active' : ''}`} onClick={() => setActiveTab('settings')} style={{ backgroundColor: activeTab === 'settings' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'settings' ? 'white' : 'var(--text-color)' }}>
             <Settings size={16} style={{ marginRight: '8px' }}/> System Controls
+        </button>
+        <button className={`pill-tab ${activeTab === 'filters' ? 'active' : ''}`} onClick={() => setActiveTab('filters')} style={{ backgroundColor: activeTab === 'filters' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'filters' ? 'white' : 'var(--text-color)' }}>
+            <Ban size={16} style={{ marginRight: '8px' }}/> Filters
         </button>
       </div>
 
@@ -787,6 +824,44 @@ export default function AdminDashboard() {
                           </div>
                       </div>
                   ))}
+              </div>
+          </div>
+      )}
+
+      {activeTab === 'filters' && (
+          <div className="feed-card" style={{ padding: '1.5rem', marginTop: '2rem' }}>
+              <h2 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Ban size={24} color="var(--accent-color)" /> Text Filter
+              </h2>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                  Words added here will be completely blocked. Any post, reply, or message containing these words will be rejected.
+              </p>
+
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                  <input 
+                      type="text" 
+                      className="composer-textarea border-input"
+                      placeholder="Add a new blocked word..."
+                      value={newWord}
+                      onChange={(e) => setNewWord(e.target.value)}
+                      style={{ padding: '0.8rem', flex: 1, borderRadius: '12px' }}
+                  />
+                  <button className="btn-glow" onClick={handleAddBlockedWord}>Add Word</button>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem' }}>
+                  {blockedWords.length === 0 ? (
+                      <p style={{ color: 'var(--text-muted)' }}>No blocked words yet.</p>
+                  ) : (
+                      blockedWords.map(w => (
+                          <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0.5rem 1rem', background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.2)', borderRadius: '20px', color: '#ff7675' }}>
+                              <span>{w.word}</span>
+                              <button className="icon-btn" onClick={() => handleDeleteBlockedWord(w.id)} style={{ color: '#ff7675', padding: '2px' }}>
+                                  <Trash2 size={14} />
+                              </button>
+                          </div>
+                      ))
+                  )}
               </div>
           </div>
       )}

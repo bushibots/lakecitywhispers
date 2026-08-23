@@ -30,6 +30,14 @@ export default function Messages() {
   }, []);
 
   useEffect(() => {
+    // Instant deep linking: Don't wait for sidebar to load!
+    const searchParams = new URLSearchParams(window.location.search);
+    const convParam = searchParams.get('conv');
+    if (convParam) {
+        setActiveConvId(parseInt(convParam));
+        window.history.replaceState({}, '', '/messages');
+    }
+  
     loadConversations();
 
     const handleNewMessage = (msg) => {

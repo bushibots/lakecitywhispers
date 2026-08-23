@@ -54,16 +54,16 @@ export default function CustomDropdown({ value, options, onChange, placeholder =
           align-items: center;
           justify-content: space-between;
           gap: 10px;
-          background: rgba(255, 255, 255, 0.05);
+          background: rgba(255, 255, 255, 0.1);
           border: 1px solid var(--border);
-          padding: 0.5rem 1rem;
-          border-radius: 20px;
+          padding: 0.6rem 1.2rem;
+          border-radius: 12px;
           cursor: pointer;
           color: var(--text-main);
-          font-size: 0.9rem;
-          font-weight: 500;
+          font-size: 0.95rem;
+          font-weight: 600;
           transition: all 0.3s ease;
-          min-width: 130px;
+          min-width: 140px;
         }
 
         .dropdown-trigger:hover {
@@ -86,15 +86,15 @@ export default function CustomDropdown({ value, options, onChange, placeholder =
           position: absolute;
           top: calc(100% + 10px);
           left: 0;
-          background: var(--bg-elevated, #16181C);
+          background: var(--card-bg, #16181C);
           border: 1px solid var(--border);
-          border-radius: 16px;
+          border-radius: 12px;
           padding: 0.5rem;
           min-width: 100%;
           z-index: 1000;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
           
           opacity: 0;
           visibility: hidden;
@@ -109,13 +109,13 @@ export default function CustomDropdown({ value, options, onChange, placeholder =
         }
 
         .dropdown-item {
-          padding: 0.6rem 1rem;
-          border-radius: 10px;
+          padding: 0.75rem 1rem;
+          border-radius: 8px;
           cursor: pointer;
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           color: var(--text-muted);
           transition: all 0.2s ease;
-          margin-bottom: 2px;
+          margin-bottom: 4px;
         }
 
         .dropdown-item:last-child {

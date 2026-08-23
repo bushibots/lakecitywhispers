@@ -39,6 +39,9 @@ class Post(db.Model):
     views = db.Column(db.Integer, default=0)
     ip_address = db.Column(db.String(45), nullable=True)
     
+    handle = db.Column(db.String(50), default='global')
+    is_announcement = db.Column(db.Boolean, default=False)
+    
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     
     # Simple replies relationship
@@ -91,6 +94,13 @@ class Message(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Manager(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    handle = db.Column(db.String(50), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user = db.relationship('User', backref=db.backref('manager_roles', lazy=True))
+
 class Block(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     blocker_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -116,3 +126,31 @@ class PostView(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class DatingProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    bio = db.Column(db.Text, nullable=True)
+    gender = db.Column(db.String(20), nullable=True)
+    looking_for = db.Column(db.String(20), nullable=True)
+    age = db.Column(db.Integer, nullable=True)
+    block = db.Column(db.String(10), nullable=True)
+    course = db.Column(db.String(100), nullable=True)
+    image_url = db.Column(db.String(255), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    user = db.relationship('User', backref=db.backref('dating_profile', uselist=False))
+
+class SwipeInteraction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    swiper_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    target_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    action = db.Column(db.String(10), nullable=False) # 'like' or 'pass'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class BlockedWord(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    word = db.Column(db.String(100), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+

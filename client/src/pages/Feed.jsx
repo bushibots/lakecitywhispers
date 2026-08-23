@@ -7,7 +7,10 @@ import { formatTime } from '../utils';
 import StoryShareModal from '../components/StoryShareModal';
 import CustomDropdown from '../components/CustomDropdown';
 
+import { CAMPUS_STRUCTURE } from '../campus_structure';
+
 const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'Advice', 'Events'];
+const HANDLES = ['global', ...Object.keys(CAMPUS_STRUCTURE)];
 const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
 
 export default function Feed() {
@@ -18,6 +21,7 @@ export default function Feed() {
   const [posts, setPosts] = useState([]);
   const [content, setContent] = useState('');
   const [topic, setTopic] = useState('Confessions');
+  const [activeHandle, setActiveHandle] = useState('global');
   const [filterTopic, setFilterTopic] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -90,7 +94,7 @@ export default function Feed() {
   useEffect(() => {
     getSessionToken().then(() => {
       setMyIdentity(localStorage.getItem('jluwhisper_identity') || '?');
-      loadPosts(filterTopic, searchQuery);
+      loadPosts(filterTopic, searchQuery, activeHandle);
     });
     fetchDailyPrompt().then(p => setDailyPrompt(p));
 
@@ -108,9 +112,9 @@ export default function Feed() {
 
     socket.on('new_post', handleNewPost);
     return () => socket.off('new_post', handleNewPost);
-  }, [filterTopic, searchQuery]);
+  }, [filterTopic, searchQuery, activeHandle]);
 
-  const loadPosts = async (t, sq = '') => {
+  const loadPosts = async (t, sq = '', handle = 'global') => {
     // 1. Instant load from local cache if on main feed
     if (!t && !sq) {
       const cached = localStorage.getItem('jluwhisper_feed_cache');
@@ -122,7 +126,7 @@ export default function Feed() {
     // 2. Fetch fresh data
     setIsSyncing(true);
     const backendTopic = t === 'Watchlist' ? '' : t;
-    let data = await fetchPosts(backendTopic, sq);
+    let data = await fetchPosts(backendTopic, sq, handle);
     
     if (t === 'Watchlist') {
       const saved = JSON.parse(localStorage.getItem('jluwhisper_saved_posts')) || {};
@@ -169,6 +173,7 @@ export default function Feed() {
         content: content.trim() || " ",
         topic,
         author_username: myIdentity,
+        handle: activeHandle,
         created_at: new Date().toISOString(),
         upvotes: 0, downvotes: 0, views: 0, replies_count: 0,
         is_optimistic: true
@@ -181,11 +186,11 @@ export default function Feed() {
     setShowPollInputs(false);
     setPollOptions(['', '']);
     
-    const res = await createPost(content.trim() || " ", topic, validPollOptions, imageUrl, audioUrl);
+    const res = await createPost(content.trim() || " ", topic, validPollOptions, imageUrl, audioUrl, activeHandle, false);
     
     if (res && res.message) {
       // Background re-fetch to ensure sync
-      await loadPosts(filterTopic);
+      await loadPosts(filterTopic, searchQuery, activeHandle);
     } else {
       // Revert if failed
       setPosts(prev => prev.filter(p => p.id !== tempId));
@@ -620,9 +625,8 @@ export default function Feed() {
   };
 
   return (
-    <div className="page-content">
-
-      {/* Categories */}
+    <div className="feed-container">
+      {/* Category Tabs */}
       <div className="pill-menu">
         <div 
           className={`pill-tab ${filterTopic === '' ? 'active' : ''}`}
@@ -650,6 +654,32 @@ export default function Feed() {
 
       {/* Advanced Composer */}
       <div className="composer-box">
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollbarWidth: 'none' }}>
+            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', alignSelf: 'center', marginRight: '0.5rem', fontWeight: 'bold' }}>Posting to:</span>
+            {HANDLES.map(h => (
+                <button
+                    key={h}
+                    onClick={() => setActiveHandle(h)}
+                    style={{
+                        padding: '0.4rem 1rem',
+                        borderRadius: '20px',
+                        border: activeHandle === h ? '1px solid var(--primary)' : '1px solid rgba(255,255,255,0.1)',
+                        background: activeHandle === h ? 'rgba(53, 214, 231, 0.15)' : 'transparent',
+                        color: activeHandle === h ? 'var(--primary)' : 'var(--text-muted)',
+                        fontSize: '0.85rem',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                    }}
+                >
+                    {activeHandle === h && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', display: 'inline-block' }}></span>}
+                    {h === 'global' ? '🌐 Global' : `@${h}`}
+                </button>
+            ))}
+        </div>
         <div className="composer-inner">
           <div className="avatar-flame" style={{ width: 40, height: 40, flexShrink: 0 }}>{myIdentity.charAt(0)}</div>
           <div style={{ flex: 1 }}>
@@ -700,13 +730,21 @@ export default function Feed() {
               </div>
               
               <div className="toolbar-right">
-                <CustomDropdown 
-                  value={topic} 
-                  onChange={(val) => setTopic(val)} 
-                  options={CATEGORIES}
-                />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <select 
+                          className="select-pill"
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                        >
+                          {CATEGORIES.map(c => (
+                            <option key={c} value={c} style={{ background: '#16181C', color: '#FFF' }}>{c}</option>
+                          ))}
+                        </select>
+                    </div>
+                </div>
                 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
                   <span className="char-count" style={{ color: content.length > 250 ? 'red' : 'var(--text-muted)', fontSize: '0.8rem' }}>
                     {content.length}/300
                   </span>

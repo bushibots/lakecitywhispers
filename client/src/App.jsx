@@ -7,6 +7,7 @@ import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Guide from './pages/Guide';
 import AdminDashboard from './pages/AdminDashboard';
+import ManagerDashboard from './pages/ManagerDashboard';
 import Dating from './pages/Dating';
 import Settings from './pages/Settings';
 import AuthModal from './components/AuthModal';
@@ -90,6 +91,7 @@ function App() {
         <Route path="guide" element={<Guide />} />
         <Route path="settings" element={<Settings />} />
         <Route path="admin" element={<AdminDashboard />} />
+        <Route path="manager" element={<ManagerDashboard />} />
         <Route path="login" element={
             <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
                 <AuthModal isOpen={true} initialMode="login" onClose={() => window.location.href='/feed'} onSuccess={() => window.location.href='/feed'} />

@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield, LogIn, Flame } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import AuthModal from './AuthModal';
-import { fetchPublicConfig } from '../api';
+import { fetchPublicConfig, apiFetch } from '../api';
 
 export default function LeftSidebar() {
   const location = useLocation();
@@ -21,6 +21,22 @@ export default function LeftSidebar() {
   ];
 
   const isAdmin = localStorage.getItem('jluwhisper_admin') === 'true';
+  const [managerHandles, setManagerHandles] = useState([]);
+
+  useEffect(() => {
+    if (isRegistered) {
+      apiFetch('/managers/me').then(data => {
+        if (data && data.handles && data.handles.length > 0) {
+          setManagerHandles(data.handles);
+        }
+      });
+    }
+  }, [isRegistered]);
+
+  if (managerHandles.length > 0) {
+    navItems.push({ path: '/manager', label: 'Dashboard', icon: Shield });
+  }
+
   if (isAdmin) {
     navItems.push({ path: '/admin', label: 'Admin', icon: Shield });
   }

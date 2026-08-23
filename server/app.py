@@ -14,7 +14,7 @@ from flask_apscheduler import APScheduler
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification, PostView
+from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification, PostView, DatingProfile, SwipeInteraction, Manager, BlockedWord
 import json
 import random
 import string
@@ -25,6 +25,11 @@ from sqlalchemy.orm import joinedload
 app = Flask(__name__)
 CORS(app)
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
+
+_server_cache = {
+    'daily_prompt': {'data': None, 'time': 0},
+    'sidebar_stats': {'data': None, 'time': 0}
+}
 
 @socketio.on('join')
 def on_join(data):
@@ -196,6 +201,15 @@ def admin_required(f):
             return jsonify({"error": "Admin privileges required"}), 403
         return f(*args, **kwargs)
     return decorated_function
+
+def contains_blocked_word(text):
+    if not text: return False
+    words = BlockedWord.query.all()
+    text_lower = text.lower()
+    for w in words:
+        if w.word in text_lower:
+            return True
+    return False
 
 # --- Authentication & Identity ---
 import threading
@@ -399,6 +413,21 @@ def get_me():
         "created_at": user.created_at.isoformat() + 'Z'
     })
 
+@app.route('/api/managers/me', methods=['GET'])
+def get_managers_me():
+    session_token = request.headers.get('Authorization')
+    if not session_token:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    manager_roles = Manager.query.filter_by(user_id=user.id).all()
+    handles = [role.handle for role in manager_roles]
+    
+    return jsonify({"handles": handles})
+
 @app.route('/api/users/<username>', methods=['GET'])
 def get_user_profile(username):
     user = User.query.filter_by(username=username).first()
@@ -580,6 +609,8 @@ def serialize_post(p, user=None, user_votes=None):
         "is_admin_post": is_admin_post,
         "is_oracle_post": is_oracle_post,
         "is_pinned": p.is_pinned,
+        "handle": p.handle,
+        "is_announcement": p.is_announcement,
         "poll": {
             "id": p.poll.id,
             "has_voted": has_voted,
@@ -628,6 +659,10 @@ def get_daily_prompt():
         should_regenerate = True
         
     if not post or post.is_deleted or should_regenerate:
+        if post and not post.is_deleted:
+            db.session.delete(post)
+            db.session.commit()
+            
         text = generate_daily_prompt()
         post = get_or_create_prompt_post(text)
         
@@ -665,6 +700,13 @@ def get_daily_prompt():
 @app.route('/api/admin/daily_prompt/regenerate', methods=['POST'])
 @admin_required
 def regenerate_daily_prompt():
+    prompt_setting = SystemSetting.query.filter_by(key='daily_prompt_id').first()
+    if prompt_setting:
+        old_post = Post.query.get(int(prompt_setting.value))
+        if old_post:
+            db.session.delete(old_post)
+            db.session.commit()
+
     text = generate_daily_prompt()
     post = get_or_create_prompt_post(text)
     
@@ -696,8 +738,9 @@ def get_posts():
             return jsonify({"error": "Maintenance Mode: The app is currently under maintenance. We'll be right back!"}), 503
 
     topic_filter = request.args.get('topic')
+    handle_filter = request.args.get('handle', 'global')
     search_query = request.args.get('q')
-    query = Post.query.filter_by(parent_id=None, is_deleted=False)
+    query = Post.query.filter_by(parent_id=None, is_deleted=False, handle=handle_filter)
     
     if topic_filter:
         query = query.filter_by(topic=topic_filter)
@@ -715,7 +758,7 @@ def get_posts():
         joinedload(Post.replies)
     )
         
-    posts = query.order_by(Post.is_pinned.desc(), Post.created_at.desc()).all()
+    posts = query.order_by(Post.is_announcement.desc(), Post.is_pinned.desc(), Post.created_at.desc()).all()
     
     # Pre-fetch user's voted poll IDs to avoid N+1 queries during serialization
     user_votes = set()
@@ -745,18 +788,32 @@ def create_post():
         return jsonify({"error": "Lockdown Mode: New posts are temporarily disabled."}), 403
         
     data = request.json
+    
+    if contains_blocked_word(data.get('content', '')):
+        return jsonify({"error": "Your message contains blocked content."}), 400
+        
     user.last_active = datetime.utcnow()
     
     raw_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
     client_ip = raw_ip.split(',')[0].strip() if raw_ip else None
     
+    handle = data.get('handle', 'global')
+    is_announcement = data.get('is_announcement', False)
+    
+    if is_announcement:
+        is_manager = Manager.query.filter_by(user_id=user.id, handle=handle).first()
+        if not is_manager and user.role != 'admin':
+            return jsonify({"error": "Only managers can post announcements"}), 403
+
     new_post = Post(
         content=data.get('content'),
         image_url=data.get('image_url'),
         audio_url=data.get('audio_url'),
         topic=data.get('topic', 'General'),
         user_id=user.id,
-        ip_address=client_ip
+        ip_address=client_ip,
+        handle=handle,
+        is_announcement=is_announcement
     )
     db.session.add(new_post)
     db.session.flush() # get post.id
@@ -782,7 +839,10 @@ def delete_post(post_id):
     if not user: return jsonify({"error": "Unauthorized"}), 401
     
     post = Post.query.get_or_404(post_id)
-    if post.user_id != user.id and user.role != 'admin':
+    
+    is_manager = Manager.query.filter_by(user_id=user.id, handle=post.handle).first()
+    
+    if post.user_id != user.id and user.role != 'admin' and not is_manager:
         return jsonify({"error": "Forbidden"}), 403
         
     post.is_deleted = True
@@ -918,6 +978,10 @@ def reply_post(post_id):
         return jsonify({"error": "Lockdown Mode: New replies are temporarily disabled."}), 403
         
     parent_post = Post.query.get_or_404(post_id)
+    
+    if contains_blocked_word(data.get('content', '')):
+        return jsonify({"error": "Your message contains blocked content."}), 400
+        
     user.last_active = datetime.utcnow()
     
     new_reply = Post(
@@ -1170,6 +1234,9 @@ def get_messages(conv_id):
 def send_message(conv_id):
     data = request.json
     content = data.get('content')
+    if contains_blocked_word(content):
+        return jsonify({"error": "Your message contains blocked content."}), 400
+        
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first()
     conv = Conversation.query.get_or_404(conv_id)
@@ -1696,7 +1763,42 @@ def admin_update_settings():
             setting = SystemSetting(key=k, value=val_str)
             db.session.add(setting)
     db.session.commit()
+    db.session.commit()
     return jsonify({"message": "Settings updated"})
+
+@app.route('/api/admin/blocked_words', methods=['GET'])
+@admin_required
+def admin_get_blocked_words():
+    words = BlockedWord.query.order_by(BlockedWord.created_at.desc()).all()
+    return jsonify([{"id": w.id, "word": w.word} for w in words])
+
+@app.route('/api/admin/blocked_words', methods=['POST'])
+@admin_required
+def admin_add_blocked_word():
+    data = request.json
+    word_str = data.get('word', '').strip().lower()
+    if not word_str:
+        return jsonify({"error": "Word cannot be empty"}), 400
+        
+    existing = BlockedWord.query.filter_by(word=word_str).first()
+    if existing:
+        return jsonify({"error": "Word already blocked"}), 400
+        
+    new_word = BlockedWord(word=word_str)
+    db.session.add(new_word)
+    db.session.commit()
+    return jsonify({"id": new_word.id, "word": new_word.word})
+
+@app.route('/api/admin/blocked_words/<int:word_id>', methods=['DELETE'])
+@admin_required
+def admin_delete_blocked_word(word_id):
+    word = BlockedWord.query.get(word_id)
+    if not word:
+        return jsonify({"error": "Word not found"}), 404
+        
+    db.session.delete(word)
+    db.session.commit()
+    return jsonify({"message": "Word unblocked"})
 
 @app.route('/api/admin/posts/all', methods=['GET'])
 @admin_required
@@ -1759,6 +1861,167 @@ def admin_wipe_user(username):
     db.session.delete(user)
     db.session.commit()
     return jsonify({"message": f"User {username} completely wiped."})
+
+# --- Dating APIs ---
+
+def get_current_user(session_token):
+    if not session_token: return None
+    return User.query.filter_by(session_token=session_token).first()
+
+@app.route('/api/dating/profile', methods=['GET', 'POST'])
+def dating_profile():
+    user = get_current_user(request.headers.get('Authorization'))
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    
+    profile = DatingProfile.query.filter_by(user_id=user.id).first()
+    
+    if request.method == 'POST':
+        data = request.json
+        if not profile:
+            profile = DatingProfile(user_id=user.id)
+            db.session.add(profile)
+        profile.bio = data.get('bio', profile.bio)
+        profile.gender = data.get('gender', profile.gender)
+        profile.looking_for = data.get('looking_for', profile.looking_for)
+        profile.block = data.get('block', profile.block)
+        profile.course = data.get('course', profile.course)
+        try:
+            if data.get('age'): profile.age = int(data.get('age'))
+        except ValueError:
+            pass
+        profile.image_url = data.get('image_url', profile.image_url)
+        profile.is_active = data.get('is_active', True)
+        db.session.commit()
+    
+    if not profile:
+        return jsonify(None)
+        
+    return jsonify({
+        "bio": profile.bio,
+        "gender": profile.gender,
+        "looking_for": profile.looking_for,
+        "age": profile.age,
+        "block": profile.block,
+        "course": profile.course,
+        "image_url": profile.image_url,
+        "is_active": profile.is_active
+    })
+
+@app.route('/api/dating/discover', methods=['GET'])
+def dating_discover():
+    user = get_current_user(request.headers.get('Authorization'))
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    
+    profile = DatingProfile.query.filter_by(user_id=user.id).first()
+    if not profile or not profile.is_active:
+        return jsonify({"error": "Dating profile inactive"}), 400
+        
+    active_profiles = db.session.query(DatingProfile, User).join(User, DatingProfile.user_id == User.id).filter(DatingProfile.is_active == True).all()
+    real_count = len([u for dp, u in active_profiles if u.is_registered and not (u.username and (u.username.startswith('bot_') or u.username.startswith('permbot_')))])
+    
+    if real_count < 20:
+        return jsonify({
+            "locked": True,
+            "current": real_count,
+            "required": 20
+        })
+        
+    from datetime import datetime, timedelta
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    
+    liked = SwipeInteraction.query.filter_by(swiper_id=user.id, action='like').all()
+    recent_passes = SwipeInteraction.query.filter(
+        SwipeInteraction.swiper_id == user.id,
+        SwipeInteraction.action == 'pass',
+        SwipeInteraction.created_at >= cutoff
+    ).all()
+    
+    swiped_ids = [s.target_id for s in liked] + [s.target_id for s in recent_passes]
+    swiped_ids.append(user.id) # Exclude self
+    
+    # Query builder
+    query = DatingProfile.query.filter(
+        DatingProfile.is_active == True,
+        DatingProfile.user_id.notin_(swiped_ids)
+    )
+    
+    # Filters
+    block_filter = request.args.get('block')
+    course_filter = request.args.get('course')
+    
+    if block_filter:
+        query = query.filter(DatingProfile.block == block_filter)
+    if course_filter:
+        query = query.filter(DatingProfile.course == course_filter)
+        
+    results = query.limit(20).all()
+    
+    discover_list = []
+    for p in results:
+        # Don't show inactive users or bots (optional, but good)
+        if p.user.is_banned: continue
+        discover_list.append({
+            "user_id": p.user_id,
+            "image_url": p.image_url,
+            "bio": p.bio,
+            "gender": p.gender,
+            "age": p.age
+        })
+    import random
+    random.shuffle(discover_list)
+    return jsonify(discover_list)
+
+@app.route('/api/dating/swipe', methods=['POST'])
+def dating_swipe():
+    user = get_current_user(request.headers.get('Authorization'))
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    
+    target_id = request.json.get('target_id')
+    action = request.json.get('action') # 'like' or 'pass'
+    
+    if not target_id or action not in ['like', 'pass']:
+        return jsonify({"error": "Invalid payload"}), 400
+    # Record swipe
+    from datetime import datetime
+    interaction = SwipeInteraction.query.filter_by(swiper_id=user.id, target_id=target_id).first()
+    if interaction:
+        interaction.action = action
+        interaction.created_at = datetime.utcnow()
+    else:
+        interaction = SwipeInteraction(swiper_id=user.id, target_id=target_id, action=action)
+        db.session.add(interaction)
+    
+    match_made = False
+    
+    if action == 'like':
+        # Check if they liked me
+        mutual = SwipeInteraction.query.filter_by(swiper_id=target_id, target_id=user.id, action='like').first()
+        if mutual:
+            match_made = True
+            # Create a conversation
+            existing = Conversation.query.filter(
+                ((Conversation.user1_id == user.id) & (Conversation.user2_id == target_id)) |
+                ((Conversation.user1_id == target_id) & (Conversation.user2_id == user.id))
+            ).first()
+            if not existing:
+                conv = Conversation(user1_id=user.id, user2_id=target_id, status='accepted')
+                db.session.add(conv)
+                db.session.flush()
+                # Send welcome message
+                sys_msg = Message(
+                    conversation_id=conv.id, 
+                    sender_id=user.id,
+                    content="💖 It's a Match! You both swiped right. Say hi!"
+                )
+                db.session.add(sys_msg)
+                existing = conv
+                
+    db.session.commit()
+    
+    return jsonify({
+        "match": match_made,
+        "conversation_id": existing.id if match_made else None
+    })
 
 @app.route('/api/health')
 def health():

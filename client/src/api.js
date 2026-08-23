@@ -38,6 +38,26 @@ export const getSessionToken = async () => {
     return token;
 };
 
+export const apiFetch = async (endpoint, options = {}) => {
+    const token = await getSessionToken();
+    const headers = {
+        'Authorization': token,
+        'Content-Type': 'application/json',
+        ...options.headers
+    };
+    
+    try {
+        const res = await fetch(`${API_URL}${endpoint}`, {
+            ...options,
+            headers
+        });
+        return await res.json();
+    } catch (e) {
+        console.error(`API Fetch Error [${endpoint}]:`, e);
+        return { error: 'Network error' };
+    }
+};
+
 export const register = async (username, password, customAlias = '') => {
     const token = await getSessionToken();
     try {
@@ -103,12 +123,13 @@ export const recoverAccount = async (username, recoveryKey, newPassword) => {
     }
 };
 
-export const fetchPosts = async (topic = '', searchQuery = '') => {
+export const fetchPosts = async (topic = '', searchQuery = '', handle = 'global') => {
     const token = await getSessionToken();
     try {
         let url = `${API_URL}/posts?`;
         if (topic) url += `topic=${encodeURIComponent(topic)}&`;
         if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
+        if (handle) url += `handle=${encodeURIComponent(handle)}&`;
         
         const res = await fetch(url, {
             headers: { 'Authorization': token }
@@ -191,7 +212,7 @@ export const recordView = async (postId) => {
     }
 };
 
-export const createPost = async (content, topic = 'General', pollOptions = [], imageUrl = null, audioUrl = null) => {
+export const createPost = async (content, topic = 'General', pollOptions = [], imageUrl = null, audioUrl = null, handle = 'global', isAnnouncement = false) => {
     const token = await getSessionToken();
     try {
         const res = await fetch(`${API_URL}/posts`, {
@@ -205,7 +226,9 @@ export const createPost = async (content, topic = 'General', pollOptions = [], i
                 topic, 
                 poll_options: pollOptions,
                 image_url: imageUrl,
-                audio_url: audioUrl
+                audio_url: audioUrl,
+                handle,
+                is_announcement: isAnnouncement
             })
         });
         return await res.json();
