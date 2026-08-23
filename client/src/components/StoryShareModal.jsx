@@ -140,12 +140,24 @@ export default function StoryShareModal({ post, onClose }) {
               whiteSpace: 'pre-wrap', 
               wordBreak: 'break-word',
               display: '-webkit-box',
-              WebkitLineClamp: 14,
+              WebkitLineClamp: post.image_url ? 6 : 14,
               WebkitBoxOrient: 'vertical',
-              overflow: 'hidden'
+              overflow: 'hidden',
+              marginBottom: post.image_url ? '3rem' : '0'
             }}>
               {post.content}
             </div>
+
+            {post.image_url && (
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden', borderRadius: '36px' }}>
+                <img 
+                  src={post.image_url} 
+                  alt="post media" 
+                  crossOrigin="anonymous"
+                  style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'cover', borderRadius: '36px' }} 
+                />
+              </div>
+            )}
           </div>
 
           <div style={{ position: 'absolute', bottom: '6rem', opacity: 0.5, color: currentStyle.textColor, fontWeight: '800', letterSpacing: '3px', fontSize: '2.7rem', textAlign: 'center' }}>
