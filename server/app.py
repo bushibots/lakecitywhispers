@@ -148,7 +148,13 @@ with app.app_context():
         db.session.rollback()
         
     try:
-        db.session.execute(db.text('ALTER TABLE dating_profile ADD COLUMN course VARCHAR(100);'))
+        db.session.execute(db.text('ALTER TABLE dating_profile ADD COLUMN course VARCHAR(255);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        
+    try:
+        db.session.execute(db.text('ALTER TABLE dating_profile ALTER COLUMN course TYPE VARCHAR(255);'))
         db.session.commit()
     except Exception:
         db.session.rollback()

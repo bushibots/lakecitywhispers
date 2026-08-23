@@ -135,7 +135,7 @@ class DatingProfile(db.Model):
     looking_for = db.Column(db.String(20), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     block = db.Column(db.String(10), nullable=True)
-    course = db.Column(db.String(100), nullable=True)
+    course = db.Column(db.String(255), nullable=True)
     image_url = db.Column(db.String(255), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
