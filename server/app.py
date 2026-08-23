@@ -952,10 +952,14 @@ def upload_file():
                 return jsonify({"error": f"Failed to upload to Cloudinary: {str(e)}"}), 500
         else:
             # Fallback: Save file locally (useful for local development)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            file_url = f"/static/uploads/{filename}"
-            return jsonify({"url": file_url}), 201
+            try:
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                # Ensure the URL is absolute so the separate frontend can resolve it against the backend server
+                file_url = request.host_url.rstrip('/') + f"/static/uploads/{filename}"
+                return jsonify({"url": file_url}), 201
+            except Exception as e:
+                return jsonify({"error": f"Local upload failed: {str(e)}. (Check folder permissions)"}), 500
 
 # --- Interactions (Votes & Replies) ---
 @app.route('/api/posts/<int:post_id>/vote', methods=['POST'])
