@@ -2138,7 +2138,8 @@ def dating_discover():
     swiped_ids.append(user.id) # Exclude self
     
     # Query builder
-    query = DatingProfile.query.filter(
+    from sqlalchemy.orm import joinedload
+    query = DatingProfile.query.options(joinedload(DatingProfile.user)).filter(
         DatingProfile.is_active == True,
         DatingProfile.user_id.notin_(swiped_ids)
     )

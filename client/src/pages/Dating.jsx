@@ -124,6 +124,11 @@ export default function Dating() {
 
   const currentProfile = profiles[currentIndex];
 
+  const optimizeImage = (url) => {
+      if (!url || !url.includes('res.cloudinary.com')) return url;
+      return url.replace('/upload/', '/upload/c_fill,w_800,q_auto,f_auto/');
+  };
+
   return (
     <div className="page-content dating-page-container" style={{ maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 100px)', paddingBottom: '0' }}>
         
@@ -185,7 +190,7 @@ export default function Dating() {
                     >
                         {currentProfile.image_url ? (
                             <img 
-                                src={currentProfile.image_url} 
+                                src={optimizeImage(currentProfile.image_url)} 
                                 alt="Profile" 
                                 style={{ 
                                     width: '100%', height: '100%', objectFit: 'cover',
