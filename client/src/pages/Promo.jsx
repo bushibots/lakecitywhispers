@@ -108,13 +108,13 @@ export default function Promo() {
 
       <style>{`
         @keyframes fadeInOut {
-          0% { opacity: 0; transform: scale(0.95) translateY(20px); }
-          15% { opacity: 1; transform: scale(1) translateY(0); }
-          85% { opacity: 1; transform: scale(1) translateY(0); }
-          100% { opacity: 0; transform: scale(1.05) translateY(-20px); }
+          0% { opacity: 0; transform: translate(-50%, -30%); }
+          15% { opacity: 1; transform: translate(-50%, -50%); }
+          85% { opacity: 1; transform: translate(-50%, -50%); }
+          100% { opacity: 0; transform: translate(-50%, -70%); }
         }
         @keyframes swipeRight {
-          to { transform: translateX(150%) rotate(20deg); opacity: 0; }
+          to { transform: translate(-50%, -50%) translateX(150%) rotate(20deg); opacity: 0; }
         }
         @keyframes stampIn {
           from { opacity: 0; transform: rotate(-20deg) scale(3); }
