@@ -10,6 +10,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import Dating from './pages/Dating';
 import Settings from './pages/Settings';
+import Promo from './pages/Promo';
 import AuthModal from './components/AuthModal';
 import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
@@ -115,6 +116,9 @@ function App() {
           {/* Placeholders for others */}
           <Route path="*" element={<div className="page-content"><h2>Coming Soon</h2><p>This page is under construction.</p></div>} />
         </Route>
+        
+        {/* Fullscreen Routes */}
+        <Route path="/promo" element={<Promo />} />
       </Routes>
     </>
   );
