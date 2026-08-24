@@ -19,20 +19,17 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
 
   if (!isOpen) return null;
 
-  const handleInstaFetch = async () => {
+  const handleUrlAdd = async () => {
       if (!instaUsername.trim() || images.length >= 5) return;
       setInstaLoading(true);
       setErrorMsg('');
       try {
-          const res = await fetchInstagramProfile(instaUsername.replace('@', '').trim());
-          if (res.url) {
-              setImages([...images, res.url]);
-              setInstaUsername('');
-          } else {
-              setErrorMsg(res.error || 'Failed to fetch Instagram profile');
-          }
+          // Just add the URL directly if it's a valid image link
+          const url = instaUsername.trim();
+          setImages([...images, url]);
+          setInstaUsername('');
       } catch (err) {
-          setErrorMsg('Network error fetching Instagram');
+          setErrorMsg('Invalid URL');
       } finally {
           setInstaLoading(false);
       }
@@ -142,22 +139,23 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
              </div>
              
              {images.length < 5 && (
-                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'center' }}>
-                   <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Import from Instagram:</span>
-                   <div style={{ display: 'flex', position: 'relative', maxWidth: '150px' }}>
-                     <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Camera size={14} /></span>
-                     <input 
-                       type="text" 
-                       placeholder="username" 
-                       value={instaUsername}
-                       onChange={(e) => setInstaUsername(e.target.value)}
-                       style={{ width: '100%', padding: '0.4rem 0.4rem 0.4rem 28px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)' }}
-                       onKeyDown={(e) => { if (e.key === 'Enter') handleInstaFetch(); }}
-                     />
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%', marginTop: '1rem', background: 'var(--bg-input)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                   <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'left' }}>Or paste an image link directly:</span>
+                   <div style={{ display: 'flex', gap: '0.5rem' }}>
+                     <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+                       <input 
+                         type="text" 
+                         placeholder="https://example.com/image.jpg" 
+                         value={instaUsername}
+                         onChange={(e) => setInstaUsername(e.target.value)}
+                         style={{ width: '100%', padding: '0.6rem 0.8rem', fontSize: '0.9rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
+                         onKeyDown={(e) => { if (e.key === 'Enter') handleUrlAdd(); }}
+                       />
+                     </div>
+                     <button onClick={handleUrlAdd} disabled={instaLoading || !instaUsername.trim()} className="btn-secondary" style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                       Add Link
+                     </button>
                    </div>
-                   <button onClick={handleInstaFetch} disabled={instaLoading || !instaUsername.trim()} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                     {instaLoading ? '...' : 'Fetch'}
-                   </button>
                  </div>
              )}
           </div>
