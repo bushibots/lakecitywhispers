@@ -73,25 +73,30 @@ export default function Dating() {
 
     const targetId = profiles[currentIndex].user_id;
     
+    // Start backend request in the background
     const fetchPromise = apiFetch('/dating/swipe', {
         method: 'POST',
         body: JSON.stringify({ target_id: targetId, action })
     });
     
-    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 300));
+    // Wait for the animation to finish (300ms)
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    const [data] = await Promise.all([fetchPromise, timeoutPromise]);
-    
+    // Optimistic UI: Immediately move to the next profile
     setActiveBtn(null);
+    setCurrentIndex(prev => prev + 1);
+    setGlimpse(false);
+    setHasGlimpsed(false);
     
-    if (data && data.match) {
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-        setMatchPopup({ name: "Your Match", conversation_id: data.conversation_id });
-    } else {
-        setCurrentIndex(prev => prev + 1);
-        setGlimpse(false); // Reset glimpse
-        setHasGlimpsed(false); // Reset view-once state
-    }
+    // Handle the background response
+    fetchPromise.then(data => {
+        if (data && data.match) {
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
+            setMatchPopup({ name: "Your Match", conversation_id: data.conversation_id });
+        }
+    }).catch(err => {
+        console.error("Swipe API failed", err);
+    });
   };
 
   if (loading) {

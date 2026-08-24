@@ -171,6 +171,13 @@ with app.app_context():
     except Exception:
         db.session.rollback()
 
+    try:
+        db.session.execute(db.text('CREATE INDEX IF NOT EXISTS idx_swipe_swiper_action ON swipe_interaction(swiper_id, action, created_at DESC);'))
+        db.session.execute(db.text('CREATE INDEX IF NOT EXISTS idx_swipe_target_swiper ON swipe_interaction(swiper_id, target_id);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to jluWhisper API", "status": "Running"})
@@ -2117,10 +2124,6 @@ def dating_discover():
     if not profile or not profile.is_active:
         return jsonify({"error": "Dating profile inactive"}), 400
         
-    active_profiles = db.session.query(DatingProfile, User).join(User, DatingProfile.user_id == User.id).filter(DatingProfile.is_active == True).all()
-    real_count = len([u for dp, u in active_profiles if u.is_registered and not (u.username and (u.username.startswith('bot_') or u.username.startswith('permbot_')))])
-    
-    
     from datetime import datetime, timedelta, timezone
     cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
     
