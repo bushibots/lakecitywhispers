@@ -165,6 +165,12 @@ with app.app_context():
     except Exception:
         db.session.rollback()
 
+    try:
+        db.session.execute(db.text('CREATE INDEX IF NOT EXISTS idx_message_conv_created ON message(conversation_id, created_at DESC);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to jluWhisper API", "status": "Running"})
@@ -1302,7 +1308,23 @@ def get_messages(conv_id):
     if user.id not in [conv.user1_id, conv.user2_id]:
         return jsonify({"error": "Unauthorized"}), 403
         
-    messages = Message.query.filter_by(conversation_id=conv.id).order_by(Message.created_at.asc()).all()
+    limit = request.args.get('limit', 30, type=int)
+    before = request.args.get('before', type=str)
+    
+    query = Message.query.filter_by(conversation_id=conv.id)
+    
+    if before:
+        from dateutil.parser import parse
+        try:
+            before_date = parse(before)
+            query = query.filter(Message.created_at < before_date)
+        except Exception:
+            pass
+            
+    messages = query.order_by(Message.created_at.desc()).limit(limit).all()
+    # Reverse so they are ascending for the chat UI
+    messages.reverse()
+    
     msg_data = []
     for m in messages:
         msg_data.append({

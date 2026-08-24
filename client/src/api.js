@@ -547,10 +547,14 @@ export const rejectRequest = async (convId) => {
     }
 };
 
-export const getMessages = async (convId) => {
+export const getMessages = async (convId, before = null, limit = 30) => {
     const token = await getSessionToken();
     try {
-        const res = await fetch(`${API_URL}/messages/${convId}`, {
+        let url = `${API_URL}/messages/${convId}?limit=${limit}`;
+        if (before) {
+            url += `&before=${encodeURIComponent(before)}`;
+        }
+        const res = await fetch(url, {
             headers: { "Authorization": token }
         });
         return await res.json();

@@ -20,6 +20,9 @@ export default function Messages() {
   const [showMenu, setShowMenu] = useState(false);
   const messagesEndRef = useRef(null);
   
+  // Cache for instant chat loading
+  const chatCache = useRef({});
+  
   // Ref for active conversation ID so the socket handler can see it without re-binding
   const activeConvIdRef = useRef(activeConvId);
   useEffect(() => { activeConvIdRef.current = activeConvId; }, [activeConvId]);
@@ -48,9 +51,20 @@ export default function Messages() {
       // 1. Update active chat window if we're looking at it
       if (activeConvIdRef.current === msg.conversation_id) {
         setChatMessages(prev => {
-          if (!prev.find(m => m.id === msg.id)) return [...prev, msg];
+          if (!prev.find(m => m.id === msg.id)) {
+              const next = [...prev, msg];
+              if (chatCache.current[msg.conversation_id]) chatCache.current[msg.conversation_id].messages = next;
+              return next;
+          }
           return prev;
         });
+      } else {
+        // Update cache for other chats if they are loaded
+        if (chatCache.current[msg.conversation_id]) {
+            if (!chatCache.current[msg.conversation_id].messages.find(m => m.id === msg.id)) {
+                chatCache.current[msg.conversation_id].messages.push(msg);
+            }
+        }
       }
       
       // 2. Optimistically update the sidebar conversation snippet without hitting API
@@ -99,16 +113,40 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages]);
 
-  const loadMessages = async (convId) => {
-    const data = await getMessages(convId);
+  const loadMessages = async (convId, before = null) => {
+    // Instant cache load
+    if (!before && chatCache.current[convId]) {
+        setActiveConvData(chatCache.current[convId].data);
+        setChatMessages(chatCache.current[convId].messages);
+    }
+    
+    const data = await getMessages(convId, before, 30);
     if (data && !data.error) {
-      setActiveConvData({
-        status: data.status,
-        is_requester: data.is_requester,
-        other_user: data.other_user
-      });
-      setChatMessages(data.messages);
-    } else {
+      if (!before) {
+          setActiveConvData({
+            status: data.status,
+            is_requester: data.is_requester,
+            other_user: data.other_user
+          });
+          setChatMessages(data.messages);
+          
+          chatCache.current[convId] = {
+              data: {
+                  status: data.status,
+                  is_requester: data.is_requester,
+                  other_user: data.other_user
+              },
+              messages: data.messages
+          };
+      } else {
+          // Prepend older messages
+          setChatMessages(prev => {
+              const next = [...data.messages, ...prev];
+              if (chatCache.current[convId]) chatCache.current[convId].messages = next;
+              return next;
+          });
+      }
+    } else if (!before) {
       setActiveConvId(null);
     }
   };
@@ -129,7 +167,11 @@ export default function Messages() {
     };
     
     // Instantly show in chat
-    setChatMessages(prev => [...prev, optimisticMsg]);
+    setChatMessages(prev => {
+        const next = [...prev, optimisticMsg];
+        if (chatCache.current[activeConvId]) chatCache.current[activeConvId].messages = next;
+        return next;
+    });
     
     // Optimistic UI update for the sidebar
     setConversations(prev => {
@@ -332,7 +374,17 @@ export default function Messages() {
                 </div>
 
                 {/* Messages Area */}
-                <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.2rem' }} onClick={() => setShowMenu(false)}>
+                <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column' }} onClick={() => setShowMenu(false)}>
+                {chatMessages.length >= 30 && (
+                  <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                    <button 
+                      onClick={() => loadMessages(activeConvId, chatMessages[0].created_at)}
+                      style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-muted)', padding: '0.4rem 1rem', borderRadius: '20px', cursor: 'pointer', fontSize: '0.8rem' }}
+                    >
+                      Load older messages
+                    </button>
+                  </div>
+                )}
                     {chatMessages.map(msg => (
                         <div key={msg.id} className="message-wrapper" style={{ alignSelf: msg.is_mine ? 'flex-end' : 'flex-start', maxWidth: '75%', position: 'relative', display: 'flex', alignItems: 'center', gap: '10px' }}>
                             
