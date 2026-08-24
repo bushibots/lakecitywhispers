@@ -248,9 +248,11 @@ export default function Dating() {
                                 }}
                                 style={{ 
                                     width: '100%', height: '100%', objectFit: 'cover',
-                                    filter: glimpse ? 'blur(2px)' : 'blur(15px)',
+                                    filter: glimpse ? 'blur(2px)' : 'blur(10px)',
                                     transition: 'filter 0.3s ease',
-                                    transform: 'scale(1.05)'
+                                    transform: 'scale(1.05) translateZ(0)',
+                                    willChange: 'filter, transform',
+                                    backfaceVisibility: 'hidden'
                                 }} 
                             />
                         ) : (
