@@ -492,7 +492,14 @@ def get_user_profile(username):
     if not user:
         return jsonify({"error": "User not found"}), 404
         
-    posts = Post.query.filter_by(user_id=user.id, parent_id=None, is_deleted=False).order_by(Post.created_at.desc()).all()
+    posts = Post.query.filter_by(user_id=user.id, parent_id=None, is_deleted=False).order_by(Post.created_at.desc()).limit(30).all()
+    
+    # Bulk fetch replies counts to avoid N+1 query burst
+    post_ids = [p.id for p in posts]
+    from sqlalchemy import func
+    reply_counts_query = db.session.query(Post.parent_id, func.count(Post.id)).filter(Post.parent_id.in_(post_ids), Post.is_deleted == False).group_by(Post.parent_id).all()
+    reply_counts = dict(reply_counts_query)
+    
     posts_data = []
     for p in posts:
         posts_data.append({
@@ -503,7 +510,7 @@ def get_user_profile(username):
             "author_avatar": user.avatar,
             "created_at": p.created_at.isoformat() + 'Z',
             "upvotes": p.upvotes,
-            "replies_count": Post.query.filter_by(parent_id=p.id, is_deleted=False).count(),
+            "replies_count": reply_counts.get(p.id, 0),
             "topic": p.topic
         })
         
@@ -639,7 +646,7 @@ def delete_account():
 
 # --- Posts (Whispers) ---
 
-def get_user_badges(user):
+def get_user_badges(user, preloaded_post_count=None):
     badges = []
     if user.role == 'admin':
         badges.append({"icon": "👑", "text": "Admin", "color": "gold"})
@@ -647,12 +654,13 @@ def get_user_badges(user):
         badges.append({"icon": "👻", "text": "Ghost Mode", "color": "silver"})
     else:
         badges.append({"icon": "🛡️", "text": "Verified Account", "color": "silver"})
-    # Only add Top Whisperer if they have > 5 posts (lazy load is okay here for small scale)
-    if len(user.posts) > 5:
+        
+    count = preloaded_post_count if preloaded_post_count is not None else Post.query.filter_by(user_id=user.id).count()
+    if count > 5:
         badges.append({"icon": "🔥", "text": "Top Whisperer", "color": "gold"})
     return badges
 
-def serialize_post(p, user=None, user_votes=None):
+def serialize_post(p, user=None, user_votes=None, author_post_counts=None):
     has_voted = False
     if p.poll and user:
         if user_votes is not None:
@@ -663,7 +671,9 @@ def serialize_post(p, user=None, user_votes=None):
     author_name = p.author.display_name if 'oracle' in p.author.username.lower() else ('Admin' if p.author.role == 'admin' else p.author.display_name)
     is_oracle_post = ('oracle' in p.author.username.lower())
     is_admin_post = (p.author.role == 'admin') and not is_oracle_post
-    badges = get_user_badges(p.author)
+    
+    preloaded_count = author_post_counts.get(p.user_id, 0) if author_post_counts is not None else None
+    badges = get_user_badges(p.author, preloaded_count)
 
     return {
         "id": p.id,
@@ -824,6 +834,17 @@ def get_posts():
     session_token = request.headers.get('Authorization')
     user = User.query.filter_by(session_token=session_token).first() if session_token else None
     
+    # Pagination
+    limit = request.args.get('limit', 20, type=int)
+    before = request.args.get('before', type=str)
+    if before:
+        from dateutil.parser import parse
+        try:
+            before_date = parse(before)
+            query = query.filter(Post.created_at < before_date)
+        except Exception:
+            pass
+
     # Eager load author, poll, options, and replies to optimize DB queries
     query = query.options(
         joinedload(Post.author),
@@ -831,7 +852,7 @@ def get_posts():
         joinedload(Post.replies)
     )
         
-    posts = query.order_by(Post.is_announcement.desc(), Post.is_pinned.desc(), Post.created_at.desc()).all()
+    posts = query.order_by(Post.is_announcement.desc(), Post.is_pinned.desc(), Post.created_at.desc()).limit(limit).all()
     
     # Pre-fetch user's voted poll IDs to avoid N+1 queries during serialization
     user_votes = set()
@@ -839,7 +860,13 @@ def get_posts():
         votes = PollVote.query.filter_by(user_id=user.id).all()
         user_votes = {v.poll_id for v in votes}
         
-    posts_data = [serialize_post(p, user, user_votes) for p in posts]
+    # Bulk fetch author post counts to avoid N+1 queries in badges
+    author_ids = list({p.user_id for p in posts})
+    from sqlalchemy import func
+    author_counts_query = db.session.query(Post.user_id, func.count(Post.id)).filter(Post.user_id.in_(author_ids)).group_by(Post.user_id).all()
+    author_post_counts = dict(author_counts_query)
+        
+    posts_data = [serialize_post(p, user, user_votes, author_post_counts) for p in posts]
     return jsonify({"posts": posts_data})
 
 @app.route('/api/posts', methods=['POST'])
@@ -1518,7 +1545,7 @@ def explore_search():
     search_term = f"%{query}%"
     
     # Search Post content, or Author name (via User join)
-    posts = Post.query.join(User, Post.author_id == User.id).filter(
+    posts = Post.query.join(User, Post.user_id == User.id).filter(
         (Post.content.ilike(search_term)) | 
         (User.display_name.ilike(search_term))
     ).order_by(Post.created_at.desc()).limit(20).all()

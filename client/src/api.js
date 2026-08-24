@@ -123,13 +123,14 @@ export const recoverAccount = async (username, recoveryKey, newPassword) => {
     }
 };
 
-export const fetchPosts = async (topic = '', searchQuery = '', handle = 'global') => {
+export const fetchPosts = async (topic = '', searchQuery = '', handle = 'global', limit = 20, before = '') => {
     const token = await getSessionToken();
     try {
-        let url = `${API_URL}/posts?`;
+        let url = `${API_URL}/posts?limit=${limit}&`;
         if (topic) url += `topic=${encodeURIComponent(topic)}&`;
         if (searchQuery) url += `q=${encodeURIComponent(searchQuery)}&`;
         if (handle) url += `handle=${encodeURIComponent(handle)}&`;
+        if (before) url += `before=${encodeURIComponent(before)}&`;
         
         const res = await fetch(url, {
             headers: { 'Authorization': token }

@@ -140,6 +140,26 @@ export default function Feed() {
     }
   };
 
+  const loadMorePosts = async () => {
+      if (posts.length === 0) return;
+      const lastPost = posts[posts.length - 1];
+      const backendTopic = filterTopic === 'Watchlist' ? '' : filterTopic;
+      
+      const moreData = await fetchPosts(backendTopic, searchQuery, 'global', 20, lastPost.created_at);
+      if (moreData && moreData.length > 0) {
+          setPosts(prev => {
+              const newPosts = [...prev, ...moreData];
+              // Ensure uniqueness just in case
+              const uniqueIds = new Set();
+              return newPosts.filter(p => {
+                  if (uniqueIds.has(p.id)) return false;
+                  uniqueIds.add(p.id);
+                  return true;
+              });
+          });
+      }
+  };
+
   const handlePost = async () => {
     if (!content.trim() && !imageFile && !audioBlob) return;
     setIsPosting(true);
@@ -831,6 +851,14 @@ export default function Feed() {
           </div>
         ) : (
           posts.filter(p => !dailyPrompt || p.id !== dailyPrompt.id).map(p => renderPost(p))
+        )}
+        
+        {posts.length > 0 && !isSyncing && (
+            <div style={{ textAlign: 'center', margin: '2rem 0 4rem 0' }}>
+                <button onClick={loadMorePosts} className="btn-secondary" style={{ padding: '0.8rem 2rem', borderRadius: '24px' }}>
+                    Load More Whispers
+                </button>
+            </div>
         )}
       </div>
       
