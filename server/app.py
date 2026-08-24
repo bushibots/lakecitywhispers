@@ -5,6 +5,8 @@ import os
 import uuid
 import random
 import string
+import requests
+from io import BytesIO
 from datetime import datetime, timedelta, timezone
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -1024,6 +1026,38 @@ def upload_file():
                 return jsonify({"url": file_url}), 201
             except Exception as e:
                 return jsonify({"error": f"Local upload failed: {str(e)}. (Check folder permissions)"}), 500
+
+@app.route('/api/upload/instagram', methods=['POST'])
+def upload_instagram():
+    session_token = request.headers.get('Authorization')
+    if not session_token or not User.query.filter_by(session_token=session_token).first():
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    data = request.json or {}
+    username = data.get('username')
+    if not username:
+        return jsonify({"error": "Instagram username required"}), 400
+        
+    try:
+        # Fetch image from unavatar securely on the server
+        resp = requests.get(f"https://unavatar.io/instagram/{username}", stream=True, timeout=10)
+        if resp.status_code != 200:
+            return jsonify({"error": "Could not fetch Instagram profile"}), 400
+            
+        file_obj = BytesIO(resp.content)
+        
+        if cloudinary_enabled:
+            upload_result = cloudinary.uploader.upload(file_obj, resource_type="image")
+            return jsonify({"url": upload_result.get("secure_url")}), 201
+        else:
+            filename = f"insta_{uuid.uuid4().hex}.jpg"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            with open(filepath, 'wb') as f:
+                f.write(resp.content)
+            file_url = request.host_url.rstrip('/') + f"/static/uploads/{filename}"
+            return jsonify({"url": file_url}), 201
+    except Exception as e:
+        return jsonify({"error": f"Failed to fetch or upload: {str(e)}"}), 500
 
 # --- Interactions (Votes & Replies) ---
 @app.route('/api/posts/<int:post_id>/vote', methods=['POST'])

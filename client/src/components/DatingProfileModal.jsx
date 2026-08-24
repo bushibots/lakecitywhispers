@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Heart, X } from 'lucide-react';
-import { apiFetch, uploadFile } from '../api';
+import { Heart, X, Instagram } from 'lucide-react';
+import { apiFetch, uploadFile, fetchInstagramProfile } from '../api';
 import { CAMPUS_STRUCTURE } from '../campus_structure';
 
 export default function DatingProfileModal({ isOpen, onClose, onSaved, initialProfile }) {
@@ -14,8 +14,28 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [instaUsername, setInstaUsername] = useState('');
+  const [instaLoading, setInstaLoading] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleInstaFetch = async () => {
+      if (!instaUsername.trim()) return;
+      setInstaLoading(true);
+      setErrorMsg('');
+      try {
+          const res = await fetchInstagramProfile(instaUsername.replace('@', '').trim());
+          if (res.url) {
+              setImageUrl(res.url);
+          } else {
+              setErrorMsg(res.error || 'Failed to fetch Instagram profile');
+          }
+      } catch (err) {
+          setErrorMsg('Network error fetching Instagram');
+      } finally {
+          setInstaLoading(false);
+      }
+  };
 
   const handleImageUpload = async (e) => {
       const file = e.target.files[0];
@@ -91,12 +111,31 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                      <img src={imageUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                      <button onClick={() => setImageUrl('')} style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>X</button>
                  </div>
-             ) : (
-                 <label style={{ display: 'inline-block', padding: '1rem', border: '2px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer', width: '100%', backgroundColor: 'var(--bg-input)' }}>
-                     {uploading ? 'Uploading...' : 'Tap to Upload Photo'}
-                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} disabled={uploading} />
-                 </label>
-             )}
+              ) : (
+                  <>
+                    <label style={{ display: 'inline-block', padding: '1rem', border: '2px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer', width: '100%', backgroundColor: 'var(--bg-input)' }}>
+                        {uploading ? 'Uploading...' : 'Tap to Upload Photo'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} disabled={uploading} />
+                    </label>
+                    <div style={{ marginTop: '0.8rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Or use Instagram:</span>
+                      <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Instagram size={14} /></span>
+                        <input 
+                          type="text" 
+                          placeholder="username" 
+                          value={instaUsername}
+                          onChange={(e) => setInstaUsername(e.target.value)}
+                          style={{ width: '100%', padding: '0.4rem 0.4rem 0.4rem 28px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)' }}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleInstaFetch(); }}
+                        />
+                      </div>
+                      <button onClick={handleInstaFetch} disabled={instaLoading || !instaUsername.trim()} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+                        {instaLoading ? 'Wait...' : 'Fetch'}
+                      </button>
+                    </div>
+                  </>
+              )}
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Age</label>

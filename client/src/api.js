@@ -260,6 +260,25 @@ export const uploadFile = async (file) => {
     }
 };
 
+export const fetchInstagramProfile = async (username) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/upload/instagram`, {
+            method: 'POST',
+            headers: { 
+                'Authorization': token,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        return data; // returns { url: ... } or { error: ... }
+    } catch (error) {
+        console.error('Insta fetch error:', error);
+        return { error: 'Network error' };
+    }
+};
+
 export const votePoll = async (postId, optionId) => {
     const token = await getSessionToken();
     try {
