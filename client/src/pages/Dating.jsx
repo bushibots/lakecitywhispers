@@ -138,25 +138,28 @@ export default function Dating() {
     // Wait for the animation to finish (300ms)
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Optimistic UI: Immediately move to the next profile
-    setActiveBtn(null);
-    setCurrentIndex(prev => {
-        const next = prev + 1;
-        datingCache.currentIndex = next;
-        return next;
-    });
-    setGlimpse(false);
-    setHasGlimpsed(false);
-    
     // Handle the background response
-    fetchPromise.then(data => {
+    fetchPromise.then(res => res.json()).then(data => {
         if (data && data.match) {
             if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-            setMatchPopup({ name: "Your Match", conversation_id: data.conversation_id });
+            
+            // Get the image of the person we just swiped on before the index advances
+            const matchImg = optimizeImage((target.images?.length > 0 ? target.images : [target.image_url])[0] || target.image_url);
+            
+            setMatchPopup({ 
+                name: "Your Match", 
+                conversation_id: data.conversation_id,
+                image: matchImg
+            });
         }
     }).catch(err => {
         console.error("Swipe API failed", err);
     });
+  };
+
+  const optimizeImage = (url) => {
+      if (!url || !url.includes('res.cloudinary.com')) return url;
+      return url.replace('/upload/', '/upload/c_fill,w_800,q_auto,f_auto/');
   };
 
   if (loading) {
@@ -184,14 +187,37 @@ export default function Dating() {
 
   const currentProfile = profiles[currentIndex];
 
-  const optimizeImage = (url) => {
-      if (!url || !url.includes('res.cloudinary.com')) return url;
-      return url.replace('/upload/', '/upload/c_fill,w_800,q_auto,f_auto/');
-  };
-
   return (
     <div className="page-content dating-page-container" style={{ maxWidth: '500px', margin: '0 auto', display: 'flex', flexDirection: 'column', height: 'calc(100dvh - 100px)', paddingBottom: '0' }}>
         
+        {/* Match Popup Overlay */}
+        {matchPopup && (
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: '#000' }}>
+                {matchPopup.image && (
+                    <img 
+                        src={matchPopup.image} 
+                        alt="Match background" 
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(15px) brightness(0.4)', opacity: 0.8 }} 
+                    />
+                )}
+                
+                <div className="feed-card" style={{ position: 'relative', zIndex: 10001, padding: '3rem', textAlign: 'center', width: '100%', maxWidth: '400px', border: '2px solid #FF5E5B', background: 'rgba(20, 20, 20, 0.85)', backdropFilter: 'blur(10px)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
+                    <div className="pulsing-heart-main" style={{ margin: '0 auto 2rem auto', width: '80px', height: '80px', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(255, 94, 91, 0.4)' }}>
+                        <Heart size={40} fill="#fff" color="#fff" />
+                    </div>
+                    <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff' }}>It's a Match!</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', margin: '1rem 0 2rem 0', fontSize: '1.1rem' }}>You and <strong>{matchPopup.name}</strong> have liked each other.</p>
+                    
+                    <button className="btn-glow" onClick={() => navigate(`/messages${matchPopup.conversation_id ? `?conv=${matchPopup.conversation_id}` : ''}`)} style={{ width: '100%', marginBottom: '1rem', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', color: '#fff', borderRadius: '30px', padding: '1rem', border: 'none', fontWeight: '700', fontSize: '1.1rem' }}>
+                        Send a Message
+                    </button>
+                    <button className="btn-secondary" onClick={() => setMatchPopup(null)} style={{ width: '100%', padding: '1rem', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', background: 'transparent' }}>
+                        Keep Swiping
+                    </button>
+                </div>
+            </div>
+        )}
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0', marginBottom: '1rem' }}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: '#FF5E5B', fontWeight: '800', letterSpacing: '-0.5px' }}>
                 <Heart fill="#FF5E5B" color="#FF5E5B" /> Campus Crush
@@ -213,22 +239,7 @@ export default function Dating() {
         </div>
 
         <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'stretch' }}>
-            {matchPopup ? (
-                <div className="feed-card" style={{ padding: '3rem', textAlign: 'center', width: '100%', border: '2px solid #FF5E5B', background: 'rgba(255, 94, 91, 0.05)', borderRadius: '24px' }}>
-                    <div className="pulsing-heart-main" style={{ margin: '0 auto 2rem auto', width: '80px', height: '80px', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(255, 94, 91, 0.4)' }}>
-                        <Heart size={40} fill="#fff" color="#fff" />
-                    </div>
-                    <h2 style={{ fontSize: '2rem', fontWeight: '800' }}>It's a Match!</h2>
-                    <p style={{ color: 'var(--text-muted)', margin: '1rem 0 2rem 0', fontSize: '1.1rem' }}>You and <strong>{matchPopup.name}</strong> have liked each other.</p>
-                    
-                    <button className="btn-glow" onClick={() => navigate(`/messages${matchPopup.conversation_id ? `?conv=${matchPopup.conversation_id}` : ''}`)} style={{ width: '100%', marginBottom: '1rem', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', color: '#fff', borderRadius: '30px', padding: '1rem', border: 'none', fontWeight: '700' }}>
-                        Send a Message
-                    </button>
-                    <button className="btn-secondary" onClick={() => setMatchPopup(null)} style={{ width: '100%' }}>
-                        Keep Swiping
-                    </button>
-                </div>
-            ) : profiles.length === 0 || currentIndex >= profiles.length ? (
+            {profiles.length === 0 || currentIndex >= profiles.length ? (
                 <div className="feed-card" style={{ padding: '3rem 2rem', textAlign: 'center', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                     <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--text-main)' }}>No Profiles Found</h2>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Check back later or try removing your filters.</p>
