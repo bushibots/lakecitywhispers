@@ -2056,15 +2056,26 @@ def admin_get_dating_profiles():
     profiles = DatingProfile.query.all()
     result = []
     for p in profiles:
+        parsed_images = []
+        if p.images:
+            try:
+                parsed_images = json.loads(p.images)
+                if not isinstance(parsed_images, list):
+                    parsed_images = []
+            except Exception:
+                pass
+        
         result.append({
+            "id": p.id,
             "user_id": p.user_id,
-            "username": p.user.username,
-            "display_name": p.user.display_name,
-            "bio": p.bio,
-            "image_url": p.image_url,
-            "images": json.loads(p.images) if p.images else [],
+            "username": p.user.username if p.user else "Unknown",
             "gender": p.gender,
             "age": p.age,
+            "course": p.course,
+            "block": p.block,
+            "image_url": p.image_url,
+            "images": parsed_images,
+            "is_active": p.is_active,
             "created_at": p.created_at.isoformat() + 'Z' if p.created_at else None
         })
     return jsonify(result)
@@ -2249,6 +2260,15 @@ def dating_profile():
     if not profile:
         return jsonify(None)
         
+    parsed_images = []
+    if profile.images:
+        try:
+            parsed_images = json.loads(profile.images)
+            if not isinstance(parsed_images, list):
+                parsed_images = []
+        except Exception:
+            pass
+
     return jsonify({
         "bio": profile.bio,
         "gender": profile.gender,
@@ -2257,7 +2277,7 @@ def dating_profile():
         "block": profile.block,
         "course": profile.course,
         "image_url": profile.image_url,
-        "images": json.loads(profile.images) if profile.images else [],
+        "images": parsed_images,
         "is_active": profile.is_active
     })
 
@@ -2303,12 +2323,21 @@ def dating_discover():
     
     discover_list = []
     for p in results:
-        # Don't show inactive users or bots (optional, but good)
         if p.user.is_banned: continue
+        
+        parsed_images = []
+        if p.images:
+            try:
+                parsed_images = json.loads(p.images)
+                if not isinstance(parsed_images, list):
+                    parsed_images = []
+            except Exception:
+                pass
+                
         discover_list.append({
             "user_id": p.user_id,
             "image_url": p.image_url,
-            "images": json.loads(p.images) if p.images else [],
+            "images": parsed_images,
             "bio": p.bio,
             "gender": p.gender,
             "age": p.age
