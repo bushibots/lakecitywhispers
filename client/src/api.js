@@ -613,19 +613,6 @@ export const fetchAdminUsers = async () => {
     }
 };
 
-export const fetchAdminSwipes = async () => {
-    const token = await getSessionToken();
-    try {
-        const res = await fetch(`${API_URL}/admin/swipes`, {
-            headers: { 'Authorization': token }
-        });
-        return await res.json();
-    } catch (error) {
-        console.error('Error fetching admin swipes:', error);
-        return [];
-    }
-};
-
 export const forceAdminMatch = async (username1, username2) => {
     const token = await getSessionToken();
     try {
