@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, X, Instagram } from 'lucide-react';
+import { Heart, X, Camera } from 'lucide-react';
 import { apiFetch, uploadFile, fetchInstagramProfile } from '../api';
 import { CAMPUS_STRUCTURE } from '../campus_structure';
 
@@ -120,7 +120,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                     <div style={{ marginTop: '0.8rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                       <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Or use Instagram:</span>
                       <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Instagram size={14} /></span>
+                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Camera size={14} /></span>
                         <input 
                           type="text" 
                           placeholder="username" 

@@ -2074,11 +2074,18 @@ def admin_delete_dating_profile(user_id):
 @app.route('/api/admin/swipes', methods=['GET'])
 @admin_required
 def admin_get_swipes():
-    swipes = SwipeInteraction.query.order_by(SwipeInteraction.created_at.desc()).limit(200).all()
+    from sqlalchemy.orm import aliased
+    User1 = aliased(User)
+    User2 = aliased(User)
+    
+    swipes_data = db.session.query(SwipeInteraction, User1, User2)\
+        .outerjoin(User1, SwipeInteraction.swiper_id == User1.id)\
+        .outerjoin(User2, SwipeInteraction.target_id == User2.id)\
+        .order_by(SwipeInteraction.created_at.desc())\
+        .limit(200).all()
+        
     result = []
-    for s in swipes:
-        swiper = User.query.get(s.swiper_id)
-        target = User.query.get(s.target_id)
+    for s, swiper, target in swipes_data:
         result.append({
             "id": s.id,
             "swiper": swiper.username if swiper else "Deleted User",
@@ -2087,6 +2094,71 @@ def admin_get_swipes():
             "created_at": s.created_at.isoformat() + 'Z' if s.created_at else None
         })
     return jsonify(result)
+
+@app.route('/api/admin/dating/force_match', methods=['POST'])
+@admin_required
+def admin_force_match():
+    data = request.json or {}
+    u1_name = data.get('username1')
+    u2_name = data.get('username2')
+    
+    if not u1_name or not u2_name:
+        return jsonify({"error": "Both usernames required"}), 400
+        
+    user1 = User.query.filter(User.username.ilike(u1_name)).first()
+    user2 = User.query.filter(User.username.ilike(u2_name)).first()
+    
+    if not user1 or not user2:
+        return jsonify({"error": "One or both users not found"}), 404
+        
+    # Overwrite any existing swipes with mutual likes
+    i1 = SwipeInteraction.query.filter_by(swiper_id=user1.id, target_id=user2.id).first()
+    if i1:
+        i1.action = 'like'
+        i1.created_at = datetime.now(timezone.utc)
+    else:
+        db.session.add(SwipeInteraction(swiper_id=user1.id, target_id=user2.id, action='like'))
+        
+    i2 = SwipeInteraction.query.filter_by(swiper_id=user2.id, target_id=user1.id).first()
+    if i2:
+        i2.action = 'like'
+        i2.created_at = datetime.now(timezone.utc)
+    else:
+        db.session.add(SwipeInteraction(swiper_id=user2.id, target_id=user1.id, action='like'))
+        
+    # Check existing conversation
+    existing = Conversation.query.filter(
+        ((Conversation.user1_id == user1.id) & (Conversation.user2_id == user2.id)) |
+        ((Conversation.user1_id == user2.id) & (Conversation.user2_id == user1.id))
+    ).first()
+    
+    if not existing:
+        conv = Conversation(user1_id=user1.id, user2_id=user2.id, status='accepted')
+        db.session.add(conv)
+        db.session.flush()
+        
+        sys_msg = Message(
+            conversation_id=conv.id, 
+            sender_id=user1.id,
+            content="💖 It's a Match! You both swiped right. Say hi!"
+        )
+        db.session.add(sys_msg)
+        
+        dp1 = DatingProfile.query.filter_by(user_id=user1.id).first()
+        dp2 = DatingProfile.query.filter_by(user_id=user2.id).first()
+        
+        if dp1 and dp1.image_url:
+            db.session.add(Message(conversation_id=conv.id, sender_id=user1.id, content=f"[IMAGE] {dp1.image_url}"))
+        if dp2 and dp2.image_url:
+            db.session.add(Message(conversation_id=conv.id, sender_id=user2.id, content=f"[IMAGE] {dp2.image_url}"))
+            
+    db.session.commit()
+    
+    # Notify if online
+    socketio.emit('new_message', {"msg": "You have a new match!", "conv_id": existing.id if existing else conv.id}, room=str(user1.id))
+    socketio.emit('new_message', {"msg": "You have a new match!", "conv_id": existing.id if existing else conv.id}, room=str(user2.id))
+    
+    return jsonify({"success": True})
 
 @app.route('/api/admin/media', methods=['GET'])
 @admin_required

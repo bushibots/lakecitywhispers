@@ -4,7 +4,7 @@ import {
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser,
-    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia
+    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
 
@@ -25,6 +25,11 @@ export default function AdminDashboard() {
   const [allMedia, setAllMedia] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
+  
+  // Force Match State
+  const [matchUser1, setMatchUser1] = useState('');
+  const [matchUser2, setMatchUser2] = useState('');
+  const [matchStatus, setMatchStatus] = useState('');
   
   const [blockedWords, setBlockedWords] = useState([]);
   const [newWord, setNewWord] = useState('');
@@ -233,6 +238,24 @@ export default function AdminDashboard() {
             }
         }
     }
+  };
+
+  const handleForceMatch = async () => {
+      if (!matchUser1.trim() || !matchUser2.trim()) {
+          setMatchStatus('Please enter both usernames.');
+          return;
+      }
+      setMatchStatus('Forcing match...');
+      const res = await forceAdminMatch(matchUser1.trim(), matchUser2.trim());
+      if (res && res.success) {
+          setMatchStatus('Match successfully forced!');
+          setMatchUser1('');
+          setMatchUser2('');
+          fetchAdminSwipes().then(data => setSwipeHistory(data));
+      } else {
+          setMatchStatus(res.error || 'Failed to force match.');
+      }
+      setTimeout(() => setMatchStatus(''), 4000);
   };
 
   const handleLogoUpload = async (e) => {
@@ -935,7 +958,40 @@ export default function AdminDashboard() {
 
       {activeTab === 'swipes' && (
           <div className="feed-card" style={{ padding: '1rem', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              
+              {/* God Mode: Force Match */}
+              <div style={{ padding: '1.5rem', background: 'rgba(231, 76, 60, 0.1)', border: '1px solid #e74c3c', borderRadius: '12px', marginBottom: '2rem' }}>
+                  <h3 style={{ color: '#e74c3c', marginTop: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Flame size={20} /> God Mode: Force a Match
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
+                      Force a mutual right-swipe between two users. They will instantly be matched and a chat will be created.
+                  </p>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <input 
+                          type="text" 
+                          placeholder="Username 1" 
+                          value={matchUser1}
+                          onChange={e => setMatchUser1(e.target.value)}
+                          style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-input)' }}
+                      />
+                      <Heart size={20} color="#e74c3c" />
+                      <input 
+                          type="text" 
+                          placeholder="Username 2" 
+                          value={matchUser2}
+                          onChange={e => setMatchUser2(e.target.value)}
+                          style={{ flex: 1, minWidth: '150px', padding: '0.8rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-input)' }}
+                      />
+                      <button onClick={handleForceMatch} style={{ background: '#e74c3c', color: '#fff', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                          Force Match
+                      </button>
+                  </div>
+                  {matchStatus && <div style={{ marginTop: '1rem', color: matchStatus.includes('success') ? '#2ecc71' : '#e74c3c', fontWeight: 'bold' }}>{matchStatus}</div>}
+              </div>
+
+              <h3>Recent Swipe History</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', marginTop: '1rem' }}>
                   <thead>
                       <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                           <th style={{ padding: '1rem' }}>Time</th>
