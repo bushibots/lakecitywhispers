@@ -26,6 +26,7 @@ export default function Dating() {
   const [filterBlock, setFilterBlock] = useState('');
   const [filterCourse, setFilterCourse] = useState('');
   const [waitlist, setWaitlist] = useState(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -84,6 +85,7 @@ export default function Dating() {
     if (data && !data.error) {
       setProfiles(data);
       setCurrentIndex(0);
+      setPhotoIndex(0);
       
       datingCache.profiles = data;
       datingCache.currentIndex = 0;
@@ -103,10 +105,11 @@ export default function Dating() {
   };
 
   const handleSwipe = async (action) => {
-    if (currentIndex >= profiles.length || activeBtn) return;
+    if (currentIndex >= profiles.length) return;
+    const target = profiles[currentIndex];
     
-    // Trigger button animation
     setActiveBtn(action);
+    setPhotoIndex(0);
     
     // Haptic feedback
     if (navigator.vibrate) {
@@ -226,26 +229,17 @@ export default function Dating() {
             ) : currentProfile ? (
                 <div key={currentProfile.user_id} className="feed-card dating-card-anim" style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: '32px', backgroundColor: '#111', marginBottom: 0 }}>
                     
-                    {/* Background Image Container */}
+                    {/* Background Image Carousel */}
                     <div 
                         style={{ 
                             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                            zIndex: 1, cursor: 'pointer'
+                            zIndex: 1
                         }}
-                        onMouseDown={() => { if (!hasGlimpsed) { setGlimpse(true); setHasGlimpsed(true); } }}
-                        onMouseUp={() => setGlimpse(false)}
-                        onMouseLeave={() => setGlimpse(false)}
-                        onTouchStart={() => { if (!hasGlimpsed) { setGlimpse(true); setHasGlimpsed(true); } }}
-                        onTouchEnd={() => setGlimpse(false)}
                     >
-                        {currentProfile.image_url ? (
+                        {(currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : [])).length > 0 ? (
                             <img 
-                                src={optimizeImage(currentProfile.image_url)} 
+                                src={optimizeImage((currentProfile.images?.length > 0 ? currentProfile.images : [currentProfile.image_url])[photoIndex] || currentProfile.image_url)} 
                                 alt="Profile" 
-                                onLoad={() => {
-                                    const tImg = performance.now();
-                                    console.log(`[Perf] 6. First image loaded at ${tImg} (+${tImg - window.datingStartTime}ms from mount)`);
-                                }}
                                 style={{ 
                                     width: '100%', height: '100%', objectFit: 'cover',
                                     filter: glimpse ? 'blur(2px)' : 'blur(10px)',
@@ -265,8 +259,52 @@ export default function Dating() {
                         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%', background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 100%)', pointerEvents: 'none' }}></div>
                     </div>
 
+                    {/* Tap Controls & Indicators */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2, display: 'flex', flexDirection: 'column' }}>
+                        {/* Bumble-style Progress Bars */}
+                        <div style={{ display: 'flex', gap: '4px', padding: '12px 16px', zIndex: 3 }}>
+                            {(()=>{
+                                const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
+                                if (imgs.length <= 1) return null;
+                                return imgs.map((_, i) => (
+                                    <div key={i} style={{ 
+                                        flex: 1, height: '4px', borderRadius: '4px', 
+                                        background: i === photoIndex ? '#fff' : 'rgba(255,255,255,0.3)',
+                                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                                        transition: 'background 0.2s ease'
+                                    }} />
+                                ));
+                            })()}
+                        </div>
+                        
+                        {/* Tap zones for left/right */}
+                        <div style={{ display: 'flex', flex: 1 }}>
+                            <div style={{ flex: 1, cursor: 'pointer' }} onClick={(e) => {
+                                e.stopPropagation();
+                                const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
+                                if (photoIndex > 0) setPhotoIndex(photoIndex - 1);
+                            }} />
+                            
+                            {/* Center hold for glimpse */}
+                            <div 
+                                style={{ flex: 2, cursor: 'pointer' }} 
+                                onMouseDown={() => { if (!hasGlimpsed) { setGlimpse(true); setHasGlimpsed(true); } }}
+                                onMouseUp={() => setGlimpse(false)}
+                                onMouseLeave={() => setGlimpse(false)}
+                                onTouchStart={() => { if (!hasGlimpsed) { setGlimpse(true); setHasGlimpsed(true); } }}
+                                onTouchEnd={() => setGlimpse(false)}
+                            />
+
+                            <div style={{ flex: 1, cursor: 'pointer' }} onClick={(e) => {
+                                e.stopPropagation();
+                                const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
+                                if (photoIndex < imgs.length - 1) setPhotoIndex(photoIndex + 1);
+                            }} />
+                        </div>
+                    </div>
+
                     {/* Content Overlay (Text + Buttons) */}
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2.5rem 1.5rem', zIndex: 2, display: 'flex', flexDirection: 'column', pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2.5rem 1.5rem', zIndex: 3, display: 'flex', flexDirection: 'column', pointerEvents: 'none' }}>
                         
                         {/* Profile Info */}
                         <div style={{ pointerEvents: 'auto', marginBottom: '2rem' }}>

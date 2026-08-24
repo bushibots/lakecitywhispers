@@ -136,7 +136,8 @@ class DatingProfile(db.Model):
     age = db.Column(db.Integer, nullable=True)
     block = db.Column(db.String(10), nullable=True)
     course = db.Column(db.String(255), nullable=True)
-    image_url = db.Column(db.String(255), nullable=True)
+    image_url = db.Column(db.String(255), nullable=True) # Legacy single image
+    images = db.Column(db.Text, nullable=True) # JSON array of image URLs
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     

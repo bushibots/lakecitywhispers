@@ -10,9 +10,9 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   const [age, setAge] = useState(initialProfile?.age || '');
   const [block, setBlock] = useState(initialProfile?.block || 'A');
   const [course, setCourse] = useState(initialProfile?.course || (CAMPUS_STRUCTURE['Block A'] ? CAMPUS_STRUCTURE['Block A'][0] : ''));
-  const [imageUrl, setImageUrl] = useState(initialProfile?.image_url || '');
+  const [images, setImages] = useState(initialProfile?.images?.length ? initialProfile.images : (initialProfile?.image_url ? [initialProfile.image_url] : []));
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState(false); // store index being uploaded, or false
   const [errorMsg, setErrorMsg] = useState('');
   const [instaUsername, setInstaUsername] = useState('');
   const [instaLoading, setInstaLoading] = useState(false);
@@ -20,13 +20,14 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   if (!isOpen) return null;
 
   const handleInstaFetch = async () => {
-      if (!instaUsername.trim()) return;
+      if (!instaUsername.trim() || images.length >= 5) return;
       setInstaLoading(true);
       setErrorMsg('');
       try {
           const res = await fetchInstagramProfile(instaUsername.replace('@', '').trim());
           if (res.url) {
-              setImageUrl(res.url);
+              setImages([...images, res.url]);
+              setInstaUsername('');
           } else {
               setErrorMsg(res.error || 'Failed to fetch Instagram profile');
           }
@@ -37,14 +38,22 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
       }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, index = null) => {
       const file = e.target.files[0];
       if (!file) return;
-      setUploading(true);
+      setUploading(index !== null ? index : images.length);
       try {
           const url = await uploadFile(file);
           if (url) {
-              setImageUrl(url);
+              setImages(prev => {
+                  const newImages = [...prev];
+                  if (index !== null && index < newImages.length) {
+                      newImages[index] = url; // replace
+                  } else {
+                      newImages.push(url); // append
+                  }
+                  return newImages;
+              });
           }
       } catch (err) {
           console.error("Upload failed", err);
@@ -65,7 +74,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           age,
           block,
           course,
-          image_url: imageUrl,
+          image_url: images.length > 0 ? images[0] : '',
+          images,
           is_active: true
         })
       });
@@ -103,39 +113,53 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', maxHeight: '50vh', paddingRight: '0.5rem' }}>
           <div style={{ textAlign: 'center' }}>
              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                 Mystery Photo <br/>
+                 Mystery Photos (Up to 5) <br/>
                  <small>(Tip: Wear a mask or hide your face to keep it semi-anonymous!)</small>
              </label>
-             {imageUrl ? (
-                 <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto', borderRadius: '50%', overflow: 'hidden', border: '3px solid #FF5E5B' }}>
-                     <img src={imageUrl} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                     <button onClick={() => setImageUrl('')} style={{ position: 'absolute', top: 0, right: 0, background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', cursor: 'pointer', padding: '2px 6px' }}>X</button>
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', marginBottom: '1rem' }}>
+                 {[0, 1, 2, 3, 4].map(index => {
+                     const hasImage = !!images[index];
+                     return (
+                         <div key={index} style={{ position: 'relative', aspectRatio: '1/1', borderRadius: '8px', overflow: 'hidden', border: hasImage ? '2px solid #FF5E5B' : '2px dashed var(--border-color)', backgroundColor: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                             {hasImage ? (
+                                 <>
+                                     <img src={images[index]} alt={`Profile ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                     <button onClick={() => {
+                                         const newImages = [...images];
+                                         newImages.splice(index, 1);
+                                         setImages(newImages);
+                                     }} style={{ position: 'absolute', top: 4, right: 4, background: 'rgba(0,0,0,0.6)', color: 'white', border: 'none', borderRadius: '50%', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={14} /></button>
+                                 </>
+                             ) : (
+                                 <label style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                                     {uploading === index || (index === images.length && uploading === images.length) ? <span style={{fontSize: '0.7rem'}}>Wait...</span> : <Camera size={24} opacity={0.5} />}
+                                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleImageUpload(e, index)} disabled={uploading !== false} />
+                                 </label>
+                             )}
+                         </div>
+                     );
+                 })}
+             </div>
+             
+             {images.length < 5 && (
+                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', justifyContent: 'center' }}>
+                   <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Import from Instagram:</span>
+                   <div style={{ display: 'flex', position: 'relative', maxWidth: '150px' }}>
+                     <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Camera size={14} /></span>
+                     <input 
+                       type="text" 
+                       placeholder="username" 
+                       value={instaUsername}
+                       onChange={(e) => setInstaUsername(e.target.value)}
+                       style={{ width: '100%', padding: '0.4rem 0.4rem 0.4rem 28px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)' }}
+                       onKeyDown={(e) => { if (e.key === 'Enter') handleInstaFetch(); }}
+                     />
+                   </div>
+                   <button onClick={handleInstaFetch} disabled={instaLoading || !instaUsername.trim()} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
+                     {instaLoading ? '...' : 'Fetch'}
+                   </button>
                  </div>
-              ) : (
-                  <>
-                    <label style={{ display: 'inline-block', padding: '1rem', border: '2px dashed var(--border-color)', borderRadius: '12px', cursor: 'pointer', width: '100%', backgroundColor: 'var(--bg-input)' }}>
-                        {uploading ? 'Uploading...' : 'Tap to Upload Photo'}
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} disabled={uploading} />
-                    </label>
-                    <div style={{ marginTop: '0.8rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>Or use Instagram:</span>
-                      <div style={{ display: 'flex', flex: 1, position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}><Camera size={14} /></span>
-                        <input 
-                          type="text" 
-                          placeholder="username" 
-                          value={instaUsername}
-                          onChange={(e) => setInstaUsername(e.target.value)}
-                          style={{ width: '100%', padding: '0.4rem 0.4rem 0.4rem 28px', fontSize: '0.85rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)' }}
-                          onKeyDown={(e) => { if (e.key === 'Enter') handleInstaFetch(); }}
-                        />
-                      </div>
-                      <button onClick={handleInstaFetch} disabled={instaLoading || !instaUsername.trim()} className="btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}>
-                        {instaLoading ? 'Wait...' : 'Fetch'}
-                      </button>
-                    </div>
-                  </>
-              )}
+             )}
           </div>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Age</label>

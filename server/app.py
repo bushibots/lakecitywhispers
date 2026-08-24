@@ -168,6 +168,12 @@ with app.app_context():
         db.session.rollback()
 
     try:
+        db.session.execute(db.text('ALTER TABLE dating_profile ADD COLUMN images TEXT;'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    try:
         db.session.execute(db.text('CREATE INDEX IF NOT EXISTS idx_message_conv_created ON message(conversation_id, created_at DESC);'))
         db.session.commit()
     except Exception:
@@ -2056,6 +2062,7 @@ def admin_get_dating_profiles():
             "display_name": p.user.display_name,
             "bio": p.bio,
             "image_url": p.image_url,
+            "images": json.loads(p.images) if p.images else [],
             "gender": p.gender,
             "age": p.age,
             "created_at": p.created_at.isoformat() + 'Z' if p.created_at else None
@@ -2226,6 +2233,11 @@ def dating_profile():
         except ValueError:
             pass
         profile.image_url = data.get('image_url', profile.image_url)
+        
+        imgs = data.get('images')
+        if imgs is not None:
+            profile.images = json.dumps(imgs)
+            
         profile.is_active = data.get('is_active', True)
         
         try:
@@ -2245,6 +2257,7 @@ def dating_profile():
         "block": profile.block,
         "course": profile.course,
         "image_url": profile.image_url,
+        "images": json.loads(profile.images) if profile.images else [],
         "is_active": profile.is_active
     })
 
@@ -2295,6 +2308,7 @@ def dating_discover():
         discover_list.append({
             "user_id": p.user_id,
             "image_url": p.image_url,
+            "images": json.loads(p.images) if p.images else [],
             "bio": p.bio,
             "gender": p.gender,
             "age": p.age
