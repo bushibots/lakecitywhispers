@@ -29,6 +29,8 @@ export default function Dating() {
   const [photoIndex, setPhotoIndex] = useState(0);
   const navigate = useNavigate();
 
+  const hasGlimpsed = glimpseCount > 0;
+
   useEffect(() => {
     // Tab cache hydration: if cache exists and is < 5 minutes old
     if (datingCache.profiles.length > 0 && Date.now() - datingCache.timestamp < 300000) {
