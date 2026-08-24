@@ -100,7 +100,14 @@ export default function Dating() {
   };
 
   if (loading) {
-    return <div className="page-content" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>Loading...</div>;
+    return (
+        <div className="page-content" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '60vh', gap: '1rem' }}>
+            <div className="pulsing-heart-main" style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(255, 94, 91, 0.4)', animation: 'pulse 1.5s infinite' }}>
+                <Heart size={30} fill="#fff" color="#fff" />
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Finding matches...</p>
+        </div>
+    );
   }
 
   if (showOnboarding) {
