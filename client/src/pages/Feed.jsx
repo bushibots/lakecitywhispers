@@ -652,17 +652,18 @@ export default function Feed() {
 
   return (
     <div className="page-content">
-      {/* Choice Bar */}
-      <div className="choice-bar hide-scrollbar" style={{ display: 'flex', gap: '0.8rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-        {['Watchlist', ...CATEGORIES].map(t => (
-          <div 
-            key={t}
-            onClick={() => setFilterTopic(t === filterTopic ? '' : t)}
-            className={`choice-pill ${filterTopic === t ? 'active' : ''}`}
-          >
-            {t}
-          </div>
-        ))}
+      {/* Sleek Feed Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold', background: 'linear-gradient(to right, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+          {filterTopic ? filterTopic : 'Campus Feed'}
+        </h2>
+        
+        <CustomDropdown
+          value={filterTopic || 'Filter'}
+          options={[{value: '', label: 'All Whispers'}, 'Watchlist', ...CATEGORIES]}
+          onChange={(val) => setFilterTopic(val)}
+          placeholder="Filter"
+        />
       </div>
 
       {/* Advanced Composer */}
