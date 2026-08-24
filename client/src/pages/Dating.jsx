@@ -32,7 +32,7 @@ export default function Dating() {
       setShowOnboarding(true);
     } else {
       setProfile(data);
-      fetchDiscover();
+      await fetchDiscover();
     }
     setLoading(false);
   };
