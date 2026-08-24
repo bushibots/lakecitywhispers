@@ -5,6 +5,13 @@ import DatingProfileModal from '../components/DatingProfileModal';
 import DatingFilterModal from '../components/DatingFilterModal';
 import { useNavigate } from 'react-router-dom';
 
+let datingCache = {
+  profile: null,
+  profiles: [],
+  currentIndex: 0,
+  timestamp: 0,
+};
+
 export default function Dating() {
   const [profile, setProfile] = useState(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -22,19 +29,51 @@ export default function Dating() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchProfile();
+    // Tab cache hydration: if cache exists and is < 5 minutes old
+    if (datingCache.profiles.length > 0 && Date.now() - datingCache.timestamp < 300000) {
+      setProfile(datingCache.profile);
+      setProfiles(datingCache.profiles);
+      setCurrentIndex(datingCache.currentIndex);
+      setLoading(false);
+      
+      // Background replenish if they are almost out of profiles
+      if (datingCache.currentIndex >= datingCache.profiles.length - 3) {
+          fetchData(true);
+      }
+    } else {
+      fetchData();
+    }
   }, []);
 
-  const fetchProfile = async () => {
-    setLoading(true);
-    const data = await apiFetch('/dating/profile');
-    if (!data || data.error || !data.is_active) {
+  const fetchData = async (background = false) => {
+    if (!background) setLoading(true);
+    
+    // Fire both requests concurrently
+    const [profileData, discoverData] = await Promise.all([
+      apiFetch('/dating/profile'),
+      apiFetch('/dating/discover')
+    ]);
+    
+    if (!profileData || profileData.error || !profileData.is_active) {
       setShowOnboarding(true);
+      setLoading(false);
     } else {
-      setProfile(data);
-      await fetchDiscover();
+      setProfile(profileData);
+      
+      if (discoverData && !discoverData.error) {
+        setProfiles(discoverData);
+        setCurrentIndex(0);
+        
+        // Update cache
+        datingCache = {
+            profile: profileData,
+            profiles: discoverData,
+            currentIndex: 0,
+            timestamp: Date.now()
+        };
+      }
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchDiscover = async (b = filterBlock, c = filterCourse) => {
@@ -45,6 +84,10 @@ export default function Dating() {
     if (data && !data.error) {
       setProfiles(data);
       setCurrentIndex(0);
+      
+      datingCache.profiles = data;
+      datingCache.currentIndex = 0;
+      datingCache.timestamp = Date.now();
     }
   };
 
@@ -84,7 +127,11 @@ export default function Dating() {
     
     // Optimistic UI: Immediately move to the next profile
     setActiveBtn(null);
-    setCurrentIndex(prev => prev + 1);
+    setCurrentIndex(prev => {
+        const next = prev + 1;
+        datingCache.currentIndex = next;
+        return next;
+    });
     setGlimpse(false);
     setHasGlimpsed(false);
     
@@ -168,10 +215,13 @@ export default function Dating() {
                         Keep Swiping
                     </button>
                 </div>
-            ) : profiles.length === 0 ? (
+            ) : profiles.length === 0 || currentIndex >= profiles.length ? (
                 <div className="feed-card" style={{ padding: '3rem 2rem', textAlign: 'center', width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                     <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--text-main)' }}>No Profiles Found</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Check back later or try removing your filters.</p>
+                    <p style={{ color: 'var(--text-muted)', marginBottom: '2rem' }}>Check back later or try removing your filters.</p>
+                    <button onClick={() => fetchData()} className="btn-glow" style={{ padding: '0.8rem 2rem', borderRadius: '30px', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', color: '#fff', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                        Refresh Profiles
+                    </button>
                 </div>
             ) : currentProfile ? (
                 <div key={currentProfile.user_id} className="feed-card dating-card-anim" style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: '32px', backgroundColor: '#111', marginBottom: 0 }}>
@@ -192,6 +242,10 @@ export default function Dating() {
                             <img 
                                 src={optimizeImage(currentProfile.image_url)} 
                                 alt="Profile" 
+                                onLoad={() => {
+                                    const tImg = performance.now();
+                                    console.log(`[Perf] 6. First image loaded at ${tImg} (+${tImg - window.datingStartTime}ms from mount)`);
+                                }}
                                 style={{ 
                                     width: '100%', height: '100%', objectFit: 'cover',
                                     filter: glimpse ? 'blur(2px)' : 'blur(15px)',
