@@ -426,7 +426,8 @@ export default function Dating() {
                             
                             {/* Center hold for glimpse */}
                             <div 
-                                style={{ flex: 2, cursor: 'pointer' }} 
+                                style={{ flex: 2, cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }} 
+                                onContextMenu={(e) => e.preventDefault()}
                                 onMouseDown={() => { 
                                     const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
                                     const maxGlimpses = Math.max(1, imgs.length - 1);
@@ -437,7 +438,7 @@ export default function Dating() {
                                 }}
                                 onMouseUp={() => setGlimpse(false)}
                                 onMouseLeave={() => setGlimpse(false)}
-                                onTouchStart={() => { 
+                                onTouchStart={(e) => { 
                                     const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
                                     const maxGlimpses = Math.max(1, imgs.length - 1);
                                     if (glimpseCount < maxGlimpses) { 
@@ -446,6 +447,7 @@ export default function Dating() {
                                     } 
                                 }}
                                 onTouchEnd={() => setGlimpse(false)}
+                                onTouchCancel={() => setGlimpse(false)}
                             />
 
                             <div style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '10px' }} onClick={(e) => {
