@@ -11,6 +11,7 @@ import ManagerDashboard from './pages/ManagerDashboard';
 import Dating from './pages/Dating';
 import Settings from './pages/Settings';
 import Promo from './pages/Promo';
+import NewFeatures from './pages/NewFeatures';
 import AuthModal from './components/AuthModal';
 import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
@@ -119,6 +120,7 @@ function App() {
         
         {/* Fullscreen Routes */}
         <Route path="/promo" element={<Promo />} />
+        <Route path="/new_features" element={<NewFeatures />} />
       </Routes>
     </>
   );
