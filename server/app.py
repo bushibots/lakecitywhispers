@@ -2366,8 +2366,8 @@ def dating_discover():
     if not profile or not profile.is_active:
         return jsonify({"error": "Dating profile inactive"}), 400
         
-    from datetime import datetime, timedelta, timezone
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=24)
+    from datetime import datetime, timedelta
+    cutoff = datetime.utcnow() - timedelta(hours=24)
     
     liked = SwipeInteraction.query.filter_by(swiper_id=user.id, action='like').all()
     recent_passes = SwipeInteraction.query.filter(
@@ -2410,8 +2410,8 @@ def dating_discover():
             except Exception:
                 pass
                 
-        from datetime import datetime, timedelta, timezone
-        cutoff_active = datetime.now(timezone.utc) - timedelta(hours=24)
+        from datetime import datetime, timedelta
+        cutoff_active = datetime.utcnow() - timedelta(hours=24)
         is_active_today = p.user.last_active >= cutoff_active if p.user and p.user.last_active else False
 
         discover_list.append({
