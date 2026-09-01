@@ -19,8 +19,6 @@ export default function Dating() {
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [matchPopup, setMatchPopup] = useState(null);
-  const [glimpse, setGlimpse] = useState(false);
-  const [glimpseCount, setGlimpseCount] = useState(0);
   const [activeBtn, setActiveBtn] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filterBlock, setFilterBlock] = useState('');
@@ -36,8 +34,6 @@ export default function Dating() {
   const dragStartX = useRef(0);
   const cardRef = useRef(null);
   const navigate = useNavigate();
-
-  const hasGlimpsed = glimpseCount > 0;
 
   useEffect(() => {
     // Tab cache hydration: if cache exists and is < 5 minutes old
@@ -96,7 +92,6 @@ export default function Dating() {
       setProfiles(data);
       setCurrentIndex(0);
       setPhotoIndex(0);
-      setGlimpseCount(0);
       
       datingCache.profiles = data;
       datingCache.currentIndex = 0;
@@ -134,7 +129,6 @@ export default function Dating() {
             return next;
         });
         setActiveBtn(null);
-        setGlimpseCount(0);
         setSuperlikeAnim(false);
     }, 300);
 
@@ -176,7 +170,6 @@ export default function Dating() {
         datingCache.currentIndex = next;
         return next;
     });
-    setGlimpseCount(0);
     setPhotoIndex(0);
   };
 
@@ -378,10 +371,8 @@ export default function Dating() {
                                 draggable={false}
                                 style={{ 
                                     width: '100%', height: '100%', objectFit: 'cover',
-                                    filter: glimpse ? 'blur(2px)' : 'blur(10px)',
-                                    transition: 'filter 0.3s ease',
                                     transform: 'scale(1.05) translateZ(0)',
-                                    willChange: 'filter, transform',
+                                    willChange: 'transform',
                                     backfaceVisibility: 'hidden',
                                     pointerEvents: 'none'
                                 }} 
@@ -423,32 +414,6 @@ export default function Dating() {
                             }}>
                                 {photoIndex > 0 && <ChevronLeft size={32} color="rgba(255,255,255,0.7)" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />}
                             </div>
-                            
-                            {/* Center hold for glimpse */}
-                            <div 
-                                style={{ flex: 2, height: '100%', cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }} 
-                                onContextMenu={(e) => e.preventDefault()}
-                                onMouseDown={() => { 
-                                    const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
-                                    const maxGlimpses = Math.max(1, imgs.length - 1);
-                                    if (glimpseCount < maxGlimpses) { 
-                                        setGlimpse(true); 
-                                        setGlimpseCount(prev => prev + 1); 
-                                    } 
-                                }}
-                                onMouseUp={() => setGlimpse(false)}
-                                onMouseLeave={() => setGlimpse(false)}
-                                onTouchStart={(e) => { 
-                                    const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
-                                    const maxGlimpses = Math.max(1, imgs.length - 1);
-                                    if (glimpseCount < maxGlimpses) { 
-                                        setGlimpse(true); 
-                                        setGlimpseCount(prev => prev + 1); 
-                                    } 
-                                }}
-                                onTouchEnd={() => setGlimpse(false)}
-                                onTouchCancel={() => setGlimpse(false)}
-                            />
 
                             <div style={{ flex: 1, height: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '10px' }} onClick={(e) => {
                                 e.stopPropagation();
@@ -465,9 +430,6 @@ export default function Dating() {
                         
                         {/* Profile Info */}
                         <div style={{ pointerEvents: 'auto', marginBottom: '2rem' }}>
-                            <p style={{ fontSize: '0.9rem', color: hasGlimpsed ? 'rgba(255,255,255,0.4)' : '#FF5E5B', marginBottom: '0.5rem', fontWeight: '600', transition: 'color 0.3s', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                                {hasGlimpsed ? 'Glimpse used' : 'Hold photo for a one-time glimpse'}
-                            </p>
                             <h2 style={{ fontSize: '2.6rem', marginBottom: '0.3rem', fontWeight: '800', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.1, display: 'flex', alignItems: 'center' }}>
                                 Anonymous {currentProfile.age ? `, ${currentProfile.age}` : ''}
                                 {currentProfile.is_active_today && (
