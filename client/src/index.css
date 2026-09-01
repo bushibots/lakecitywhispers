@@ -807,20 +807,20 @@ body.t-brutalism {
 }
 
 body.t-brutalism.dark-mode {
-  --bg-color: #111111;
-  --bg-secondary: #000000;
+  --bg-color: #121212;
+  --bg-secondary: #0a0a0a;
   --card-bg: #1a1a1a;
-  --primary: #00ffcc; /* Neon Cyan for dark mode contrast */
+  --primary: #00ffcc; /* Neon Cyan */
   --accent-glow: #ffffff;
-  --text-main: #ffffff;
-  --text-muted: #aaaaaa;
-  --border: #ffffff;
-  --border-strong: #ffffff;
+  --text-main: #e0e0e0;
+  --text-muted: #888888;
+  --border: #333333; /* Soften the side lines */
+  --border-strong: #444444; /* Soften the brutalist borders */
   
   --neu-shadow: 6px 6px 0px var(--border-strong);
   --neu-shadow-sm: 4px 4px 0px var(--border-strong);
-  --neu-inset: inset 4px 4px 0px rgba(255,255,255,0.1);
-  --neu-inset-sm: inset 2px 2px 0px rgba(255,255,255,0.1);
+  --neu-inset: inset 4px 4px 0px rgba(255,255,255,0.05);
+  --neu-inset-sm: inset 2px 2px 0px rgba(255,255,255,0.05);
 }
 
 body.t-brutalism .feed-card, body.t-brutalism .widget, body.t-brutalism .composer-box {

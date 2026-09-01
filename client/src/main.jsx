@@ -4,7 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 
-if (localStorage.getItem('theme') === 'dark' || !localStorage.getItem('theme')) {
+const savedTheme = localStorage.getItem('theme');
+const prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+
+if (savedTheme === 'dark' || (!savedTheme && !prefersLight)) {
   document.body.classList.add('dark-mode');
 }
 
