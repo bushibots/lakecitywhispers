@@ -929,10 +929,23 @@ body.t-brutalism .global-mobile-header {
   box-shadow: 0 6px 0px var(--border-strong);
 }
 
-body.t-brutalism .mobile-bottom-nav {
+body.t-brutalism .bottom-nav {
   border-top: 4px solid var(--border-strong);
 }
 
+body.t-brutalism .special-icon {
+  background: var(--accent-glow) !important;
+  color: #fff !important;
+  border-radius: 0 !important;
+  border: 4px solid var(--border-strong) !important;
+  box-shadow: 6px 6px 0px var(--border-strong) !important;
+  animation: brutalistBeat 1s infinite alternate !important;
+}
+
+@keyframes brutalistBeat {
+  0% { transform: translateY(0) scale(1); box-shadow: 4px 4px 0px var(--border-strong); }
+  100% { transform: translateY(-4px) scale(1.1); box-shadow: 8px 8px 0px var(--border-strong); }
+}
 /* Retro (Dark Green) */
 body.t-retro {
   --bg-color: #111811;
