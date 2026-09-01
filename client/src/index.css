@@ -931,6 +931,10 @@ body.t-brutalism .global-mobile-header {
 
 body.t-brutalism .bottom-nav {
   border-top: 4px solid var(--border-strong);
+  background: #fff;
+}
+body.t-brutalism.dark-mode .bottom-nav {
+  background: #1a1a1a;
 }
 
 body.t-brutalism .special-icon {
