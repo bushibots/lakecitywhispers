@@ -24,7 +24,10 @@ export default function StoryShareModal({ post, onClose }) {
       cardBg: 'rgba(255, 255, 255, 0.05)',
       border: '3px solid rgba(255, 255, 255, 0.1)',
       textColor: '#E7E9EA',
-      backdropFilter: 'blur(60px)'
+      backdropFilter: 'blur(60px)',
+      cardRadius: '72px',
+      avatarRadius: '36px',
+      avatarBg: 'linear-gradient(135deg, #1D9BF0, #35D6E7)'
     },
     neon: {
       background: '#09090b',
@@ -32,6 +35,9 @@ export default function StoryShareModal({ post, onClose }) {
       border: '6px solid #1D9BF0',
       boxShadow: '0 0 90px rgba(29, 155, 240, 0.3)',
       textColor: '#E7E9EA',
+      cardRadius: '72px',
+      avatarRadius: '36px',
+      avatarBg: 'linear-gradient(135deg, #1D9BF0, #35D6E7)'
     },
     minimal: {
       background: '#E7E9EA',
@@ -39,6 +45,19 @@ export default function StoryShareModal({ post, onClose }) {
       border: '3px solid #cfd9de',
       textColor: '#0f1419',
       boxShadow: '0 30px 90px rgba(0,0,0,0.05)',
+      cardRadius: '72px',
+      avatarRadius: '36px',
+      avatarBg: 'linear-gradient(135deg, #1D9BF0, #35D6E7)'
+    },
+    brutalism: {
+      background: '#ffcc00',
+      cardBg: '#ffffff',
+      border: '16px solid #000000',
+      textColor: '#000000',
+      boxShadow: '40px 40px 0px #ff3366',
+      cardRadius: '0px',
+      avatarRadius: '0px',
+      avatarBg: '#35D6E7'
     }
   };
 
@@ -120,12 +139,20 @@ export default function StoryShareModal({ post, onClose }) {
             boxShadow: currentStyle.boxShadow || '0 24px 96px rgba(0,0,0,0.2)',
             backdropFilter: currentStyle.backdropFilter || 'none',
             WebkitBackdropFilter: currentStyle.backdropFilter || 'none',
-            borderRadius: '72px',
+            borderRadius: currentStyle.cardRadius,
             padding: '6rem',
             color: currentStyle.textColor
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '36px', marginBottom: '4.5rem' }}>
-              <div style={{ width: '144px', height: '144px', borderRadius: '36px', background: 'linear-gradient(135deg, #1D9BF0, #35D6E7)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4.5rem', fontWeight: 'bold', color: '#000' }}>
+              <div style={{ 
+                width: '144px', height: '144px', 
+                borderRadius: currentStyle.avatarRadius, 
+                background: currentStyle.avatarBg,
+                border: theme === 'brutalism' ? '8px solid #000' : 'none',
+                boxShadow: theme === 'brutalism' ? '12px 12px 0px #000' : 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                fontSize: '4.5rem', fontWeight: 'bold', color: '#000' 
+              }}>
                  {(post.author_avatar || post.author_display || post.author_username || 'A').charAt(0).toUpperCase()}
               </div>
               <div>
@@ -149,12 +176,12 @@ export default function StoryShareModal({ post, onClose }) {
             </div>
 
             {post.image_url && (
-              <div style={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden', borderRadius: '36px' }}>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'center', overflow: 'hidden', borderRadius: currentStyle.cardRadius, border: theme === 'brutalism' ? '12px solid #000' : 'none' }}>
                 <img 
                   src={post.image_url} 
                   alt="post media" 
                   crossOrigin="anonymous"
-                  style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'cover', borderRadius: '36px' }} 
+                  style={{ maxWidth: '100%', maxHeight: '600px', objectFit: 'cover', borderRadius: currentStyle.cardRadius }} 
                 />
               </div>
             )}
