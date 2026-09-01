@@ -195,6 +195,8 @@ with app.app_context():
     try:
         db.session.execute(db.text('ALTER TABLE conversation ADD COLUMN user2_read_at TIMESTAMP;'))
         db.session.commit()
+    except Exception:
+        db.session.rollback()
     try:
         db.session.execute(db.text('ALTER TABLE user ADD COLUMN secret_crushes TEXT;'))
         db.session.commit()
