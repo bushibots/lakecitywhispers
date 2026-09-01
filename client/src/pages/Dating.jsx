@@ -397,9 +397,9 @@ export default function Dating() {
                     </div>
 
                     {/* Tap Controls & Indicators */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', zIndex: 2, display: 'flex', flexDirection: 'column' }}>
                         {/* Bumble-style Progress Bars */}
-                        <div style={{ display: 'flex', gap: '4px', padding: '12px 16px', zIndex: 3 }}>
+                        <div style={{ display: 'flex', gap: '4px', padding: '12px 16px', zIndex: 3, flexShrink: 0 }}>
                             {(()=>{
                                 const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
                                 if (imgs.length <= 1) return null;
@@ -415,8 +415,8 @@ export default function Dating() {
                         </div>
                         
                         {/* Tap zones for left/right */}
-                        <div style={{ display: 'flex', flex: 1 }}>
-                            <div style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', paddingLeft: '10px' }} onClick={(e) => {
+                        <div style={{ display: 'flex', flex: 1, width: '100%', height: '100%' }}>
+                            <div style={{ flex: 1, height: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', paddingLeft: '10px' }} onClick={(e) => {
                                 e.stopPropagation();
                                 const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
                                 if (photoIndex > 0) setPhotoIndex(photoIndex - 1);
@@ -426,7 +426,7 @@ export default function Dating() {
                             
                             {/* Center hold for glimpse */}
                             <div 
-                                style={{ flex: 2, cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }} 
+                                style={{ flex: 2, height: '100%', cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }} 
                                 onContextMenu={(e) => e.preventDefault()}
                                 onMouseDown={() => { 
                                     const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
@@ -450,7 +450,7 @@ export default function Dating() {
                                 onTouchCancel={() => setGlimpse(false)}
                             />
 
-                            <div style={{ flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '10px' }} onClick={(e) => {
+                            <div style={{ flex: 1, height: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '10px' }} onClick={(e) => {
                                 e.stopPropagation();
                                 const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
                                 if (photoIndex < imgs.length - 1) setPhotoIndex(photoIndex + 1);
