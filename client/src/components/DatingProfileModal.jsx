@@ -24,8 +24,14 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   const [errorMsg, setErrorMsg] = useState('');
   const [instaUsername, setInstaUsername] = useState('');
   const [instaLoading, setInstaLoading] = useState(false);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
 
   if (!isOpen) return null;
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    setIsScrolledToBottom(scrollHeight - scrollTop <= clientHeight + 20);
+  };
 
   const handleUrlAdd = async () => {
       if (!instaUsername.trim() || images.length >= 5) return;
@@ -115,24 +121,34 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   };
 
   return (
-    <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div className="modal-content feed-card" style={{ maxWidth: '400px', width: '90%', padding: '2rem', position: 'relative' }}>
+    <div className="modal-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.85)', zIndex: 1000 }}>
+      <div className="modal-content" style={{ 
+          maxWidth: '450px', width: '90%', padding: '2rem', 
+          position: 'relative', backgroundColor: '#fff', 
+          border: '4px solid #000', borderRadius: '12px', 
+          boxShadow: '12px 12px 0px #000', color: '#000',
+          maxHeight: '90vh', display: 'flex', flexDirection: 'column'
+      }}>
         {onClose && (
           <button 
             onClick={onClose} 
-            style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+            style={{ position: 'absolute', top: '1rem', right: '1rem', background: '#FF5E5B', border: '3px solid #000', color: '#fff', cursor: 'pointer', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '3px 3px 0 #000', zIndex: 10 }}
           >
-            <X size={20} />
+            <X size={20} strokeWidth={3} />
           </button>
         )}
         
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-          <Heart size={48} color="#FF5E5B" fill="#FF5E5B" style={{ marginBottom: '1rem' }} />
-          <h2>Join Campus Dating</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Set up your blind dating profile to find your campus crush anonymously.</p>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem', flexShrink: 0 }}>
+          <Heart size={54} color="#000" fill="#FF5E5B" strokeWidth={3} style={{ marginBottom: '0.5rem', filter: 'drop-shadow(3px 3px 0px #000)' }} />
+          <h2 style={{ fontWeight: 900, fontSize: '2.2rem', letterSpacing: '-1px', margin: 0, textTransform: 'uppercase' }}>Join Dating</h2>
+          <p style={{ color: '#444', fontSize: '1rem', fontWeight: 600, marginTop: '0.5rem' }}>Set up your blind dating profile to find your campus crush.</p>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', maxHeight: '50vh', paddingRight: '0.5rem' }}>
+        <div 
+          style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto', flex: 1, paddingRight: '0.5rem', paddingBottom: '2rem', position: 'relative' }}
+          onScroll={handleScroll}
+          className="custom-scroll"
+        >
           <div style={{ textAlign: 'center' }}>
              <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                  Mystery Photos (Up to 5) <br/>
@@ -338,21 +354,35 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
 
         </div>
         
+        {/* Scroll Indicator */}
+        <div style={{ 
+            position: 'absolute', bottom: '90px', left: '50%', transform: 'translateX(-50%)', 
+            background: '#ffcc00', border: '3px solid #000', borderRadius: '20px', 
+            padding: '4px 12px', fontSize: '0.85rem', fontWeight: 800, color: '#000',
+            boxShadow: '3px 3px 0 #000', zIndex: 10, pointerEvents: 'none',
+            opacity: isScrolledToBottom ? 0 : 1, transition: 'opacity 0.3s ease',
+            display: 'flex', alignItems: 'center', gap: '4px'
+        }}>
+            ↓ SCROLL FOR MORE
+        </div>
+        
         {/* Sticky Footer */}
-        <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-elevated)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div style={{ padding: '1rem 0 0 0', marginTop: '1rem', borderTop: '4px solid #000', display: 'flex', flexDirection: 'column', gap: '0.5rem', flexShrink: 0, backgroundColor: '#fff' }}>
           <button 
-            className="btn-glow" 
-            style={{ width: '100%', padding: '1rem', backgroundColor: '#FF5E5B', fontSize: '1.1rem' }}
+            style={{ width: '100%', padding: '1rem', backgroundColor: '#FF5E5B', border: '4px solid #000', borderRadius: '8px', color: '#fff', fontSize: '1.2rem', fontWeight: 900, textTransform: 'uppercase', boxShadow: '4px 4px 0 #000', cursor: 'pointer', transition: 'all 0.1s' }}
             onClick={handleSave}
             disabled={loading}
+            onMouseDown={(e) => { e.currentTarget.style.transform = 'translate(4px, 4px)'; e.currentTarget.style.boxShadow = '0px 0px 0 #000'; }}
+            onMouseUp={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '4px 4px 0 #000'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '4px 4px 0 #000'; }}
           >
-            {loading ? 'Saving...' : 'Start Swiping'}
+            {loading ? 'SAVING...' : 'START SWIPING'}
           </button>
           
           {initialProfile && (
               <button 
-                  style={{ width: '100%', padding: '1rem', fontSize: '0.9rem', color: '#FF5E5B', border: '1px solid rgba(255, 94, 91, 0.3)', background: 'transparent', borderRadius: '24px', cursor: 'pointer', transition: 'all 0.2s' }}
-                  onClick={async () => {
+                  style={{ width: '100%', padding: '0.8rem', fontSize: '1rem', fontWeight: 700, color: '#e74c3c', border: '3px solid #000', background: '#fff', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.1s', boxShadow: '3px 3px 0 #000' }}
+                  onClick={async (e) => {
                       if (window.confirm("Are you sure you want to withdraw your profile? You will no longer be visible in Dating.")) {
                           setLoading(true);
                           const res = await apiFetch('/dating/profile', {
@@ -363,9 +393,12 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                           setLoading(false);
                       }
                   }}
+                  onMouseDown={(e) => { e.currentTarget.style.transform = 'translate(3px, 3px)'; e.currentTarget.style.boxShadow = '0px 0px 0 #000'; }}
+                  onMouseUp={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '3px 3px 0 #000'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '3px 3px 0 #000'; }}
                   disabled={loading}
               >
-                  Withdraw Profile
+                  WITHDRAW PROFILE
               </button>
           )}
         </div>
