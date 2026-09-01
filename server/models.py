@@ -143,6 +143,11 @@ class DatingProfile(db.Model):
     course = db.Column(db.String(255), nullable=True)
     image_url = db.Column(db.String(255), nullable=True) # Legacy single image
     images = db.Column(db.Text, nullable=True) # JSON array of image URLs
+    interests = db.Column(db.Text, nullable=True) # JSON array of interests
+    red_flags = db.Column(db.Text, nullable=True) # JSON array of red flags
+    green_flags = db.Column(db.Text, nullable=True) # JSON array of green flags
+    campus_spot = db.Column(db.String(255), nullable=True)
+    campus_spot_updated_at = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     

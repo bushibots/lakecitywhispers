@@ -2325,6 +2325,20 @@ def dating_profile():
         if imgs is not None:
             profile.images = json.dumps(imgs)
             
+        def safe_json_dump(val, default):
+            if val is not None:
+                return json.dumps(val)
+            return default
+            
+        profile.interests = safe_json_dump(data.get('interests'), profile.interests)
+        profile.red_flags = safe_json_dump(data.get('red_flags'), profile.red_flags)
+        profile.green_flags = safe_json_dump(data.get('green_flags'), profile.green_flags)
+        
+        if data.get('campus_spot') and data.get('campus_spot') != profile.campus_spot:
+            from datetime import datetime
+            profile.campus_spot_updated_at = datetime.utcnow()
+        profile.campus_spot = data.get('campus_spot', profile.campus_spot)
+            
         profile.is_active = data.get('is_active', True)
         
         try:
@@ -2345,6 +2359,19 @@ def dating_profile():
         except Exception:
             pass
 
+    parsed_interests = []
+    parsed_red = []
+    parsed_green = []
+    if profile.interests:
+        try: parsed_interests = json.loads(profile.interests)
+        except Exception: pass
+    if profile.red_flags:
+        try: parsed_red = json.loads(profile.red_flags)
+        except Exception: pass
+    if profile.green_flags:
+        try: parsed_green = json.loads(profile.green_flags)
+        except Exception: pass
+
     return jsonify({
         "bio": profile.bio,
         "gender": profile.gender,
@@ -2354,6 +2381,10 @@ def dating_profile():
         "course": profile.course,
         "image_url": profile.image_url,
         "images": parsed_images,
+        "interests": parsed_interests,
+        "red_flags": parsed_red,
+        "green_flags": parsed_green,
+        "campus_spot": profile.campus_spot,
         "is_active": profile.is_active
     })
 
@@ -2410,6 +2441,19 @@ def dating_discover():
             except Exception:
                 pass
                 
+        parsed_interests = []
+        parsed_red = []
+        parsed_green = []
+        if p.interests:
+            try: parsed_interests = json.loads(p.interests)
+            except Exception: pass
+        if p.red_flags:
+            try: parsed_red = json.loads(p.red_flags)
+            except Exception: pass
+        if p.green_flags:
+            try: parsed_green = json.loads(p.green_flags)
+            except Exception: pass
+            
         from datetime import datetime, timedelta
         cutoff_active = datetime.utcnow() - timedelta(hours=24)
         is_active_today = p.user.last_active >= cutoff_active if p.user and p.user.last_active else False
@@ -2423,6 +2467,10 @@ def dating_discover():
             "age": p.age,
             "block": p.block,
             "course": p.course,
+            "interests": parsed_interests,
+            "red_flags": parsed_red,
+            "green_flags": parsed_green,
+            "campus_spot": p.campus_spot,
             "is_active_today": is_active_today,
             "badges": get_user_badges(p.user) if p.user else []
         })

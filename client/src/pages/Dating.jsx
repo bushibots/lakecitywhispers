@@ -432,6 +432,9 @@ export default function Dating() {
                         <div style={{ pointerEvents: 'auto', marginBottom: '2rem' }}>
                             <h2 style={{ fontSize: '2.6rem', marginBottom: '0.3rem', fontWeight: '800', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.1, display: 'flex', alignItems: 'center' }}>
                                 Anonymous {currentProfile.age ? `, ${currentProfile.age}` : ''}
+                                {currentProfile.gender === 'male' && <span style={{fontSize: '1.4rem', marginLeft: '8px', color: '#3498db'}} title="Male">♂</span>}
+                                {currentProfile.gender === 'female' && <span style={{fontSize: '1.4rem', marginLeft: '8px', color: '#e74c3c'}} title="Female">♀</span>}
+                                {currentProfile.gender === 'non_binary' && <span style={{fontSize: '1.4rem', marginLeft: '8px', color: '#9b59b6'}} title="Non-binary">⚧</span>}
                                 {currentProfile.is_active_today && (
                                     <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#2ecc71', marginLeft: '12px', boxShadow: '0 0 8px #2ecc71', border: '2px solid rgba(0,0,0,0.3)' }} title="Active Today" />
                                 )}
@@ -456,9 +459,17 @@ export default function Dating() {
                                 {(() => {
                                     let vibeScore = 50;
                                     if (profile && currentProfile) {
-                                        if (profile.course === currentProfile.course && profile.course) vibeScore += 30;
-                                        if (profile.block === currentProfile.block && profile.block) vibeScore += 15;
-                                        vibeScore += (currentProfile.user_id % 5);
+                                        if (profile.course === currentProfile.course && profile.course) vibeScore += 15;
+                                        if (profile.block === currentProfile.block && profile.block) vibeScore += 10;
+                                        if (profile.campus_spot && profile.campus_spot === currentProfile.campus_spot) vibeScore += 25;
+                                        
+                                        const myInterests = profile.interests || [];
+                                        const theirInterests = currentProfile.interests || [];
+                                        const shared = myInterests.filter(i => theirInterests.includes(i)).length;
+                                        vibeScore += shared * 10;
+                                        
+                                        if (vibeScore > 100) vibeScore = 100;
+                                        else if (vibeScore < 50 && shared === 0) vibeScore = 45 + (currentProfile.user_id % 5);
                                     }
                                     return (
                                         <span style={{ padding: '6px 16px', background: 'rgba(46, 204, 113, 0.3)', backdropFilter: 'blur(10px)', borderRadius: '24px', fontSize: '0.9rem', color: '#fff', fontWeight: '800', border: '1px solid rgba(46, 204, 113, 0.5)' }}>
@@ -471,6 +482,21 @@ export default function Dating() {
                             <p style={{ fontSize: '1.1rem', lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                 {currentProfile.bio || "No bio provided. Mystery is intriguing."}
                             </p>
+
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem', maxHeight: '100px', overflowY: 'auto', pointerEvents: 'auto' }}>
+                                {currentProfile.campus_spot && (
+                                    <span style={{ padding: '4px 10px', background: 'rgba(255, 200, 0, 0.2)', color: '#FFD700', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(255, 200, 0, 0.4)' }}>📍 {currentProfile.campus_spot}</span>
+                                )}
+                                {(currentProfile.interests || []).map(i => (
+                                    <span key={i} style={{ padding: '4px 10px', background: 'rgba(255, 94, 91, 0.2)', color: '#FF5E5B', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(255, 94, 91, 0.4)' }}>{i}</span>
+                                ))}
+                                {(currentProfile.green_flags || []).map(i => (
+                                    <span key={i} style={{ padding: '4px 10px', background: 'rgba(46, 204, 113, 0.2)', color: '#2ecc71', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(46, 204, 113, 0.4)' }}>✅ {i}</span>
+                                ))}
+                                {(currentProfile.red_flags || []).map(i => (
+                                    <span key={i} style={{ padding: '4px 10px', background: 'rgba(231, 76, 60, 0.2)', color: '#e74c3c', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(231, 76, 60, 0.4)' }}>🚩 {i}</span>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Action Buttons Container */}

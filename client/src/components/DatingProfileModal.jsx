@@ -3,6 +3,10 @@ import { Heart, X, Camera } from 'lucide-react';
 import { apiFetch, uploadFile, fetchInstagramProfile } from '../api';
 import { CAMPUS_STRUCTURE } from '../campus_structure';
 
+const INTEREST_OPTIONS = ["Late Night Snacking", "Library Grind", "Gaming", "Photography", "Cafe Hopping", "Anime", "Gym Rat", "Partying", "Music Festivals", "Art & Design", "Sports", "Thrifting"];
+const GREEN_FLAG_OPTIONS = ["Replies fast", "Loves animals", "Has a car", "Cooks", "Knows good spots", "Good listener", "Punctual", "Spontaneous"];
+const RED_FLAG_OPTIONS = ["8 AM classes", "Uses TikTok too much", "Ghoster", "Never on time", "Picky eater", "Hates coffee", "Dry texter", "Too loud"];
+
 export default function DatingProfileModal({ isOpen, onClose, onSaved, initialProfile }) {
   const [bio, setBio] = useState(initialProfile?.bio || '');
   const [gender, setGender] = useState(initialProfile?.gender || 'not_specified');
@@ -11,6 +15,10 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   const [block, setBlock] = useState(initialProfile?.block || 'A');
   const [course, setCourse] = useState(initialProfile?.course || (CAMPUS_STRUCTURE['Block A'] ? CAMPUS_STRUCTURE['Block A'][0] : ''));
   const [images, setImages] = useState(initialProfile?.images?.length ? initialProfile.images : (initialProfile?.image_url ? [initialProfile.image_url] : []));
+  const [interests, setInterests] = useState(initialProfile?.interests || []);
+  const [redFlags, setRedFlags] = useState(initialProfile?.red_flags || []);
+  const [greenFlags, setGreenFlags] = useState(initialProfile?.green_flags || []);
+  const [campusSpot, setCampusSpot] = useState(initialProfile?.campus_spot || '');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false); // store index being uploaded, or false
   const [errorMsg, setErrorMsg] = useState('');
@@ -60,6 +68,19 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   };
 
   const handleSave = async () => {
+    if (!age || age < 18) {
+      setErrorMsg("You must be 18+ and specify your age.");
+      return;
+    }
+    if (gender === 'not_specified') {
+      setErrorMsg("Please specify your gender.");
+      return;
+    }
+    if (!bio.trim()) {
+      setErrorMsg("Bio cannot be empty.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await apiFetch('/dating/profile', {
@@ -73,6 +94,10 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           course,
           image_url: images.length > 0 ? images[0] : '',
           images,
+          interests,
+          red_flags: redFlags,
+          green_flags: greenFlags,
+          campus_spot: campusSpot,
           is_active: true
         })
       });
@@ -239,6 +264,69 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
               placeholder="What makes you interesting?"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Interests (Select up to 5)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {INTEREST_OPTIONS.map(opt => {
+                    const selected = interests.includes(opt);
+                    return (
+                        <button key={opt} onClick={() => {
+                            if (selected) setInterests(interests.filter(i => i !== opt));
+                            else if (interests.length < 5) setInterests([...interests, opt]);
+                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', borderRadius: '16px', border: `1px solid ${selected ? '#FF5E5B' : 'var(--border-color)'}`, background: selected ? 'rgba(255, 94, 91, 0.1)' : 'transparent', color: selected ? '#FF5E5B' : 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            {opt}
+                        </button>
+                    );
+                })}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Green Flags (Select up to 3)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {GREEN_FLAG_OPTIONS.map(opt => {
+                    const selected = greenFlags.includes(opt);
+                    return (
+                        <button key={opt} onClick={() => {
+                            if (selected) setGreenFlags(greenFlags.filter(i => i !== opt));
+                            else if (greenFlags.length < 3) setGreenFlags([...greenFlags, opt]);
+                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', borderRadius: '16px', border: `1px solid ${selected ? '#2ecc71' : 'var(--border-color)'}`, background: selected ? 'rgba(46, 204, 113, 0.1)' : 'transparent', color: selected ? '#2ecc71' : 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            {opt}
+                        </button>
+                    );
+                })}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Red Flags (Select up to 3)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {RED_FLAG_OPTIONS.map(opt => {
+                    const selected = redFlags.includes(opt);
+                    return (
+                        <button key={opt} onClick={() => {
+                            if (selected) setRedFlags(redFlags.filter(i => i !== opt));
+                            else if (redFlags.length < 3) setRedFlags([...redFlags, opt]);
+                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', borderRadius: '16px', border: `1px solid ${selected ? '#e74c3c' : 'var(--border-color)'}`, background: selected ? 'rgba(231, 76, 60, 0.1)' : 'transparent', color: selected ? '#e74c3c' : 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                            {opt}
+                        </button>
+                    );
+                })}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Live Campus Spot (Optional)</label>
+            <input 
+              type="text" 
+              className="composer-textarea border-input"
+              style={{ width: '100%', padding: '0.8rem' }}
+              placeholder="e.g. Studying at the Library"
+              value={campusSpot}
+              onChange={(e) => setCampusSpot(e.target.value)}
             />
           </div>
 
