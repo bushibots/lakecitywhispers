@@ -2362,6 +2362,7 @@ def dating_profile():
     parsed_interests = []
     parsed_red = []
     parsed_green = []
+    parsed_love = []
     if profile.interests:
         try: parsed_interests = json.loads(profile.interests)
         except Exception: pass
@@ -2370,6 +2371,9 @@ def dating_profile():
         except Exception: pass
     if profile.green_flags:
         try: parsed_green = json.loads(profile.green_flags)
+        except Exception: pass
+    if profile.love_languages:
+        try: parsed_love = json.loads(profile.love_languages)
         except Exception: pass
 
     return jsonify({
@@ -2384,6 +2388,7 @@ def dating_profile():
         "interests": parsed_interests,
         "red_flags": parsed_red,
         "green_flags": parsed_green,
+        "love_languages": parsed_love,
         "campus_spot": profile.campus_spot,
         "is_active": profile.is_active
     })
@@ -2444,6 +2449,7 @@ def dating_discover():
         parsed_interests = []
         parsed_red = []
         parsed_green = []
+        parsed_love = []
         if p.interests:
             try: parsed_interests = json.loads(p.interests)
             except Exception: pass
@@ -2452,6 +2458,9 @@ def dating_discover():
             except Exception: pass
         if p.green_flags:
             try: parsed_green = json.loads(p.green_flags)
+            except Exception: pass
+        if p.love_languages:
+            try: parsed_love = json.loads(p.love_languages)
             except Exception: pass
             
         from datetime import datetime, timedelta
@@ -2470,6 +2479,7 @@ def dating_discover():
             "interests": parsed_interests,
             "red_flags": parsed_red,
             "green_flags": parsed_green,
+            "love_languages": parsed_love,
             "campus_spot": p.campus_spot,
             "is_active_today": is_active_today,
             "badges": get_user_badges(p.user) if p.user else []

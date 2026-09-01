@@ -496,6 +496,9 @@ export default function Dating() {
                                 {(currentProfile.red_flags || []).map(i => (
                                     <span key={i} style={{ padding: '2px 8px', background: 'rgba(231, 76, 60, 0.2)', color: '#e74c3c', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid rgba(231, 76, 60, 0.4)' }}>🚩 {i}</span>
                                 ))}
+                                {(currentProfile.love_languages || []).map(i => (
+                                    <span key={i} style={{ padding: '2px 8px', background: 'rgba(155, 89, 182, 0.2)', color: '#9b59b6', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid rgba(155, 89, 182, 0.4)' }}>💝 {i}</span>
+                                ))}
                             </div>
                         </div>
 

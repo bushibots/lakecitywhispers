@@ -146,6 +146,7 @@ class DatingProfile(db.Model):
     interests = db.Column(db.Text, nullable=True) # JSON array of interests
     red_flags = db.Column(db.Text, nullable=True) # JSON array of red flags
     green_flags = db.Column(db.Text, nullable=True) # JSON array of green flags
+    love_languages = db.Column(db.Text, nullable=True) # JSON array of love languages
     campus_spot = db.Column(db.String(255), nullable=True)
     campus_spot_updated_at = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)

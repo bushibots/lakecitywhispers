@@ -6,6 +6,7 @@ import { CAMPUS_STRUCTURE } from '../campus_structure';
 const INTEREST_OPTIONS = ["Late Night Snacking", "Library Grind", "Gaming", "Photography", "Cafe Hopping", "Anime", "Gym Rat", "Partying", "Music Festivals", "Art & Design", "Sports", "Thrifting"];
 const GREEN_FLAG_OPTIONS = ["Replies fast", "Loves animals", "Has a car", "Cooks", "Knows good spots", "Good listener", "Punctual", "Spontaneous"];
 const RED_FLAG_OPTIONS = ["8 AM classes", "Uses TikTok too much", "Ghoster", "Never on time", "Picky eater", "Hates coffee", "Dry texter", "Too loud"];
+const LOVE_LANGUAGE_OPTIONS = ["Physical Touch", "Quality Time", "Words of Affirmation", "Acts of Service", "Receiving Gifts"];
 
 export default function DatingProfileModal({ isOpen, onClose, onSaved, initialProfile }) {
   const [bio, setBio] = useState(initialProfile?.bio || '');
@@ -18,6 +19,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   const [interests, setInterests] = useState(initialProfile?.interests || []);
   const [redFlags, setRedFlags] = useState(initialProfile?.red_flags || []);
   const [greenFlags, setGreenFlags] = useState(initialProfile?.green_flags || []);
+  const [loveLanguages, setLoveLanguages] = useState(initialProfile?.love_languages || []);
   const [campusSpot, setCampusSpot] = useState(initialProfile?.campus_spot || '');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false); // store index being uploaded, or false
@@ -98,11 +100,12 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           age,
           block,
           course,
-          image_url: images.length > 0 ? images[0] : '',
+          image_url: images[0] || '',
           images,
           interests,
           red_flags: redFlags,
           green_flags: greenFlags,
+          love_languages: loveLanguages,
           campus_spot: campusSpot,
           is_active: true
         })
@@ -310,6 +313,23 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                             if (selected) setGreenFlags(greenFlags.filter(i => i !== opt));
                             else if (greenFlags.length < 3) setGreenFlags([...greenFlags, opt]);
                         }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', fontWeight: 'bold', borderRadius: '16px', border: selected ? '3px solid #000' : '2px solid #555', background: selected ? '#2ecc71' : '#fff', color: selected ? '#fff' : '#000', boxShadow: selected ? '3px 3px 0 #000' : 'none', cursor: 'pointer', transition: 'all 0.1s' }}>
+                            {opt}
+                        </button>
+                    );
+                })}
+            </div>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Love Languages (Select up to 2)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                {LOVE_LANGUAGE_OPTIONS.map(opt => {
+                    const selected = loveLanguages.includes(opt);
+                    return (
+                        <button key={opt} onClick={() => {
+                            if (selected) setLoveLanguages(loveLanguages.filter(i => i !== opt));
+                            else if (loveLanguages.length < 2) setLoveLanguages([...loveLanguages, opt]);
+                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', fontWeight: 'bold', borderRadius: '16px', border: selected ? '3px solid #000' : '2px solid #555', background: selected ? '#9b59b6' : '#fff', color: selected ? '#fff' : '#000', boxShadow: selected ? '3px 3px 0 #000' : 'none', cursor: 'pointer', transition: 'all 0.1s' }}>
                             {opt}
                         </button>
                     );
