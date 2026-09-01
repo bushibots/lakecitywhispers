@@ -53,13 +53,14 @@ export default function MobileHeader() {
         <button className="icon-btn-minimal" onClick={() => setIsOpen(true)}>
           <Menu size={24} color="var(--text-main)" />
         </button>
-        {siteLogo ? (
-          <img src={siteLogo} alt="Logo" style={{ height: '24px', marginRight: '8px', objectFit: 'contain' }} />
-        ) : (
-          <div className="logo-flame" style={{ fontSize: '1.5rem', marginRight: '5px' }}><Flame size={20}/></div>
-        )}
-        <h2 style={{ fontSize: '1.2rem', margin: 0 }}>{siteName}</h2>
-        <div style={{ flex: 1 }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, gap: '8px' }}>
+          {siteLogo ? (
+            <img src={siteLogo} alt="Logo" style={{ height: '28px', objectFit: 'contain' }} />
+          ) : (
+            <div className="logo-flame" style={{ fontSize: '1.5rem' }}><Flame size={22}/></div>
+          )}
+          <h2 style={{ fontSize: '1.3rem', margin: 0, whiteSpace: 'nowrap', fontWeight: 800 }}>{siteName}</h2>
+        </div>
         <button 
           className="icon-btn-minimal" 
           onClick={toggleTheme}
