@@ -384,7 +384,7 @@ export default function Dating() {
                         )}
                         
                         {/* Tall Gradient Overlay for Text & Buttons */}
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '70%', background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0) 100%)', pointerEvents: 'none' }}></div>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '65%', background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0) 100%)', pointerEvents: 'none' }}></div>
                     </div>
 
                     {/* Tap Controls & Indicators */}
@@ -426,10 +426,10 @@ export default function Dating() {
                     </div>
 
                     {/* Content Overlay (Text + Buttons) */}
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '2.5rem 1.5rem', zIndex: 3, display: 'flex', flexDirection: 'column', pointerEvents: 'none' }}>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '1rem 1rem 1.5rem 1rem', zIndex: 3, display: 'flex', flexDirection: 'column', pointerEvents: 'none' }}>
                         
                         {/* Profile Info */}
-                        <div style={{ pointerEvents: 'auto', marginBottom: '2rem' }}>
+                        <div style={{ pointerEvents: 'auto', marginBottom: '1rem' }}>
                             <h2 style={{ fontSize: '2.6rem', marginBottom: '0.3rem', fontWeight: '800', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.1, display: 'flex', alignItems: 'center' }}>
                                 Anonymous {currentProfile.age ? `, ${currentProfile.age}` : ''}
                                 {currentProfile.gender === 'male' && <span style={{fontSize: '1.4rem', marginLeft: '8px', color: '#3498db'}} title="Male">♂</span>}
@@ -483,18 +483,18 @@ export default function Dating() {
                                 {currentProfile.bio || "No bio provided. Mystery is intriguing."}
                             </p>
 
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1rem', maxHeight: '100px', overflowY: 'auto', pointerEvents: 'auto' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem', maxHeight: '85px', overflowY: 'auto', pointerEvents: 'auto', paddingRight: '4px' }} className="custom-scroll">
                                 {currentProfile.campus_spot && (
-                                    <span style={{ padding: '4px 10px', background: 'rgba(255, 200, 0, 0.2)', color: '#FFD700', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(255, 200, 0, 0.4)' }}>📍 {currentProfile.campus_spot}</span>
+                                    <span style={{ padding: '2px 8px', background: 'rgba(255, 200, 0, 0.2)', color: '#FFD700', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid rgba(255, 200, 0, 0.4)' }}>📍 {currentProfile.campus_spot}</span>
                                 )}
                                 {(currentProfile.interests || []).map(i => (
-                                    <span key={i} style={{ padding: '4px 10px', background: 'rgba(255, 94, 91, 0.2)', color: '#FF5E5B', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(255, 94, 91, 0.4)' }}>{i}</span>
+                                    <span key={i} style={{ padding: '2px 8px', background: 'rgba(255, 94, 91, 0.2)', color: '#FF5E5B', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid rgba(255, 94, 91, 0.4)' }}>{i}</span>
                                 ))}
                                 {(currentProfile.green_flags || []).map(i => (
-                                    <span key={i} style={{ padding: '4px 10px', background: 'rgba(46, 204, 113, 0.2)', color: '#2ecc71', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(46, 204, 113, 0.4)' }}>✅ {i}</span>
+                                    <span key={i} style={{ padding: '2px 8px', background: 'rgba(46, 204, 113, 0.2)', color: '#2ecc71', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid rgba(46, 204, 113, 0.4)' }}>✅ {i}</span>
                                 ))}
                                 {(currentProfile.red_flags || []).map(i => (
-                                    <span key={i} style={{ padding: '4px 10px', background: 'rgba(231, 76, 60, 0.2)', color: '#e74c3c', borderRadius: '12px', fontSize: '0.8rem', border: '1px solid rgba(231, 76, 60, 0.4)' }}>🚩 {i}</span>
+                                    <span key={i} style={{ padding: '2px 8px', background: 'rgba(231, 76, 60, 0.2)', color: '#e74c3c', borderRadius: '12px', fontSize: '0.75rem', border: '1px solid rgba(231, 76, 60, 0.4)' }}>🚩 {i}</span>
                                 ))}
                             </div>
                         </div>
