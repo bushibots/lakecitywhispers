@@ -800,35 +800,53 @@ body.t-brutalism {
   --border: #000000;
   --border-strong: #000000;
   
-  --neu-shadow: 6px 6px 0px #000000;
-  --neu-shadow-sm: 4px 4px 0px #000000;
+  --neu-shadow: 6px 6px 0px var(--border-strong);
+  --neu-shadow-sm: 4px 4px 0px var(--border-strong);
   --neu-inset: inset 4px 4px 0px rgba(0,0,0,0.1);
   --neu-inset-sm: inset 2px 2px 0px rgba(0,0,0,0.1);
 }
+
+body.t-brutalism.dark-mode {
+  --bg-color: #111111;
+  --bg-secondary: #000000;
+  --card-bg: #1a1a1a;
+  --primary: #00ffcc; /* Neon Cyan for dark mode contrast */
+  --accent-glow: #ffffff;
+  --text-main: #ffffff;
+  --text-muted: #aaaaaa;
+  --border: #ffffff;
+  --border-strong: #ffffff;
+  
+  --neu-shadow: 6px 6px 0px var(--border-strong);
+  --neu-shadow-sm: 4px 4px 0px var(--border-strong);
+  --neu-inset: inset 4px 4px 0px rgba(255,255,255,0.1);
+  --neu-inset-sm: inset 2px 2px 0px rgba(255,255,255,0.1);
+}
+
 body.t-brutalism .feed-card, body.t-brutalism .widget, body.t-brutalism .composer-box {
   border-radius: 0 !important;
-  border: 3px solid #000 !important;
+  border: 3px solid var(--border-strong) !important;
 }
 body.t-brutalism .btn-glow {
   border-radius: 0 !important;
-  border: 3px solid #000 !important;
-  color: #000;
+  border: 3px solid var(--border-strong) !important;
+  color: var(--bg-color);
   background: var(--primary);
-  box-shadow: 4px 4px 0px #000 !important;
+  box-shadow: 4px 4px 0px var(--border-strong) !important;
 }
 body.t-brutalism .btn-glow:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px #000 !important;
-  color: #000;
+  box-shadow: 6px 6px 0px var(--border-strong) !important;
+  color: var(--bg-color);
 }
 body.t-brutalism .btn-glow:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px #000 !important;
+  box-shadow: 2px 2px 0px var(--border-strong) !important;
 }
 body.t-brutalism .icon-btn, body.t-brutalism .icon-btn-teal, body.t-brutalism .icon-btn-minimal {
   border-radius: 0 !important;
-  border: 2px solid #000;
-  box-shadow: 3px 3px 0px #000;
+  border: 2px solid var(--border-strong);
+  box-shadow: 3px 3px 0px var(--border-strong);
 }
 body.t-brutalism .nav-link, body.t-brutalism .composer-textarea {
   border-radius: 0 !important;
