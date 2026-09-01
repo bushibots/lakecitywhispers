@@ -304,6 +304,12 @@ def async_generate_identity(app_obj, user_id):
 
 @app.route('/api/users/session', methods=['POST'])
 def create_session():
+    # Detect uptime bots / crawlers to prevent spam account creation
+    user_agent = request.headers.get('User-Agent', '').lower()
+    bot_keywords = ['uptimerobot', 'pingdom', 'uptime', 'monitor', 'headlesstransporter', 'bot', 'spider', 'crawler', 'curl', 'python-requests', 'go-http-client']
+    if any(b in user_agent for b in bot_keywords):
+        return jsonify({"message": "Bot detected, skipping guest creation", "is_bot": True}), 200
+
     # Provide an existing token to just log activity, or create a new guest
     req_token = request.headers.get('Authorization')
     if req_token:
@@ -2084,6 +2090,37 @@ def admin_wipe_user(username):
     db.session.delete(user)
     db.session.commit()
     return jsonify({"message": f"User {username} completely wiped."})
+
+@app.route('/api/admin/users/bulk-wipe', methods=['POST'])
+@admin_required
+def admin_bulk_wipe_users():
+    data = request.json or {}
+    user_ids = data.get('user_ids', [])
+    if not user_ids or not isinstance(user_ids, list):
+        return jsonify({"error": "No user_ids provided"}), 400
+        
+    users = User.query.filter(User.id.in_(user_ids), User.role != 'admin').all()
+    if not users:
+        return jsonify({"message": "No non-admin users matched for deletion.", "deleted_count": 0})
+        
+    deleted_ids = [u.id for u in users]
+    
+    # Clean related records in dependency order
+    from models import SwipeInteraction, DatingProfile, Notification, PostView, PollVote
+    SwipeInteraction.query.filter((SwipeInteraction.swiper_id.in_(deleted_ids)) | (SwipeInteraction.target_id.in_(deleted_ids))).delete(synchronize_session=False)
+    DatingProfile.query.filter(DatingProfile.user_id.in_(deleted_ids)).delete(synchronize_session=False)
+    Notification.query.filter(Notification.user_id.in_(deleted_ids)).delete(synchronize_session=False)
+    PostView.query.filter(PostView.user_id.in_(deleted_ids)).delete(synchronize_session=False)
+    PollVote.query.filter(PollVote.user_id.in_(deleted_ids)).delete(synchronize_session=False)
+    
+    # Delete posts by these users
+    Post.query.filter(Post.user_id.in_(deleted_ids)).delete(synchronize_session=False)
+    
+    # Delete users
+    User.query.filter(User.id.in_(deleted_ids)).delete(synchronize_session=False)
+    
+    db.session.commit()
+    return jsonify({"message": f"Successfully wiped {len(deleted_ids)} users.", "deleted_count": len(deleted_ids)})
 
 @app.route('/api/admin/dating_profiles', methods=['GET'])
 @admin_required

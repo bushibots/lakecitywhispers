@@ -3,7 +3,7 @@ import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3, Hear
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
-    sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser,
+    sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser, adminBulkWipeUsers,
     fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
@@ -26,6 +26,7 @@ export default function AdminDashboard() {
   const [adminMessages, setAdminMessages] = useState([]);
   const [adminMsgPage, setAdminMsgPage] = useState(1);
   const [adminMsgTotal, setAdminMsgTotal] = useState(0);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
   
@@ -487,30 +488,98 @@ export default function AdminDashboard() {
           <div className="feed-card" style={{ padding: '1.5rem' }}>
               <h2 style={{ marginBottom: '1.5rem' }}>User Management</h2>
               
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>
-                <button 
-                  style={{ background: 'none', border: 'none', color: userTab === 'real' ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: userTab === 'real' ? 'bold' : 'normal', cursor: 'pointer' }}
-                  onClick={() => setUserTab('real')}
-                >
-                  Real Users
-                </button>
-                <button 
-                  style={{ background: 'none', border: 'none', color: userTab === 'bots' ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: userTab === 'bots' ? 'bold' : 'normal', cursor: 'pointer' }}
-                  onClick={() => setUserTab('bots')}
-                >
-                  AI Bots
-                </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  <button 
+                    style={{ background: 'none', border: 'none', color: userTab === 'real' ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: userTab === 'real' ? 'bold' : 'normal', cursor: 'pointer' }}
+                    onClick={() => { setUserTab('real'); setSelectedUserIds([]); }}
+                  >
+                    Real Users
+                  </button>
+                  <button 
+                    style={{ background: 'none', border: 'none', color: userTab === 'bots' ? 'var(--accent-color)' : 'var(--text-muted)', fontWeight: userTab === 'bots' ? 'bold' : 'normal', cursor: 'pointer' }}
+                    onClick={() => { setUserTab('bots'); setSelectedUserIds([]); }}
+                  >
+                    AI Bots
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <button 
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-main)', borderRadius: '6px', cursor: 'pointer' }}
+                    onClick={() => {
+                      const visible = allUsers.filter(u => userTab === 'bots' ? u.is_bot : !u.is_bot).filter(u => u.role !== 'admin');
+                      const visibleIds = visible.map(u => u.id);
+                      const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedUserIds.includes(id));
+                      if (allSelected) {
+                        setSelectedUserIds(prev => prev.filter(id => !visibleIds.includes(id)));
+                      } else {
+                        setSelectedUserIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+                      }
+                    }}
+                  >
+                    {(() => {
+                      const visible = allUsers.filter(u => userTab === 'bots' ? u.is_bot : !u.is_bot).filter(u => u.role !== 'admin');
+                      const visibleIds = visible.map(u => u.id);
+                      return visibleIds.length > 0 && visibleIds.every(id => selectedUserIds.includes(id)) ? 'Deselect All' : 'Select All';
+                    })()}
+                  </button>
+
+                  <button 
+                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', backgroundColor: 'rgba(231, 76, 60, 0.15)', border: '1px solid rgba(231, 76, 60, 0.3)', color: '#FF4757', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                    onClick={() => {
+                      const unregOrNoPost = allUsers.filter(u => (userTab === 'bots' ? u.is_bot : !u.is_bot) && u.role !== 'admin' && (!u.is_registered || u.post_count === 0)).map(u => u.id);
+                      setSelectedUserIds(unregOrNoPost);
+                    }}
+                    title="Select accounts with 0 posts or unregistered guests"
+                  >
+                    Select Inactive/Bots (0 posts)
+                  </button>
+
+                  {selectedUserIds.length > 0 && (
+                    <button 
+                      style={{ padding: '0.4rem 1rem', fontSize: '0.85rem', backgroundColor: '#FF4757', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                      onClick={async () => {
+                        if (window.confirm(`Are you sure you want to PERMANENTLY WIPE ${selectedUserIds.length} selected users and all their data?`)) {
+                          const res = await adminBulkWipeUsers(selectedUserIds);
+                          if (res && res.deleted_count !== undefined) {
+                            alert(`Wiped ${res.deleted_count} users successfully.`);
+                            setSelectedUserIds([]);
+                            loadData();
+                          } else {
+                            alert(res?.error || 'Failed to bulk wipe users.');
+                          }
+                        }
+                      }}
+                    >
+                      <Trash2 size={13} style={{ verticalAlign: 'middle', marginRight: '4px' }}/> Wipe Selected ({selectedUserIds.length})
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
                   {allUsers.filter(u => userTab === 'bots' ? u.is_bot : !u.is_bot).map(u => (
-                      <div key={u.id} className="feed-card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: u.is_banned ? 'rgba(231, 76, 60, 0.05)' : 'var(--bg-elevated)' }}>
+                      <div key={u.id} className="feed-card" style={{ padding: '1.5rem', border: selectedUserIds.includes(u.id) ? '2px solid #FF4757' : '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '0.5rem', backgroundColor: u.is_banned ? 'rgba(231, 76, 60, 0.05)' : 'var(--bg-elevated)', position: 'relative' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <div>
-                                  <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '5px', fontSize: '1.2rem' }}>
-                                      {u.display_name} {u.is_bot && '🤖'} {u.is_permanent && '🛡️'}
-                                  </h3>
-                                  <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>@{u.username}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  {u.role !== 'admin' && (
+                                    <input 
+                                      type="checkbox" 
+                                      checked={selectedUserIds.includes(u.id)} 
+                                      onChange={(e) => {
+                                        if (e.target.checked) setSelectedUserIds(prev => [...prev, u.id]);
+                                        else setSelectedUserIds(prev => prev.filter(id => id !== u.id));
+                                      }}
+                                      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                                    />
+                                  )}
+                                  <div>
+                                      <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '5px', fontSize: '1.2rem' }}>
+                                          {u.display_name} {u.is_bot && '🤖'} {u.is_permanent && '🛡️'}
+                                      </h3>
+                                      <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>@{u.username}</div>
+                                  </div>
                               </div>
                               <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: u.role === 'admin' ? 'rgba(var(--accent-rgb), 0.2)' : 'var(--bg-card)', color: u.role === 'admin' ? 'var(--accent-color)' : 'var(--text-muted)' }}>
                                   {u.role.toUpperCase()}

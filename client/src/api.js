@@ -974,3 +974,18 @@ export const adminWipeUser = async (username) => {
         return { error: 'Network error' };
     }
 };
+
+export const adminBulkWipeUsers = async (userIds) => {
+    const token = await getSessionToken();
+    try {
+        const res = await fetch(`${API_URL}/admin/users/bulk-wipe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': token },
+            body: JSON.stringify({ user_ids: userIds })
+        });
+        return await res.json();
+    } catch (error) {
+        return { error: 'Network error' };
+    }
+};
+
