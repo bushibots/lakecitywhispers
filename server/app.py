@@ -198,7 +198,7 @@ with app.app_context():
     except Exception:
         db.session.rollback()
     try:
-        db.session.execute(db.text('ALTER TABLE user ADD COLUMN secret_crushes TEXT;'))
+        db.session.execute(db.text('ALTER TABLE "user" ADD COLUMN secret_crushes TEXT;'))
         db.session.commit()
     except Exception:
         db.session.rollback()
@@ -1705,10 +1705,9 @@ def get_sidebar_stats():
 @app.route('/api/sidebar/polls', methods=['GET'])
 def get_sidebar_polls():
     polls = Poll.query.join(Post).order_by(Post.created_at.desc()).limit(10).all()
-    
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
     # Generate new poll if none exist or latest is > 24 hours old
-    if not polls or polls[0].post.created_at < datetime.now(timezone.utc) - timedelta(days=1):
+    if not polls or polls[0].post.created_at < datetime.utcnow() - timedelta(days=1):
         from ai import generate_campus_poll
         poll_data = generate_campus_poll()
         if poll_data:
