@@ -791,65 +791,146 @@ body.t-inverted {
 /* Neo-Brutalism (Sharp Edges, Hard Shadows, High Contrast) */
 body.t-brutalism {
   --bg-color: #f4f4f0;
-  --bg-secondary: #f4f4f0;
+  --bg-secondary: transparent;
   --card-bg: #ffffff;
-  --primary: #ff3366; /* Hot Pink */
-  --accent-glow: #000000;
+  --primary: #ffcc00; /* Primary Yellow */
+  --accent-glow: #ff3366; /* Hot Pink */
   --text-main: #000000;
   --text-muted: #555555;
   --border: #000000;
   --border-strong: #000000;
   
-  --neu-shadow: 6px 6px 0px var(--border-strong);
+  --neu-shadow: 8px 8px 0px var(--border-strong);
   --neu-shadow-sm: 4px 4px 0px var(--border-strong);
-  --neu-inset: inset 4px 4px 0px rgba(0,0,0,0.1);
-  --neu-inset-sm: inset 2px 2px 0px rgba(0,0,0,0.1);
+  --neu-inset: inset 6px 6px 0px rgba(0,0,0,0.1);
+  --neu-inset-sm: inset 3px 3px 0px rgba(0,0,0,0.1);
+
+  font-family: 'Space Grotesk', sans-serif !important;
+}
+
+body.t-brutalism::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: linear-gradient(#000 2px, transparent 2px), linear-gradient(90deg, #000 2px, transparent 2px);
+  background-size: 40px 40px;
+  opacity: 0.05;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body.t-brutalism h1, body.t-brutalism h2, body.t-brutalism h3, body.t-brutalism .nav-label {
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
 }
 
 body.t-brutalism.dark-mode {
   --bg-color: #121212;
-  --bg-secondary: #0a0a0a;
   --card-bg: #1a1a1a;
-  --primary: #00ffcc; /* Neon Cyan */
-  --accent-glow: #ffffff;
+  --primary: #35D6E7; /* Neon Cyan */
+  --accent-glow: #2ecc71; /* Neon Green */
   --text-main: #e0e0e0;
   --text-muted: #888888;
-  --border: #333333; /* Soften the side lines */
-  --border-strong: #444444; /* Soften the brutalist borders */
+  --border: #333333;
+  --border-strong: #000000;
   
-  --neu-shadow: 6px 6px 0px var(--border-strong);
+  --neu-shadow: 8px 8px 0px var(--border-strong);
   --neu-shadow-sm: 4px 4px 0px var(--border-strong);
-  --neu-inset: inset 4px 4px 0px rgba(255,255,255,0.05);
-  --neu-inset-sm: inset 2px 2px 0px rgba(255,255,255,0.05);
+}
+body.t-brutalism.dark-mode::before {
+  background-image: linear-gradient(#fff 2px, transparent 2px), linear-gradient(90deg, #fff 2px, transparent 2px);
+  opacity: 0.03;
 }
 
 body.t-brutalism .feed-card, body.t-brutalism .widget, body.t-brutalism .composer-box {
   border-radius: 0 !important;
-  border: 3px solid var(--border-strong) !important;
+  border: 4px solid var(--border-strong) !important;
+  box-shadow: var(--neu-shadow) !important;
+  margin-bottom: 2rem; /* Extra margin for the massive shadow */
 }
+
+body.t-brutalism .feed-card:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0px var(--border-strong) !important;
+  transition: all 0.2s ease;
+}
+
 body.t-brutalism .btn-glow {
   border-radius: 0 !important;
-  border: 3px solid var(--border-strong) !important;
-  color: var(--bg-color);
-  background: var(--primary);
-  box-shadow: 4px 4px 0px var(--border-strong) !important;
+  border: 4px solid var(--border-strong) !important;
+  color: #000 !important;
+  background: var(--primary) !important;
+  box-shadow: var(--neu-shadow-sm) !important;
+  font-weight: 900 !important;
+  text-transform: uppercase;
+  transition: all 0.1s ease !important;
 }
+
+body.t-brutalism.dark-mode .btn-glow {
+  color: #fff !important;
+  background: var(--primary) !important;
+  text-shadow: 1px 1px 0 #000;
+}
+
 body.t-brutalism .btn-glow:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--border-strong) !important;
-  color: var(--bg-color);
+  transform: translate(-4px, -4px) !important;
+  box-shadow: 8px 8px 0px var(--border-strong) !important;
 }
+
 body.t-brutalism .btn-glow:active {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px var(--border-strong) !important;
+  transform: translate(4px, 4px) !important;
+  box-shadow: 0px 0px 0px var(--border-strong) !important;
 }
+
 body.t-brutalism .icon-btn, body.t-brutalism .icon-btn-teal, body.t-brutalism .icon-btn-minimal {
   border-radius: 0 !important;
-  border: 2px solid var(--border-strong);
-  box-shadow: 3px 3px 0px var(--border-strong);
+  border: 3px solid var(--border-strong) !important;
+  box-shadow: 4px 4px 0px var(--border-strong) !important;
+  background: #fff;
+  transition: all 0.1s ease !important;
 }
-body.t-brutalism .nav-link, body.t-brutalism .composer-textarea {
+
+body.t-brutalism.dark-mode .icon-btn, body.t-brutalism.dark-mode .icon-btn-teal, body.t-brutalism.dark-mode .icon-btn-minimal {
+  background: #2a2a2a;
+}
+
+body.t-brutalism .icon-btn:hover, body.t-brutalism .icon-btn-teal:hover, body.t-brutalism .icon-btn-minimal:hover {
+  transform: translate(-2px, -2px) !important;
+  box-shadow: 6px 6px 0px var(--border-strong) !important;
+}
+body.t-brutalism .icon-btn:active, body.t-brutalism .icon-btn-teal:active, body.t-brutalism .icon-btn-minimal:active {
+  transform: translate(2px, 2px) !important;
+  box-shadow: 0px 0px 0px var(--border-strong) !important;
+}
+
+body.t-brutalism .nav-link, body.t-brutalism .composer-textarea, body.t-brutalism .border-input {
   border-radius: 0 !important;
+  border: 3px solid var(--border-strong) !important;
+}
+
+body.t-brutalism .composer-textarea:focus, body.t-brutalism .border-input:focus {
+  background: #fff !important;
+  box-shadow: 6px 6px 0px var(--accent-glow) !important;
+  border-color: var(--border-strong) !important;
+}
+
+body.t-brutalism.dark-mode .composer-textarea:focus, body.t-brutalism.dark-mode .border-input:focus {
+  background: #1a1a1a !important;
+}
+
+body.t-brutalism .left-sidebar, body.t-brutalism .right-sidebar {
+  border-right: 4px solid var(--border-strong);
+  border-left: 4px solid var(--border-strong);
+}
+
+body.t-brutalism .global-mobile-header {
+  border-bottom: 4px solid var(--border-strong);
+  box-shadow: 0 6px 0px var(--border-strong);
+}
+
+body.t-brutalism .mobile-bottom-nav {
+  border-top: 4px solid var(--border-strong);
 }
 
 /* Retro (Dark Green) */
