@@ -195,6 +195,9 @@ with app.app_context():
     try:
         db.session.execute(db.text('ALTER TABLE conversation ADD COLUMN user2_read_at TIMESTAMP;'))
         db.session.commit()
+    try:
+        db.session.execute(db.text('ALTER TABLE user ADD COLUMN secret_crushes TEXT;'))
+        db.session.commit()
     except Exception:
         db.session.rollback()
 
@@ -2406,13 +2409,21 @@ def dating_discover():
             except Exception:
                 pass
                 
+        from datetime import datetime, timedelta, timezone
+        cutoff_active = datetime.now(timezone.utc) - timedelta(hours=24)
+        is_active_today = p.user.last_active >= cutoff_active if p.user and p.user.last_active else False
+
         discover_list.append({
             "user_id": p.user_id,
             "image_url": p.image_url,
             "images": parsed_images,
             "bio": p.bio,
             "gender": p.gender,
-            "age": p.age
+            "age": p.age,
+            "block": p.block,
+            "course": p.course,
+            "is_active_today": is_active_today,
+            "badges": get_user_badges(p.user) if p.user else []
         })
     import random
     random.shuffle(discover_list)
@@ -2574,8 +2585,66 @@ def admin_all_messages():
         "pages": messages.pages
     })
 
+@app.route('/api/dating/secret_crush', methods=['POST'])
+def dating_secret_crush():
+    user = get_current_user(request.headers.get('Authorization'))
+    if not user: return jsonify({"error": "Unauthorized"}), 401
+    
+    data = request.json
+    crushes = data.get('crushes', [])
+    if not isinstance(crushes, list) or len(crushes) > 3:
+        return jsonify({"error": "Max 3 crushes allowed"}), 400
+        
+    user.secret_crushes = json.dumps(crushes)
+    db.session.commit()
+    
+    # Check for mutual secret crushes
+    for crush_username in crushes:
+        crush_username = crush_username.strip().lstrip('@')
+        target = User.query.filter_by(username=crush_username).first()
+        if target and target.secret_crushes:
+            try:
+                target_crushes = json.loads(target.secret_crushes)
+                if user.username in target_crushes:
+                    # Mutual crush! Trigger a match (if not already matched)
+                    existing_conv = Conversation.query.filter(
+                        ((Conversation.user1_id == user.id) & (Conversation.user2_id == target.id)) |
+                        ((Conversation.user1_id == target.id) & (Conversation.user2_id == user.id))
+                    ).first()
+                    
+                    if not existing_conv:
+                        conv = Conversation(user1_id=user.id, user2_id=target.id)
+                        db.session.add(conv)
+                        db.session.commit()
+                        
+                        emit_to_user(target.session_token, 'new_notification', {
+                            'title': 'Secret Crush Matched! 💘',
+                            'body': f'You and {user.display_name} secretly crushed on each other!',
+                            'type': 'match'
+                        })
+                        emit_to_user(user.session_token, 'new_notification', {
+                            'title': 'Secret Crush Matched! 💘',
+                            'body': f'You and {target.display_name} secretly crushed on each other!',
+                            'type': 'match'
+                        })
+            except Exception:
+                pass
+                
+    return jsonify({"message": "Secret crushes updated", "crushes": crushes})
 
-
+@app.route('/api/admin/broadcast_daily_drop', methods=['POST'])
+@admin_required
+def admin_broadcast_daily_drop():
+    # Send a broadcast to all active users via socket (simulated push)
+    # The frontend will show a toast when this event is received
+    socketio.emit('daily_drop', {
+        'title': '8 PM Daily Drop is here! ⏰',
+        'body': 'Check Dating now to see your top matches for the day before they are gone.'
+    })
+    return jsonify({"message": "Daily drop broadcasted."})
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    # Set to gevent and allow external access
     socketio.run(app, host='0.0.0.0', port=5000, debug=True)

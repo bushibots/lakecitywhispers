@@ -1,130 +1,251 @@
 import { useState, useEffect } from 'react';
-import { Heart, X, MessageCircle, Shield } from 'lucide-react';
+import { Shield, Zap, Flame, Clock, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Promo() {
   const [step, setStep] = useState(0);
+  const totalSteps = 6;
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setStep(prev => (prev < 4 ? prev + 1 : 0));
-    }, 3500); // Change slide every 3.5 seconds
+      setStep(prev => (prev < totalSteps - 1 ? prev + 1 : 0));
+    }, 4500); 
     return () => clearInterval(timer);
   }, []);
 
-  const slideVariants = {
-    hidden: { opacity: 0, transform: 'translateY(20px)' },
-    visible: { opacity: 1, transform: 'translateY(0)' }
-  };
-
   return (
-    <div style={{ height: '100vh', width: '100%', background: '#000', color: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+    <div style={{ height: '100vh', width: '100%', background: '#e0e0e0', color: '#000', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'relative', fontFamily: "'Space Grotesk', sans-serif" }}>
       
-      {/* Dynamic Background Glow */}
-      <div style={{
-        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '60vw', height: '60vw', background: 'radial-gradient(circle, rgba(255, 51, 102, 0.15) 0%, rgba(0,0,0,0) 70%)',
-        filter: 'blur(40px)', zIndex: 0
-      }}></div>
+      {/* Brutalist Background Grid */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundImage: 'linear-gradient(#000 2px, transparent 2px), linear-gradient(90deg, #000 2px, transparent 2px)', backgroundSize: '50px 50px', opacity: 0.05, zIndex: 0 }}></div>
 
-      <div style={{ zIndex: 1, textAlign: 'center', maxWidth: '600px', width: '90%' }}>
+      <div style={{ zIndex: 1, textAlign: 'center', maxWidth: '700px', width: '90%', position: 'relative' }}>
         
         {/* Step 0: Intro */}
         {step === 0 && (
-          <div className="promo-slide" style={{ animation: 'fadeInOut 3.5s ease' }}>
-            <h1 style={{ fontSize: '3rem', fontWeight: 'bold', background: 'linear-gradient(90deg, #ff3366, #ff9933)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '1rem' }}>
-              Campus Crush
-            </h1>
-            <p style={{ fontSize: '1.2rem', color: '#aaa' }}>The exclusive dating experience for our campus.</p>
+          <div className="promo-slide">
+            <div className="brutalist-badge" style={{ background: '#ff3366', color: '#fff', transform: 'rotate(-5deg)' }}>VERSION 2.0</div>
+            <h1 className="brutalist-title">CAMPUS<br/>CRUSH</h1>
+            <p className="brutalist-text">The exclusive dating experience for our campus. Rebuilt. Faster. Better.</p>
           </div>
         )}
 
         {/* Step 1: Lightning Fast */}
         {step === 1 && (
-          <div className="promo-slide" style={{ animation: 'fadeInOut 3.5s ease' }}>
-            <div style={{ 
-              width: '280px', height: '400px', background: '#111', borderRadius: '24px', 
-              margin: '0 auto 2rem', position: 'relative', overflow: 'hidden',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.5)', border: '1px solid #333'
-            }}>
-              {/* Fake Photo */}
-              <div style={{ width: '100%', height: '100%', background: 'url("https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80") center/cover', opacity: 0.8 }}></div>
-              <div style={{ position: 'absolute', bottom: '20px', left: '20px', right: '20px', textAlign: 'left' }}>
-                <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Silent Owl, 21</h2>
-                <p style={{ margin: 0, color: '#ccc' }}>Computer Science</p>
+          <div className="promo-slide">
+            <div className="brutalist-card swipe-animation" style={{ background: '#fff', transform: 'rotate(2deg)' }}>
+              <div style={{ width: '100%', height: '250px', background: 'url("https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80") center/cover', borderBottom: '4px solid #000' }}></div>
+              <div style={{ padding: '1rem', textAlign: 'left' }}>
+                <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Silent Owl, 21</h2>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <span className="brutalist-tag" style={{ background: '#35D6E7' }}>CS</span>
+                  <span className="brutalist-tag" style={{ background: '#ffcc00' }}>Block B</span>
+                </div>
               </div>
             </div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Lightning Fast.</h2>
-            <p style={{ color: '#aaa' }}>Hardware-accelerated profiles load instantly.</p>
+            <h2 className="brutalist-subtitle"><Zap size={32} style={{ verticalAlign: 'middle', marginRight: '10px' }}/>FRICTIONLESS SWIPING</h2>
+            <p className="brutalist-text">Hardware-accelerated profiles load instantly. Just tap.</p>
           </div>
         )}
 
-        {/* Step 2: Swipe Right */}
+        {/* Step 2: Vibe Score */}
         {step === 2 && (
-          <div className="promo-slide" style={{ animation: 'fadeInOut 3.5s ease' }}>
-            <div style={{ 
-              width: '280px', height: '400px', background: '#111', borderRadius: '24px', 
-              margin: '0 auto 2rem', position: 'relative', overflow: 'hidden',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.5)', border: '1px solid #ff3366',
-              animation: 'swipeRight 1s ease forwards 1s'
-            }}>
-              <div style={{ width: '100%', height: '100%', background: 'url("https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=80") center/cover', opacity: 0.8 }}></div>
-              {/* Fake Like Stamp */}
-              <div style={{ position: 'absolute', top: '40px', left: '40px', border: '4px solid #ff3366', color: '#ff3366', padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '2rem', fontWeight: 'bold', transform: 'rotate(-20deg)', opacity: 0, animation: 'stampIn 0.3s forwards 0.8s' }}>
-                LIKE
-              </div>
-            </div>
-            <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Frictionless Swiping.</h2>
-            <p style={{ color: '#aaa' }}>See someone you like? Just tap.</p>
-          </div>
-        )}
-
-        {/* Step 3: Match & Chat */}
-        {step === 3 && (
-          <div className="promo-slide" style={{ animation: 'fadeInOut 3.5s ease' }}>
-             <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '2rem' }}>
-                <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'url("https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80") center/cover', border: '4px solid #ff3366' }}></div>
-                <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'url("https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&q=80") center/cover', border: '4px solid #ff3366' }}></div>
+          <div className="promo-slide">
+             <div className="brutalist-card vibe-animation" style={{ background: '#35D6E7', color: '#000', padding: '3rem 2rem', transform: 'rotate(-3deg)' }}>
+                <h1 style={{ fontSize: '4rem', margin: 0, fontWeight: 900, textShadow: '4px 4px 0 #fff' }}>87%</h1>
+                <h3 style={{ fontSize: '1.5rem', margin: 0, fontWeight: 800 }}>VIBE MATCH</h3>
+                <p style={{ marginTop: '1rem', fontWeight: 600 }}>Shared Course + Shared Block</p>
              </div>
-             <Shield size={48} color="#ff3366" style={{ margin: '0 auto 1rem' }} />
-            <h2 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>Secure & Anonymous.</h2>
-            <p style={{ color: '#aaa' }}>Match and chat privately. No phone numbers required.</p>
+            <h2 className="brutalist-subtitle"><Flame size={32} style={{ verticalAlign: 'middle', marginRight: '10px' }}/>VIBE SCORE</h2>
+            <p className="brutalist-text">Instantly see your compatibility percentage before you even swipe.</p>
           </div>
         )}
 
-        {/* Step 4: Call to Action */}
+        {/* Step 3: Secret Crush */}
+        {step === 3 && (
+          <div className="promo-slide">
+            <div className="brutalist-card crush-animation" style={{ background: '#ff3366', color: '#fff', padding: '2rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                 <div className="crush-avatar"></div>
+                 <div className="crush-avatar"></div>
+              </div>
+              <h2 style={{ fontSize: '2rem', margin: 0, fontWeight: 800, textShadow: '3px 3px 0 #000' }}>IT'S A MATCH!</h2>
+            </div>
+            <h2 className="brutalist-subtitle"><Shield size={32} style={{ verticalAlign: 'middle', marginRight: '10px' }}/>SECRET CRUSH</h2>
+            <p className="brutalist-text">Tag up to 3 friends secretly. If they tag you back, boom! Instant match.</p>
+          </div>
+        )}
+
+        {/* Step 4: 8 PM Drop & Ghost Prevention */}
         {step === 4 && (
-          <div className="promo-slide" style={{ animation: 'fadeInOut 3.5s ease' }}>
-            <h1 style={{ fontSize: '3rem', fontWeight: 'bold', background: 'linear-gradient(90deg, #ff3366, #ff9933)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '1rem' }}>
-              Find your crush.
+          <div className="promo-slide">
+            <div className="brutalist-card" style={{ background: '#ffcc00', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+               <div style={{ background: '#000', color: '#0f0', padding: '1rem', border: '4px solid #fff', fontWeight: 900, fontSize: '1.5rem' }}>
+                 🟢 ACTIVE TODAY
+               </div>
+               <div style={{ background: '#000', color: '#ff3366', padding: '1rem', border: '4px solid #fff', fontWeight: 900, fontSize: '1.5rem' }}>
+                 ⏰ 8:00 PM DROP
+               </div>
+            </div>
+            <h2 className="brutalist-subtitle"><Clock size={32} style={{ verticalAlign: 'middle', marginRight: '10px' }}/>NO MORE GHOST TOWN</h2>
+            <p className="brutalist-text">Profiles show if they were active in the last 24h. Plus, everyone gets new matches at 8 PM daily.</p>
+          </div>
+        )}
+
+        {/* Step 5: Call to Action */}
+        {step === 5 && (
+          <div className="promo-slide">
+            <h1 className="brutalist-title" style={{ fontSize: '4rem', color: '#ff3366', textShadow: '6px 6px 0px #000', marginBottom: '2rem' }}>
+              READY?
             </h1>
-            <Link to="/dating" className="btn-primary" style={{ padding: '1rem 3rem', fontSize: '1.2rem', borderRadius: '30px', display: 'inline-block', marginTop: '2rem', textDecoration: 'none' }}>
-              Launch Campus Crush
+            <Link to="/dating" className="brutalist-btn">
+              LAUNCH CAMPUS CRUSH <ArrowRight size={24} style={{ verticalAlign: 'middle', marginLeft: '10px' }} />
             </Link>
           </div>
         )}
 
       </div>
 
+      {/* Progress indicators */}
+      <div style={{ position: 'absolute', bottom: '30px', display: 'flex', gap: '10px', zIndex: 10 }}>
+        {Array.from({length: totalSteps}).map((_, i) => (
+          <div key={i} onClick={() => setStep(i)} style={{ 
+            width: '40px', height: '12px', background: step === i ? '#ff3366' : '#000', 
+            border: '2px solid #000', cursor: 'pointer', transition: 'background 0.3s' 
+          }} />
+        ))}
+      </div>
+
       <style>{`
-        @keyframes fadeInOut {
-          0% { opacity: 0; transform: translate(-50%, -30%); }
-          15% { opacity: 1; transform: translate(-50%, -50%); }
-          85% { opacity: 1; transform: translate(-50%, -50%); }
-          100% { opacity: 0; transform: translate(-50%, -70%); }
-        }
-        @keyframes swipeRight {
-          to { transform: translate(-50%, -50%) translateX(150%) rotate(20deg); opacity: 0; }
-        }
-        @keyframes stampIn {
-          from { opacity: 0; transform: rotate(-20deg) scale(3); }
-          to { opacity: 1; transform: rotate(-20deg) scale(1); }
-        }
         .promo-slide {
           position: absolute;
           top: 50%; left: 50%;
           transform: translate(-50%, -50%);
           width: 100%;
+          animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .brutalist-title {
+          font-size: 5rem;
+          font-weight: 900;
+          color: #fff;
+          -webkit-text-stroke: 3px #000;
+          text-shadow: 8px 8px 0px #000;
+          margin: 0 0 1rem 0;
+          line-height: 1;
+        }
+
+        .brutalist-subtitle {
+          font-size: 2rem;
+          font-weight: 900;
+          margin: 0 0 1rem 0;
+          text-transform: uppercase;
+        }
+
+        .brutalist-text {
+          font-size: 1.2rem;
+          font-weight: 700;
+          background: #000;
+          color: #fff;
+          display: inline-block;
+          padding: 0.5rem 1rem;
+          border: 3px solid #000;
+          box-shadow: 4px 4px 0 #ff3366;
+        }
+
+        .brutalist-badge {
+          display: inline-block;
+          font-weight: 900;
+          padding: 0.5rem 1rem;
+          border: 4px solid #000;
+          box-shadow: 6px 6px 0 #000;
+          font-size: 1.5rem;
+          margin-bottom: 2rem;
+        }
+
+        .brutalist-card {
+          width: 320px;
+          margin: 0 auto 2rem;
+          border: 4px solid #000;
+          box-shadow: 12px 12px 0 #000;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .brutalist-tag {
+          padding: 4px 8px;
+          border: 2px solid #000;
+          font-weight: 800;
+          font-size: 0.8rem;
+          box-shadow: 2px 2px 0 #000;
+          color: #000;
+        }
+
+        .brutalist-btn {
+          display: inline-block;
+          background: #ffcc00;
+          color: #000;
+          font-weight: 900;
+          font-size: 1.5rem;
+          padding: 1rem 2rem;
+          border: 4px solid #000;
+          text-decoration: none;
+          box-shadow: 8px 8px 0 #000;
+          transition: all 0.1s ease;
+          text-transform: uppercase;
+        }
+        
+        .brutalist-btn:hover {
+          transform: translate(-4px, -4px);
+          box-shadow: 12px 12px 0 #000;
+        }
+        
+        .brutalist-btn:active {
+          transform: translate(4px, 4px);
+          box-shadow: 4px 4px 0 #000;
+        }
+
+        .crush-avatar {
+          width: 80px; height: 80px; 
+          border-radius: 50%; 
+          border: 4px solid #000; 
+          background: #fff;
+          box-shadow: 4px 4px 0 #000;
+        }
+
+        @keyframes popIn {
+          0% { opacity: 0; transform: translate(-50%, -40%) scale(0.9); }
+          100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .swipe-animation {
+          animation: swipeAnim 4s infinite ease-in-out;
+        }
+        @keyframes swipeAnim {
+          0%, 100% { transform: rotate(2deg) translateX(0); }
+          50% { transform: rotate(10deg) translateX(50px); }
+        }
+        
+        .vibe-animation {
+          animation: vibePulse 2s infinite alternate cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes vibePulse {
+          0% { transform: scale(1) rotate(-3deg); }
+          100% { transform: scale(1.1) rotate(2deg); box-shadow: 16px 16px 0 #000; }
+        }
+
+        .crush-animation {
+          animation: crushShake 0.5s infinite;
+        }
+        @keyframes crushShake {
+          0%, 100% { transform: rotate(-2deg); }
+          50% { transform: rotate(2deg); }
+        }
+
+        @media (max-width: 768px) {
+          .brutalist-title { font-size: 3.5rem; }
+          .brutalist-text { font-size: 1rem; }
+          .brutalist-card { width: 280px; }
         }
       `}</style>
     </div>

@@ -180,6 +180,17 @@ export default function Dating() {
     setPhotoIndex(0);
   };
 
+  const handleSecretCrush = () => {
+      const crushStr = prompt("Enter up to 3 usernames (comma separated) for your Secret Crush list.\nIf they also crush on you, it's a match!");
+      if (crushStr !== null) {
+          const crushes = crushStr.split(',').map(s => s.trim().replace('@', '')).filter(Boolean).slice(0, 3);
+          apiFetch('/api/dating/secret_crush', { method: 'POST', body: JSON.stringify({ crushes }) })
+          .then(res => {
+              if (res.message) alert("Secret crushes saved! 🤫");
+          });
+      }
+  };
+
   // Drag-to-swipe handlers
   const handleDragStart = (clientX) => {
     if (activeBtn) return;
@@ -248,14 +259,39 @@ export default function Dating() {
                         <Heart size={40} fill="#fff" color="#fff" />
                     </div>
                     <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff' }}>It's a Match!</h2>
-                    <p style={{ color: 'rgba(255,255,255,0.8)', margin: '1rem 0 2rem 0', fontSize: '1.1rem' }}>You and <strong>{matchPopup.name}</strong> have liked each other.</p>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.1rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>You and {matchPopup.targetName} have liked each other.</p>
                     
-                    <button className="btn-glow" onClick={() => navigate(`/messages${matchPopup.conversation_id ? `?conv=${matchPopup.conversation_id}` : ''}`)} style={{ width: '100%', marginBottom: '1rem', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', color: '#fff', borderRadius: '30px', padding: '1rem', border: 'none', fontWeight: '700', fontSize: '1.1rem' }}>
-                        Send a Message
-                    </button>
-                    <button className="btn-secondary" onClick={() => setMatchPopup(null)} style={{ width: '100%', padding: '1rem', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', background: 'transparent' }}>
-                        Keep Swiping
-                    </button>
+                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.1)', borderRadius: '12px', margin: '1.5rem 0', textAlign: 'left' }}>
+                        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>🔥 Spill the Tea (Icebreaker)</p>
+                        <p style={{ color: '#fff', fontWeight: 'bold', fontSize: '1.05rem' }}>
+                            {(() => {
+                                const icebreakers = [
+                                    "What's your most controversial opinion about campus food?",
+                                    "What's the weirdest thing you've seen in the library?",
+                                    "If you could teleport anywhere on campus right now, where would it be?",
+                                    "What's your go-to caffeine fix before an 8 AM class?",
+                                    "Who is your secret campus crush? (I won't tell 🤫)",
+                                    "What's your favorite spot to hide and study?",
+                                    "Describe your block in three words.",
+                                    "What's the best late-night snack spot?",
+                                    "If our campus had a mascot, what would it actually be?",
+                                    "What's your most chaotic story from a campus event?"
+                                ];
+                                // use matchPopup targetId to make it stable per match
+                                const idx = (matchPopup.targetId || 1) % icebreakers.length;
+                                return icebreakers[idx];
+                            })()}
+                        </p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}> 
+                        <button className="btn-glow" onClick={() => navigate(`/messages${matchPopup.conversation_id ? `?conv=${matchPopup.conversation_id}` : ''}`)} style={{ width: '100%', marginBottom: '1rem', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', color: '#fff', borderRadius: '30px', padding: '1rem', border: 'none', fontWeight: '700', fontSize: '1.1rem' }}>
+                            Send a Message
+                        </button>
+                        <button className="btn-secondary" onClick={() => setMatchPopup(null)} style={{ width: '100%', padding: '1rem', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', background: 'transparent' }}>
+                            Keep Swiping
+                        </button>
+                    </div>
                 </div>
             </div>
         )}
@@ -265,6 +301,13 @@ export default function Dating() {
                 <Heart fill="#FF5E5B" color="#FF5E5B" /> Campus Crush
             </h2>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <button 
+                    onClick={handleSecretCrush}
+                    style={{ background: 'none', border: 'none', color: '#ff7eb3', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '1.2rem' }}
+                    title="Set Secret Crushes"
+                >
+                    🤫
+                </button>
                 <button 
                     onClick={() => setShowFilters(true)} 
                     style={{ background: 'none', border: 'none', color: (filterBlock || filterCourse) ? 'var(--accent-color)' : 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -423,14 +466,20 @@ export default function Dating() {
                             <p style={{ fontSize: '0.9rem', color: hasGlimpsed ? 'rgba(255,255,255,0.4)' : '#FF5E5B', marginBottom: '0.5rem', fontWeight: '600', transition: 'color 0.3s', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                                 {hasGlimpsed ? 'Glimpse used' : 'Hold photo for a one-time glimpse'}
                             </p>
-                            <h2 style={{ fontSize: '2.6rem', marginBottom: '0.3rem', fontWeight: '800', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.1 }}>
+                            <h2 style={{ fontSize: '2.6rem', marginBottom: '0.3rem', fontWeight: '800', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.1, display: 'flex', alignItems: 'center' }}>
                                 Anonymous {currentProfile.age ? `, ${currentProfile.age}` : ''}
+                                {currentProfile.is_active_today && (
+                                    <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#2ecc71', marginLeft: '12px', boxShadow: '0 0 8px #2ecc71', border: '2px solid rgba(0,0,0,0.3)' }} title="Active Today" />
+                                )}
                             </h2>
                             
                             {currentProfile.block && (
                                 <div style={{ fontSize: '1.05rem', color: 'rgba(255,255,255,0.9)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '600' }}>
                                     <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#FF5E5B', boxShadow: '0 0 8px rgba(255,94,91,0.6)' }}></span>
                                     Block {currentProfile.block}
+                                    {currentProfile.badges && currentProfile.badges.map((b, i) => (
+                                        <span key={i} title={b.text} style={{ fontSize: '1.1rem', marginLeft: '6px', background: 'rgba(0,0,0,0.3)', padding: '2px 6px', borderRadius: '12px' }}>{b.icon}</span>
+                                    ))}
                                 </div>
                             )}
                             
@@ -440,6 +489,19 @@ export default function Dating() {
                                         {currentProfile.gender}
                                     </span>
                                 )}
+                                {(() => {
+                                    let vibeScore = 50;
+                                    if (profile && currentProfile) {
+                                        if (profile.course === currentProfile.course && profile.course) vibeScore += 30;
+                                        if (profile.block === currentProfile.block && profile.block) vibeScore += 15;
+                                        vibeScore += (currentProfile.user_id % 5);
+                                    }
+                                    return (
+                                        <span style={{ padding: '6px 16px', background: 'rgba(46, 204, 113, 0.3)', backdropFilter: 'blur(10px)', borderRadius: '24px', fontSize: '0.9rem', color: '#fff', fontWeight: '800', border: '1px solid rgba(46, 204, 113, 0.5)' }}>
+                                            🔥 {vibeScore}% Vibe Match
+                                        </span>
+                                    );
+                                })()}
                             </div>
 
                             <p style={{ fontSize: '1.1rem', lineHeight: 1.5, color: 'rgba(255,255,255,0.9)', textShadow: '0 1px 4px rgba(0,0,0,0.6)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>

@@ -55,7 +55,7 @@ function App() {
         document.body.classList.remove('dark-mode');
       }
 
-      const themeClasses = ['t-aurora', 't-cyber', 't-space', 't-inverted', 't-retro', 't-default'];
+      const themeClasses = ['t-aurora', 't-cyber', 't-space', 't-inverted', 't-retro', 't-brutalism', 't-default'];
       document.body.classList.remove(...themeClasses);
 
       if (cfg && cfg.global_theme && cfg.global_theme !== 't-default') {

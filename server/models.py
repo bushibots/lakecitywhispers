@@ -25,6 +25,9 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_active = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Engagement
+    secret_crushes = db.Column(db.Text, nullable=True) # JSON array of usernames
+    
     posts = db.relationship('Post', backref='author', lazy=True)
 
 class Post(db.Model):
