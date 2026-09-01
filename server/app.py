@@ -2514,14 +2514,13 @@ def dating_swipe():
                 db.session.flush()
                 
                 try:
-                    from add_socketio import emit_to_user
                     if target_user:
-                        emit_to_user(target_user.session_token, 'new_notification', {
+                        socketio.emit('new_notification', {
                             'id': notif1.id, 'type': 'message', 'message': notif1.message, 'created_at': notif1.created_at.isoformat() + 'Z'
-                        })
-                    emit_to_user(user.session_token, 'new_notification', {
+                        }, room=f"user_{target_user.id}")
+                    socketio.emit('new_notification', {
                         'id': notif2.id, 'type': 'message', 'message': notif2.message, 'created_at': notif2.created_at.isoformat() + 'Z'
-                    })
+                    }, room=f"user_{user.id}")
                 except Exception as e:
                     pass
                 
@@ -2618,16 +2617,16 @@ def dating_secret_crush():
                         db.session.add(conv)
                         db.session.commit()
                         
-                        emit_to_user(target.session_token, 'new_notification', {
+                        socketio.emit('new_notification', {
                             'title': 'Secret Crush Matched! 💘',
                             'body': f'You and {user.display_name} secretly crushed on each other!',
                             'type': 'match'
-                        })
-                        emit_to_user(user.session_token, 'new_notification', {
+                        }, room=f"user_{target.id}")
+                        socketio.emit('new_notification', {
                             'title': 'Secret Crush Matched! 💘',
                             'body': f'You and {target.display_name} secretly crushed on each other!',
                             'type': 'match'
-                        })
+                        }, room=f"user_{user.id}")
             except Exception:
                 pass
                 
