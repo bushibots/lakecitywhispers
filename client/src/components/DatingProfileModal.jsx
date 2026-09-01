@@ -204,8 +204,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Age</label>
             <input 
               type="number" 
-              className="composer-textarea border-input"
-              style={{ width: '100%', padding: '0.8rem' }}
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px', boxShadow: 'inset 2px 2px 0 rgba(0,0,0,0.05)' }}
               placeholder="e.g. 21"
               value={age}
               onChange={(e) => setAge(e.target.value)}
@@ -215,8 +215,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>University Block</label>
             <select 
-              className="composer-textarea border-input"
-              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--bg-input)' }}
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px' }}
               value={block}
               onChange={(e) => setBlock(e.target.value)}
             >
@@ -231,8 +231,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Course</label>
             <select 
-              className="composer-textarea border-input"
-              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--bg-input)' }}
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px' }}
               value={course}
               onChange={(e) => setCourse(e.target.value)}
             >
@@ -245,8 +245,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>I identify as</label>
             <select 
-              className="composer-textarea border-input"
-              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--bg-input)' }}
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px' }}
               value={gender}
               onChange={(e) => setGender(e.target.value)}
             >
@@ -260,8 +260,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>I'm looking for</label>
             <select 
-              className="composer-textarea border-input"
-              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--bg-input)' }}
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px' }}
               value={lookingFor}
               onChange={(e) => setLookingFor(e.target.value)}
             >
@@ -275,8 +275,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Bio (Keep it anonymous!)</label>
             <textarea 
-              className="composer-textarea border-input"
-              style={{ width: '100%', padding: '0.8rem', minHeight: '80px' }}
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', minHeight: '80px', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px', boxShadow: 'inset 2px 2px 0 rgba(0,0,0,0.05)' }}
               placeholder="What makes you interesting?"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
@@ -292,7 +292,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                         <button key={opt} onClick={() => {
                             if (selected) setInterests(interests.filter(i => i !== opt));
                             else if (interests.length < 5) setInterests([...interests, opt]);
-                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', borderRadius: '16px', border: `1px solid ${selected ? '#FF5E5B' : 'var(--border-color)'}`, background: selected ? 'rgba(255, 94, 91, 0.1)' : 'transparent', color: selected ? '#FF5E5B' : 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', fontWeight: 'bold', borderRadius: '16px', border: selected ? '3px solid #000' : '2px solid #555', background: selected ? '#FF5E5B' : '#fff', color: selected ? '#fff' : '#000', boxShadow: selected ? '3px 3px 0 #000' : 'none', cursor: 'pointer', transition: 'all 0.1s' }}>
                             {opt}
                         </button>
                     );
@@ -309,7 +309,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                         <button key={opt} onClick={() => {
                             if (selected) setGreenFlags(greenFlags.filter(i => i !== opt));
                             else if (greenFlags.length < 3) setGreenFlags([...greenFlags, opt]);
-                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', borderRadius: '16px', border: `1px solid ${selected ? '#2ecc71' : 'var(--border-color)'}`, background: selected ? 'rgba(46, 204, 113, 0.1)' : 'transparent', color: selected ? '#2ecc71' : 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', fontWeight: 'bold', borderRadius: '16px', border: selected ? '3px solid #000' : '2px solid #555', background: selected ? '#2ecc71' : '#fff', color: selected ? '#fff' : '#000', boxShadow: selected ? '3px 3px 0 #000' : 'none', cursor: 'pointer', transition: 'all 0.1s' }}>
                             {opt}
                         </button>
                     );
@@ -326,7 +326,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                         <button key={opt} onClick={() => {
                             if (selected) setRedFlags(redFlags.filter(i => i !== opt));
                             else if (redFlags.length < 3) setRedFlags([...redFlags, opt]);
-                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', borderRadius: '16px', border: `1px solid ${selected ? '#e74c3c' : 'var(--border-color)'}`, background: selected ? 'rgba(231, 76, 60, 0.1)' : 'transparent', color: selected ? '#e74c3c' : 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                        }} style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', fontWeight: 'bold', borderRadius: '16px', border: selected ? '3px solid #000' : '2px solid #555', background: selected ? '#e74c3c' : '#fff', color: selected ? '#fff' : '#000', boxShadow: selected ? '3px 3px 0 #000' : 'none', cursor: 'pointer', transition: 'all 0.1s' }}>
                             {opt}
                         </button>
                     );
@@ -338,8 +338,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Live Campus Spot (Optional)</label>
             <input 
               type="text" 
-              className="composer-textarea border-input"
-              style={{ width: '100%', padding: '0.8rem' }}
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px', boxShadow: 'inset 2px 2px 0 rgba(0,0,0,0.05)' }}
               placeholder="e.g. Studying at the Library"
               value={campusSpot}
               onChange={(e) => setCampusSpot(e.target.value)}
@@ -356,14 +356,14 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
         
         {/* Scroll Indicator */}
         <div style={{ 
-            position: 'absolute', bottom: '90px', left: '50%', transform: 'translateX(-50%)', 
-            background: '#ffcc00', border: '3px solid #000', borderRadius: '20px', 
-            padding: '4px 12px', fontSize: '0.85rem', fontWeight: 800, color: '#000',
-            boxShadow: '3px 3px 0 #000', zIndex: 10, pointerEvents: 'none',
-            opacity: isScrolledToBottom ? 0 : 1, transition: 'opacity 0.3s ease',
+            position: 'absolute', bottom: '100px', left: '50%', transform: 'translateX(-50%)', 
+            background: '#ffcc00', border: '2px solid #000', borderRadius: '16px', 
+            padding: '2px 8px', fontSize: '0.75rem', fontWeight: 900, color: '#000',
+            boxShadow: '2px 2px 0 #000', zIndex: 10, pointerEvents: 'none',
+            opacity: isScrolledToBottom ? 0 : 0.8, transition: 'opacity 0.3s ease',
             display: 'flex', alignItems: 'center', gap: '4px'
         }}>
-            ↓ SCROLL FOR MORE
+            ↓ SCROLL
         </div>
         
         {/* Sticky Footer */}
