@@ -134,25 +134,15 @@ export default function Promo() {
             <p style={{ fontWeight: 700, marginBottom: '2rem' }}>Download these high-res Neo-Brutalism backgrounds for your IG/Snap stories.</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
-              
-              {/* Kit 1 */}
-              <div style={{ border: '3px solid #000', padding: '1rem', background: '#f0f0f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <img src="/backgrounds/bg1.png" alt="Promo Kit 1" style={{ width: '100%', height: 'auto', border: '2px solid #000', aspectRatio: '9/16', objectFit: 'cover' }} />
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <a href="/backgrounds/bg1.png" download="lakecitywhispers-kit1.png" style={{ flex: 1, background: '#35D6E7', color: '#000', border: '2px solid #000', padding: '10px', textAlign: 'center', fontWeight: 800, textDecoration: 'none', boxShadow: '4px 4px 0 #000' }}>PNG</a>
-                  <a href="/backgrounds/bg1.png" download="lakecitywhispers-kit1.jpg" style={{ flex: 1, background: '#ffcc00', color: '#000', border: '2px solid #000', padding: '10px', textAlign: 'center', fontWeight: 800, textDecoration: 'none', boxShadow: '4px 4px 0 #000' }}>JPG</a>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(kitNum => (
+                <div key={kitNum} style={{ border: '3px solid #000', padding: '1rem', background: '#f0f0f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <img src={`/backgrounds/bg${kitNum}.png`} alt={`Promo Kit ${kitNum}`} style={{ width: '100%', height: 'auto', border: '2px solid #000', aspectRatio: '9/16', objectFit: 'cover' }} />
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <a href={`/backgrounds/bg${kitNum}.png`} download={`lakecitywhispers-kit${kitNum}.png`} style={{ flex: 1, background: '#35D6E7', color: '#000', border: '2px solid #000', padding: '10px', textAlign: 'center', fontWeight: 800, textDecoration: 'none', boxShadow: '4px 4px 0 #000' }}>PNG</a>
+                    <a href={`/backgrounds/bg${kitNum}.png`} download={`lakecitywhispers-kit${kitNum}.jpg`} style={{ flex: 1, background: '#ffcc00', color: '#000', border: '2px solid #000', padding: '10px', textAlign: 'center', fontWeight: 800, textDecoration: 'none', boxShadow: '4px 4px 0 #000' }}>JPG</a>
+                  </div>
                 </div>
-              </div>
-
-              {/* Kit 2 */}
-              <div style={{ border: '3px solid #000', padding: '1rem', background: '#f0f0f0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <img src="/backgrounds/bg2.png" alt="Promo Kit 2" style={{ width: '100%', height: 'auto', border: '2px solid #000', aspectRatio: '9/16', objectFit: 'cover' }} />
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <a href="/backgrounds/bg2.png" download="lakecitywhispers-kit2.png" style={{ flex: 1, background: '#35D6E7', color: '#000', border: '2px solid #000', padding: '10px', textAlign: 'center', fontWeight: 800, textDecoration: 'none', boxShadow: '4px 4px 0 #000' }}>PNG</a>
-                  <a href="/backgrounds/bg2.png" download="lakecitywhispers-kit2.jpg" style={{ flex: 1, background: '#ffcc00', color: '#000', border: '2px solid #000', padding: '10px', textAlign: 'center', fontWeight: 800, textDecoration: 'none', boxShadow: '4px 4px 0 #000' }}>JPG</a>
-                </div>
-              </div>
-
+              ))}
             </div>
           </div>
         </div>
