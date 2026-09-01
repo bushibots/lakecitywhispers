@@ -23,6 +23,9 @@ export default function AdminDashboard() {
   const [datingProfiles, setDatingProfiles] = useState([]);
   const [swipeHistory, setSwipeHistory] = useState([]);
   const [allMedia, setAllMedia] = useState([]);
+  const [adminMessages, setAdminMessages] = useState([]);
+  const [adminMsgPage, setAdminMsgPage] = useState(1);
+  const [adminMsgTotal, setAdminMsgTotal] = useState(0);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
   
@@ -101,6 +104,15 @@ export default function AdminDashboard() {
             setAllMedia(data);
         } else {
             setAllMedia([]);
+        }
+    } else if (activeTab === 'admin_messages') {
+        const API = import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api';
+        const data = await fetch(`${API}/admin/messages?page=${adminMsgPage}`, {
+            headers: { 'Authorization': localStorage.getItem('jluwhisper_session') }
+        }).then(r => r.json());
+        if (data && data.messages) {
+            setAdminMessages(data.messages);
+            setAdminMsgTotal(data.total);
         }
     }
     setLoading(false);
@@ -368,6 +380,9 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'media' ? 'active' : ''}`} onClick={() => setActiveTab('media')} style={{ backgroundColor: activeTab === 'media' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'media' ? 'white' : 'var(--text-color)' }}>
             <Eye size={16} style={{ marginRight: '8px' }}/> Media Gallery
+        </button>
+        <button className={`pill-tab ${activeTab === 'admin_messages' ? 'active' : ''}`} onClick={() => setActiveTab('admin_messages')} style={{ backgroundColor: activeTab === 'admin_messages' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'admin_messages' ? 'white' : 'var(--text-color)' }}>
+            <Eye size={16} style={{ marginRight: '8px' }}/> Message Logs
         </button>
       </div>
 
@@ -925,15 +940,26 @@ export default function AdminDashboard() {
       
       {activeTab === 'dating' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
-              {datingProfiles.map(dp => (
+              {datingProfiles.map(dp => {
+                const imgs = (() => { try { return dp.images ? JSON.parse(dp.images) : []; } catch { return []; } })();
+                const displayImg = imgs[0] || dp.image_url;
+                return (
                   <div key={dp.user_id} className="feed-card" style={{ padding: 0, overflow: 'hidden', borderRadius: '16px' }}>
-                      <img src={dp.image_url} alt="Profile" style={{ width: '100%', height: '250px', objectFit: 'cover' }} />
+                      {displayImg ? (
+                        <img src={displayImg} alt="Profile" style={{ width: '100%', height: '220px', objectFit: 'cover' }} onError={e => e.target.style.display='none'} />
+                      ) : (
+                        <div style={{ height: '220px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Heart size={48} color="rgba(255,255,255,0.2)" />
+                        </div>
+                      )}
                       <div style={{ padding: '1rem' }}>
-                          <h3 style={{ margin: '0 0 0.5rem 0' }}>{dp.display_name} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>({dp.username})</span></h3>
-                          <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: 'var(--text-main)' }}>{dp.bio}</p>
-                          <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-                              <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', fontSize: '0.8rem' }}>{dp.gender}</span>
-                              <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', fontSize: '0.8rem' }}>{dp.age} yrs</span>
+                          <h3 style={{ margin: '0 0 0.5rem 0' }}>{dp.display_name || dp.username} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>(@{dp.username})</span></h3>
+                          <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.875rem', color: 'var(--text-muted)' }}>{dp.bio || 'No bio'}</p>
+                          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                              {dp.gender && <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,94,91,0.2)', fontSize: '0.75rem', color: '#FF5E5B' }}>{dp.gender}</span>}
+                              {dp.age && <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', fontSize: '0.75rem' }}>{dp.age} yrs</span>}
+                              {dp.block && <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(255,255,255,0.1)', fontSize: '0.75rem' }}>Block {dp.block}</span>}
+                              {imgs.length > 0 && <span style={{ padding: '2px 8px', borderRadius: '12px', background: 'rgba(53,214,231,0.15)', fontSize: '0.75rem', color: '#35D6E7' }}>{imgs.length} photo{imgs.length > 1 ? 's' : ''}</span>}
                           </div>
                           <button 
                               onClick={async () => {
@@ -942,12 +968,13 @@ export default function AdminDashboard() {
                                       setDatingProfiles(prev => prev.filter(p => p.user_id !== dp.user_id));
                                   }
                               }} 
-                              style={{ width: '100%', padding: '0.7rem', background: '#FF4757', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                              <Trash2 size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }}/> Delete Profile
+                              style={{ width: '100%', padding: '0.6rem', background: '#FF4757', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.875rem' }}>
+                              <Trash2 size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }}/> Delete Profile
                           </button>
                       </div>
                   </div>
-              ))}
+                );
+              })}
               {datingProfiles.length === 0 && (
                   <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                       No dating profiles found.
@@ -1052,6 +1079,51 @@ export default function AdminDashboard() {
                       <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No media found on the server.</div>
                   )}
               </div>
+          </div>
+      )}
+      {activeTab === 'admin_messages' && (
+          <div className="feed-card" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ margin: 0 }}>Message Logs</h2>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{adminMsgTotal} total messages</span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                  <thead>
+                      <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600 }}>Time</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600 }}>From</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600 }}>To</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600 }}>Message</th>
+                          <th style={{ padding: '0.75rem', textAlign: 'left', color: 'var(--text-muted)', fontWeight: 600 }}>Conv #</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {adminMessages.map(msg => (
+                          <tr key={msg.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(255,255,255,0.02)'} onMouseLeave={e => e.currentTarget.style.background='transparent'}>
+                              <td style={{ padding: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', fontSize: '0.8rem' }}>{new Date(msg.created_at).toLocaleString()}</td>
+                              <td style={{ padding: '0.75rem', fontWeight: 600 }}>
+                                  {msg.sender}
+                                  {msg.sender_username && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.75rem' }}> (@{msg.sender_username})</span>}
+                              </td>
+                              <td style={{ padding: '0.75rem', color: 'var(--text-main)' }}>{msg.recipient}</td>
+                              <td style={{ padding: '0.75rem', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: msg.content.startsWith('[IMAGE]') ? '#35D6E7' : 'var(--text-main)' }}>
+                                  {msg.content.startsWith('[IMAGE]') ? '📷 Image' : msg.content}
+                              </td>
+                              <td style={{ padding: '0.75rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>#{msg.conversation_id}</td>
+                          </tr>
+                      ))}
+                      {adminMessages.length === 0 && (
+                          <tr><td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No messages found.</td></tr>
+                      )}
+                  </tbody>
+              </table>
+              {adminMsgTotal > 50 && (
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                      <button disabled={adminMsgPage === 1} onClick={() => { setAdminMsgPage(p => p - 1); }} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: adminMsgPage === 1 ? 'not-allowed' : 'pointer', opacity: adminMsgPage === 1 ? 0.4 : 1 }}>← Prev</button>
+                      <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', fontSize: '0.875rem' }}>Page {adminMsgPage} of {Math.ceil(adminMsgTotal / 50)}</span>
+                      <button disabled={adminMsgPage >= Math.ceil(adminMsgTotal / 50)} onClick={() => { setAdminMsgPage(p => p + 1); }} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: adminMsgPage >= Math.ceil(adminMsgTotal / 50) ? 'not-allowed' : 'pointer', opacity: adminMsgPage >= Math.ceil(adminMsgTotal / 50) ? 0.4 : 1 }}>Next →</button>
+                  </div>
+              )}
           </div>
       )}
 

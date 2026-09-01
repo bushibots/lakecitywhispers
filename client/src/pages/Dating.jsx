@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, X, MessageCircle, Filter, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Heart, X, Filter, ChevronLeft, ChevronRight, Star, RotateCcw, ImagePlus } from 'lucide-react';
 import { apiFetch } from '../api';
 import DatingProfileModal from '../components/DatingProfileModal';
 import DatingFilterModal from '../components/DatingFilterModal';
@@ -25,8 +25,16 @@ export default function Dating() {
   const [showFilters, setShowFilters] = useState(false);
   const [filterBlock, setFilterBlock] = useState('');
   const [filterCourse, setFilterCourse] = useState('');
-  const [waitlist, setWaitlist] = useState(null);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [likesToday, setLikesToday] = useState(0);
+  const [likesLimit] = useState(25);
+  const [dailyLimitHit, setDailyLimitHit] = useState(false);
+  const [superlikeAnim, setSuperlikeAnim] = useState(false);
+  // Drag-to-swipe state
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const cardRef = useRef(null);
   const navigate = useNavigate();
 
   const hasGlimpsed = glimpseCount > 0;
@@ -109,15 +117,15 @@ export default function Dating() {
 
   const handleSwipe = async (action) => {
     if (currentIndex >= profiles.length) return;
+    if (action !== 'pass' && dailyLimitHit) return;
     const target = profiles[currentIndex];
     
     setActiveBtn(action);
     setPhotoIndex(0);
+    setDragX(0);
     
-    // Haptic feedback
-    if (navigator.vibrate) {
-        navigator.vibrate(50);
-    }
+    if (action === 'superlike') setSuperlikeAnim(true);
+    if (navigator.vibrate) navigator.vibrate(action === 'superlike' ? [50, 30, 100] : 50);
 
     setTimeout(() => {
         setCurrentIndex(prev => {
@@ -127,37 +135,69 @@ export default function Dating() {
         });
         setActiveBtn(null);
         setGlimpseCount(0);
+        setSuperlikeAnim(false);
     }, 300);
 
     const targetId = profiles[currentIndex].user_id;
     
-    // Start backend request in the background
     const fetchPromise = apiFetch('/dating/swipe', {
         method: 'POST',
         body: JSON.stringify({ target_id: targetId, action })
     });
     
-    // Wait for the animation to finish (300ms)
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Handle the background response
     fetchPromise.then(res => res.json()).then(data => {
-        if (data && data.match) {
+        if (data.error === 'daily_limit') {
+            setDailyLimitHit(true);
+            setLikesToday(data.likes_today || likesLimit);
+            return;
+        }
+        if (data.likes_today !== undefined) setLikesToday(data.likes_today);
+        if (data.match) {
             if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 200]);
-            
-            // Get the image of the person we just swiped on before the index advances
             const matchImg = optimizeImage((target.images?.length > 0 ? target.images : [target.image_url])[0] || target.image_url);
-            
             setMatchPopup({ 
                 name: "Your Match", 
                 conversation_id: data.conversation_id,
-                image: matchImg
+                image: matchImg,
+                isSuperlike: data.is_superlike
             });
         }
     }).catch(err => {
         console.error("Swipe API failed", err);
     });
   };
+
+  const handleUndo = () => {
+    if (currentIndex <= 0) return;
+    setCurrentIndex(prev => {
+        const next = prev - 1;
+        datingCache.currentIndex = next;
+        return next;
+    });
+    setGlimpseCount(0);
+    setPhotoIndex(0);
+  };
+
+  // Drag-to-swipe handlers
+  const handleDragStart = (clientX) => {
+    if (activeBtn) return;
+    setIsDragging(true);
+    dragStartX.current = clientX;
+  };
+  const handleDragMove = (clientX) => {
+    if (!isDragging) return;
+    setDragX(clientX - dragStartX.current);
+  };
+  const handleDragEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    if (dragX > 80) handleSwipe('like');
+    else if (dragX < -80) handleSwipe('pass');
+    else setDragX(0);
+  };
+
 
   const optimizeImage = (url) => {
       if (!url || !url.includes('res.cloudinary.com')) return url;
@@ -250,8 +290,33 @@ export default function Dating() {
                     </button>
                 </div>
             ) : currentProfile ? (
-                <div key={currentProfile.user_id} className="feed-card dating-card-anim" style={{ width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', borderRadius: '32px', backgroundColor: '#111', marginBottom: 0 }}>
+                <div 
+                    ref={cardRef}
+                    key={currentProfile.user_id} 
+                    className="feed-card dating-card-anim" 
+                    style={{ 
+                        width: '100%', height: '100%', position: 'relative', display: 'flex', flexDirection: 'column', 
+                        padding: 0, overflow: 'hidden', borderRadius: '32px', backgroundColor: '#111', marginBottom: 0,
+                        transform: `rotate(${dragX * 0.04}deg) translateX(${dragX}px)`,
+                        transition: isDragging ? 'none' : 'transform 0.3s ease',
+                        cursor: isDragging ? 'grabbing' : 'grab',
+                        userSelect: 'none'
+                    }}
+                    onMouseDown={(e) => handleDragStart(e.clientX)}
+                    onMouseMove={(e) => handleDragMove(e.clientX)}
+                    onMouseUp={handleDragEnd}
+                    onMouseLeave={handleDragEnd}
+                    onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+                    onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+                    onTouchEnd={handleDragEnd}
+                >
                     
+                    {/* Like/Pass overlay indicators when dragging */}
+                    {Math.abs(dragX) > 30 && (
+                        <div style={{ position: 'absolute', top: '2rem', ...(dragX > 0 ? { left: '1.5rem' } : { right: '1.5rem' }), zIndex: 10, padding: '0.4rem 1rem', borderRadius: '12px', border: `3px solid ${dragX > 0 ? '#2ecc71' : '#e74c3c'}`, transform: 'rotate(-10deg)' }}>
+                            <span style={{ fontSize: '1.8rem', fontWeight: '900', color: dragX > 0 ? '#2ecc71' : '#e74c3c', textShadow: '0 2px 4px rgba(0,0,0,0.4)' }}>{dragX > 0 ? 'LIKE' : 'NOPE'}</span>
+                        </div>
+                    )}
                     {/* Background Image Carousel */}
                     <div 
                         onContextMenu={(e) => e.preventDefault()}
@@ -383,37 +448,72 @@ export default function Dating() {
                         </div>
 
                         {/* Action Buttons Container */}
-                        <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center', pointerEvents: 'auto' }}>
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', alignItems: 'center', pointerEvents: 'auto' }}>
+                            {/* Undo */}
                             <button 
-                                onClick={() => handleSwipe('pass')}
-                                className={activeBtn === 'pass' ? 'btn-pass-anim' : ''}
+                                onClick={(e) => { e.stopPropagation(); handleUndo(); }}
+                                title="Undo last swipe"
                                 style={{ 
-                                    width: '76px', height: '76px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', 
-                                    backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s, background-color 0.2s, border-color 0.2s'
+                                    width: '56px', height: '56px', borderRadius: '50%', border: '1px solid rgba(255,200,0,0.4)', 
+                                    backgroundColor: 'rgba(255,200,0,0.1)', backdropFilter: 'blur(10px)', color: '#FFD700', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: currentIndex > 0 ? 'pointer' : 'not-allowed', opacity: currentIndex > 0 ? 1 : 0.3, transition: 'all 0.2s'
                                 }}
-                                onMouseOver={(e) => { if (!activeBtn) { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)'; e.currentTarget.style.transform = 'scale(1.05)'; } }}
-                                onMouseOut={(e) => { if (!activeBtn) { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.transform = 'scale(1)'; } }}
-                                onMouseDown={(e) => { if (!activeBtn) e.currentTarget.style.transform = 'scale(0.95)'; }}
-                                onMouseUp={(e) => { if (!activeBtn) e.currentTarget.style.transform = 'scale(1.05)'; }}
                             >
-                                <X size={36} strokeWidth={2.5} />
+                                <RotateCcw size={22} />
                             </button>
 
+                            {/* Pass */}
                             <button 
-                                onClick={() => handleSwipe('like')}
-                                className={activeBtn === 'like' ? 'btn-like-anim' : ''}
+                                onClick={(e) => { e.stopPropagation(); handleSwipe('pass'); }}
+                                className={activeBtn === 'pass' ? 'btn-pass-anim' : ''}
                                 style={{ 
-                                    width: '76px', height: '76px', borderRadius: '50%', border: 'none', 
-                                    background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s, filter 0.2s',
-                                    boxShadow: '0 10px 30px rgba(255, 94, 91, 0.5)'
+                                    width: '72px', height: '72px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.2)', 
+                                    backgroundColor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'transform 0.2s, background-color 0.2s'
                                 }}
-                                onMouseOver={(e) => { if (!activeBtn) { e.currentTarget.style.filter = 'brightness(1.1)'; e.currentTarget.style.transform = 'scale(1.05)'; } }}
-                                onMouseOut={(e) => { if (!activeBtn) { e.currentTarget.style.filter = 'brightness(1)'; e.currentTarget.style.transform = 'scale(1)'; } }}
-                                onMouseDown={(e) => { if (!activeBtn) e.currentTarget.style.transform = 'scale(0.95)'; }}
-                                onMouseUp={(e) => { if (!activeBtn) e.currentTarget.style.transform = 'scale(1.05)'; }}
                             >
-                                <Heart size={36} fill="#fff" strokeWidth={0} />
+                                <X size={32} strokeWidth={2.5} />
                             </button>
+
+                            {/* Like */}
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); handleSwipe('like'); }}
+                                className={activeBtn === 'like' ? 'btn-like-anim' : ''}
+                                disabled={dailyLimitHit}
+                                style={{ 
+                                    width: '72px', height: '72px', borderRadius: '50%', border: 'none', 
+                                    background: dailyLimitHit ? 'rgba(255,255,255,0.1)' : 'linear-gradient(135deg, #FF5E5B, #FF2A55)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: dailyLimitHit ? 'not-allowed' : 'pointer', transition: 'transform 0.2s, filter 0.2s',
+                                    boxShadow: dailyLimitHit ? 'none' : '0 8px 24px rgba(255, 94, 91, 0.5)'
+                                }}
+                            >
+                                <Heart size={32} fill="#fff" strokeWidth={0} />
+                            </button>
+
+                            {/* Super Like */}
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); handleSwipe('superlike'); }}
+                                title="Super Like"
+                                disabled={dailyLimitHit}
+                                style={{ 
+                                    width: '56px', height: '56px', borderRadius: '50%', border: '1px solid rgba(53,214,231,0.4)', 
+                                    backgroundColor: superlikeAnim ? 'rgba(53,214,231,0.4)' : 'rgba(53,214,231,0.15)', backdropFilter: 'blur(10px)', color: '#35D6E7', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: dailyLimitHit ? 'not-allowed' : 'pointer', opacity: dailyLimitHit ? 0.3 : 1, transition: 'all 0.2s',
+                                    boxShadow: superlikeAnim ? '0 0 20px rgba(53,214,231,0.5)' : 'none'
+                                }}
+                            >
+                                <Star size={22} fill={superlikeAnim ? '#35D6E7' : 'none'} />
+                            </button>
+                        </div>
+
+                        {/* Daily like counter */}
+                        <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center', pointerEvents: 'none' }}>
+                            {dailyLimitHit ? (
+                                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem' }}>No more likes today · Come back tomorrow!</span>
+                            ) : (
+                                <>
+                                    <div style={{ height: '3px', borderRadius: '3px', background: 'rgba(255,255,255,0.15)', flex: 1, maxWidth: '120px', overflow: 'hidden' }}>
+                                        <div style={{ height: '100%', borderRadius: '3px', background: 'linear-gradient(90deg, #FF5E5B, #FF2A55)', width: `${Math.min((likesToday / likesLimit) * 100, 100)}%`, transition: 'width 0.4s ease' }} />
+                                    </div>
+                                    <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.75rem' }}>{likesLimit - likesToday} left today</span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

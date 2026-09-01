@@ -186,6 +186,18 @@ with app.app_context():
     except Exception:
         db.session.rollback()
 
+    # Add read tracking columns to conversation
+    try:
+        db.session.execute(db.text('ALTER TABLE conversation ADD COLUMN user1_read_at TIMESTAMP;'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+    try:
+        db.session.execute(db.text('ALTER TABLE conversation ADD COLUMN user2_read_at TIMESTAMP;'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
 @app.route('/')
 def index():
     return jsonify({"message": "Welcome to jluWhisper API", "status": "Running"})
@@ -1314,7 +1326,18 @@ def get_conversations():
         (Message.created_at == subq.c.max_date)
     ).all()
     
-    last_msg_map = {m.conversation_id: m.content for m in latest_messages}
+    last_msg_map = {m.conversation_id: m for m in latest_messages}
+    
+    # Count unread messages per conversation (messages by other user, after last read)
+    from sqlalchemy import case as sa_case
+    unread_counts = {}
+    for c in convs:
+        other_id = c.user2_id if c.user1_id == user.id else c.user1_id
+        last_read = c.user1_read_at if c.user1_id == user.id else c.user2_read_at
+        q = Message.query.filter_by(conversation_id=c.id).filter(Message.sender_id == other_id)
+        if last_read:
+            q = q.filter(Message.created_at > last_read)
+        unread_counts[c.id] = q.count()
     
     active = []
     requests = []
@@ -1326,15 +1349,19 @@ def get_conversations():
             continue
             
         other_name = user_map.get(other_user_id, "Unknown")
-        last_msg_text = last_msg_map.get(c.id, "")
+        last_msg_obj = last_msg_map.get(c.id)
+        last_msg_text = last_msg_obj.content if last_msg_obj else ""
+        last_msg_time = (last_msg_obj.created_at.isoformat() + 'Z') if last_msg_obj and last_msg_obj.created_at else None
         
         conv_data = {
             "id": c.id,
             "other_user": other_name,
             "status": c.status,
             "last_message": last_msg_text,
+            "last_message_at": last_msg_time,
             "updated_at": c.updated_at.isoformat() + 'Z',
-            "is_requester": c.user1_id == user.id
+            "is_requester": c.user1_id == user.id,
+            "unread_count": unread_counts.get(c.id, 0)
         }
         
         if c.status == 'accepted':
@@ -1410,6 +1437,14 @@ def get_messages(conv_id):
         
     other_user_id = conv.user2_id if conv.user1_id == user.id else conv.user1_id
     other_user = db.session.get(User, other_user_id)
+    
+    # Mark conversation as read for this user
+    now_utc = datetime.now(timezone.utc)
+    if conv.user1_id == user.id:
+        conv.user1_read_at = now_utc
+    else:
+        conv.user2_read_at = now_utc
+    db.session.commit()
         
     return jsonify({
         "status": conv.status,
@@ -2352,10 +2387,22 @@ def dating_swipe():
     if not user: return jsonify({"error": "Unauthorized"}), 401
     
     target_id = request.json.get('target_id')
-    action = request.json.get('action') # 'like' or 'pass'
+    action = request.json.get('action') # 'like', 'pass', or 'superlike'
     
-    if not target_id or action not in ['like', 'pass']:
+    if not target_id or action not in ['like', 'pass', 'superlike']:
         return jsonify({"error": "Invalid payload"}), 400
+    
+    # Daily like limit check (10 likes/superlikes per day)
+    if action in ['like', 'superlike']:
+        from datetime import date
+        today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
+        likes_today = SwipeInteraction.query.filter(
+            SwipeInteraction.swiper_id == user.id,
+            SwipeInteraction.action.in_(['like', 'superlike']),
+            SwipeInteraction.created_at >= today_start
+        ).count()
+        if likes_today >= 25:  # 25/day limit
+            return jsonify({"error": "daily_limit", "message": "You've used all your likes for today. Come back tomorrow!", "likes_today": likes_today, "likes_limit": 25}), 429
     # Record swipe
     from datetime import datetime
     interaction = SwipeInteraction.query.filter_by(swiper_id=user.id, target_id=target_id).first()
@@ -2368,9 +2415,13 @@ def dating_swipe():
     
     match_made = False
     
-    if action == 'like':
-        # Check if they liked me
-        mutual = SwipeInteraction.query.filter_by(swiper_id=target_id, target_id=user.id, action='like').first()
+    if action in ['like', 'superlike']:
+        # Check if they liked me back (any like/superlike from them)
+        mutual = SwipeInteraction.query.filter(
+            SwipeInteraction.swiper_id == target_id,
+            SwipeInteraction.target_id == user.id,
+            SwipeInteraction.action.in_(['like', 'superlike'])
+        ).first()
         if mutual:
             match_made = True
             # Create a conversation
@@ -2428,14 +2479,63 @@ def dating_swipe():
                 existing = conv
     db.session.commit()
     
+    # Count today's likes to return to frontend
+    from datetime import date
+    today_start = datetime.combine(date.today(), datetime.min.time()).replace(tzinfo=timezone.utc)
+    likes_today = SwipeInteraction.query.filter(
+        SwipeInteraction.swiper_id == user.id,
+        SwipeInteraction.action.in_(['like', 'superlike']),
+        SwipeInteraction.created_at >= today_start
+    ).count()
+    
     return jsonify({
         "match": match_made,
-        "conversation_id": existing.id if match_made else None
+        "conversation_id": existing.id if match_made else None,
+        "is_superlike": action == 'superlike',
+        "likes_today": likes_today,
+        "likes_limit": 25
     })
 
 @app.route('/api/health')
 def health():
     return jsonify({"status": "ok"})
+
+@app.route('/api/admin/messages', methods=['GET'])
+def admin_all_messages():
+    session_token = request.headers.get('Authorization')
+    user = User.query.filter_by(session_token=session_token).first()
+    if not user or user.role != 'admin':
+        return jsonify({"error": "Forbidden"}), 403
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    
+    messages = db.session.query(Message, User, Conversation).join(
+        User, User.id == Message.sender_id
+    ).join(
+        Conversation, Conversation.id == Message.conversation_id
+    ).order_by(Message.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
+    result = []
+    for msg, sender, conv in messages.items:
+        other_id = conv.user2_id if conv.user1_id == sender.id else conv.user1_id
+        other_user = db.session.get(User, other_id)
+        result.append({
+            "id": msg.id,
+            "conversation_id": conv.id,
+            "sender": sender.display_name,
+            "sender_username": sender.username,
+            "recipient": other_user.display_name if other_user else "Unknown",
+            "content": msg.content,
+            "created_at": msg.created_at.isoformat() + 'Z'
+        })
+    
+    return jsonify({
+        "messages": result,
+        "total": messages.total,
+        "page": page,
+        "pages": messages.pages
+    })
 
 
 

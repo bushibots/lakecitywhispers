@@ -84,6 +84,8 @@ class Conversation(db.Model):
     status = db.Column(db.String(20), default='pending') # pending, accepted, rejected
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    user1_read_at = db.Column(db.DateTime, nullable=True)  # when user1 last read
+    user2_read_at = db.Column(db.DateTime, nullable=True)  # when user2 last read
     
     messages = db.relationship('Message', backref='conversation', lazy=True, cascade="all, delete-orphan")
 

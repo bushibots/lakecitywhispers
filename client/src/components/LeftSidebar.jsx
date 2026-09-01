@@ -9,10 +9,20 @@ export default function LeftSidebar() {
   const currentPath = location.pathname;
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   const [isDarkMode, setIsDarkMode] = useState(
     localStorage.getItem('theme') === 'dark' || !localStorage.getItem('theme')
   );
+
+  // Listen for unread messages from Messages page
+  useEffect(() => {
+    const handler = (e) => setUnreadMessages(e.detail || 0);
+    window.addEventListener('unread_changed', handler);
+    // init from window global if Messages was already mounted
+    setUnreadMessages(window.__messagesUnread || 0);
+    return () => window.removeEventListener('unread_changed', handler);
+  }, []);
 
   const toggleTheme = () => {
     const isDark = document.body.classList.toggle('dark-mode');
@@ -108,10 +118,14 @@ export default function LeftSidebar() {
         {navItems.map(item => {
           const Icon = item.icon;
           const isActive = currentPath === item.path || (currentPath === '/' && item.path === '/feed');
+          const showBadge = item.path === '/messages' && unreadMessages > 0;
           return (
-            <Link key={item.path} to={item.path} className={`nav-link ${isActive ? 'active' : ''}`}>
+            <Link key={item.path} to={item.path} className={`nav-link ${isActive ? 'active' : ''}`} style={{ position: 'relative' }}>
               <Icon size={24} />
               <span className="nav-label">{item.label}</span>
+              {showBadge && (
+                <span style={{ position: 'absolute', top: '6px', left: '28px', width: '9px', height: '9px', borderRadius: '50%', background: '#FF4757', border: '2px solid var(--bg-color)', display: 'block' }} />
+              )}
             </Link>
           );
         })}
