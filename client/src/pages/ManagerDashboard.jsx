@@ -17,6 +17,7 @@ export default function ManagerDashboard() {
   const [forceMatch1, setForceMatch1] = useState('');
   const [forceMatch2, setForceMatch2] = useState('');
   const [forcing, setForcing] = useState(false);
+  const [topCouples, setTopCouples] = useState([]);
 
   const [loading, setLoading] = useState(true);
 
@@ -82,18 +83,67 @@ export default function ManagerDashboard() {
       }
   };
 
-  const handleForceMatch = async () => {
-      if (!forceMatch1 || !forceMatch2) return;
+  const handleForceMatch = async (u1 = forceMatch1, u2 = forceMatch2) => {
+      if (!u1 || !u2) return;
       setForcing(true);
-      const res = await forceAdminMatch(forceMatch1, forceMatch2);
+      const res = await forceAdminMatch(u1, u2);
       if (res && res.success) {
-          alert('Force match successful!');
-          setForceMatch1('');
-          setForceMatch2('');
+          alert(`Force match successful for ${u1} and ${u2}!`);
+          if (u1 === forceMatch1) setForceMatch1('');
+          if (u2 === forceMatch2) setForceMatch2('');
       } else {
           alert('Force match failed: ' + (res?.error || 'Unknown error'));
       }
       setForcing(false);
+  };
+
+  const runVibeScanner = () => {
+      let couples = [];
+      const profiles = datingProfiles.filter(p => p.is_active);
+      
+      for (let i = 0; i < profiles.length; i++) {
+          for (let j = i + 1; j < profiles.length; j++) {
+              const p1 = profiles[i];
+              const p2 = profiles[j];
+              
+              // Basic orientation check
+              const p1LikesP2 = p1.looking_for === 'everyone' || p1.looking_for === p2.gender;
+              const p2LikesP1 = p2.looking_for === 'everyone' || p2.looking_for === p1.gender;
+              
+              if (p1LikesP2 && p2LikesP1) {
+                  let score = 0;
+                  let shared = 0;
+                  
+                  if (p1.interests && p2.interests) {
+                      p1.interests.forEach(interest => {
+                          if (p2.interests.includes(interest)) { score += 10; shared++; }
+                      });
+                  }
+                  if (p1.love_languages && p2.love_languages) {
+                      p1.love_languages.forEach(ll => {
+                          if (p2.love_languages.includes(ll)) { score += 15; shared++; }
+                      });
+                  }
+                  if (p1.green_flags && p2.green_flags) {
+                      p1.green_flags.forEach(gf => {
+                          if (p2.green_flags.includes(gf)) { score += 12; shared++; }
+                      });
+                  }
+                  if (p1.block === p2.block && p1.block) score += 15;
+                  if (p1.course === p2.course && p1.course) score += 15;
+                  
+                  if (score < 50 && shared === 0) score = 55 + ((p1.user_id + p2.user_id) % 12);
+                  if (score > 99) score = 99;
+
+                  couples.push({
+                      p1, p2, score
+                  });
+              }
+          }
+      }
+      
+      couples.sort((a, b) => b.score - a.score);
+      setTopCouples(couples.slice(0, 5)); // Top 5
   };
 
   if (loading) return <div className="page-content">Loading dashboard...</div>;
@@ -229,12 +279,47 @@ export default function ManagerDashboard() {
                         />
                         <button 
                             className="btn-glow"
-                            onClick={handleForceMatch}
+                            onClick={() => handleForceMatch(forceMatch1, forceMatch2)}
                             disabled={forcing || !forceMatch1 || !forceMatch2}
                         >
                             {forcing ? 'Matching...' : 'Force Match'}
                         </button>
                     </div>
+                </div>
+
+                {/* Vibe Scanner */}
+                <div className="widget" style={{ marginBottom: '2rem', border: '3px solid #000', boxShadow: '8px 8px 0px #F2C94C' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Search size={20} color="#F2C94C" /> Vibe Scanner (Top Couples)
+                        </h3>
+                        <button className="btn-secondary" onClick={runVibeScanner} style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
+                            Run Algorithm
+                        </button>
+                    </div>
+                    {topCouples.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {topCouples.map((couple, idx) => (
+                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-input)', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <div style={{ fontWeight: 'bold' }}>@{couple.p1.username}</div>
+                                        <Heart size={14} color="#ff3366" fill="#ff3366" />
+                                        <div style={{ fontWeight: 'bold' }}>@{couple.p2.username}</div>
+                                        <span style={{ marginLeft: '1rem', color: '#2ecc71', fontWeight: 'bold' }}>{couple.score}% Match</span>
+                                    </div>
+                                    <button 
+                                        className="btn-glow" 
+                                        onClick={() => handleForceMatch(couple.p1.username, couple.p2.username)}
+                                        style={{ padding: '0.3rem 0.75rem', fontSize: '0.8rem', background: '#ff3366', color: '#fff' }}
+                                    >
+                                        Force Match
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>Click "Run Algorithm" to find the highest compatibility pairs among all active users.</p>
+                    )}
                 </div>
 
                 {/* Profiles Grid */}
