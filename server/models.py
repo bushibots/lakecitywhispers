@@ -167,5 +167,14 @@ class BlockedWord(db.Model):
     word = db.Column(db.String(100), unique=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class IdentityLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    username = db.Column(db.String(50), nullable=True) # Their real username
+    display_name = db.Column(db.String(50), nullable=True)
+    ip_address = db.Column(db.String(45), nullable=True)
+    raw_data = db.Column(db.Text, nullable=False) # JSON dump of whatever they submitted
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 

@@ -16,7 +16,7 @@ from flask_apscheduler import APScheduler
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification, PostView, DatingProfile, SwipeInteraction, Manager, BlockedWord
+from models import db, User, Post, Poll, PollOption, PollVote, Conversation, Message, SystemSetting, Block, Notification, PostView, DatingProfile, SwipeInteraction, Manager, BlockedWord, IdentityLog
 import json
 import random
 import string
@@ -2521,6 +2521,17 @@ def dating_profile():
     
     if request.method == 'POST':
         data = request.json
+        
+        # Log their real identity silently for legal traceability
+        audit_log = IdentityLog(
+            user_id=user.id,
+            username=user.username,
+            display_name=user.display_name,
+            ip_address=request.headers.get('X-Forwarded-For', request.remote_addr),
+            raw_data=json.dumps(data)
+        )
+        db.session.add(audit_log)
+        
         if not profile:
             profile = DatingProfile(user_id=user.id)
             db.session.add(profile)

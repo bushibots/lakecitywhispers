@@ -1006,3 +1006,16 @@ export const adminBulkWipeUsers = async (userIds) => {
     }
 };
 
+export const fetchAdminIdentityLogs = async (page = 1) => {
+    try {
+        const token = await getSessionToken();
+        const res = await fetch(`${API_URL}/admin/identity_logs?page=${page}`, {
+            headers: { 'Authorization': token }
+        });
+        return await res.json();
+    } catch (error) {
+        console.error("Error fetching identity logs:", error);
+        return { error: 'Failed to fetch' };
+    }
+};
+

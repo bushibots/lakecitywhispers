@@ -4,7 +4,7 @@ import {
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser, adminBulkWipeUsers,
-    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch
+    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch, fetchAdminIdentityLogs
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
 
@@ -30,6 +30,7 @@ export default function AdminDashboard() {
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
   const [lookupIp, setLookupIp] = useState('');
+  const [identityLogs, setIdentityLogs] = useState([]);
   
   // Force Match State
   const [matchUser1, setMatchUser1] = useState('');
@@ -115,6 +116,11 @@ export default function AdminDashboard() {
         if (data && data.messages) {
             setAdminMessages(data.messages);
             setAdminMsgTotal(data.total);
+        }
+    } else if (activeTab === 'identity_logs') {
+        const data = await fetchAdminIdentityLogs(1);
+        if (data && data.logs) {
+            setIdentityLogs(data.logs);
         }
     }
     setLoading(false);
@@ -385,6 +391,9 @@ export default function AdminDashboard() {
         </button>
         <button className={`pill-tab ${activeTab === 'admin_messages' ? 'active' : ''}`} onClick={() => setActiveTab('admin_messages')} style={{ backgroundColor: activeTab === 'admin_messages' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'admin_messages' ? 'white' : 'var(--text-color)' }}>
             <Eye size={16} style={{ marginRight: '8px' }}/> Message Logs
+        </button>
+        <button className={`pill-tab ${activeTab === 'identity_logs' ? 'active' : ''}`} onClick={() => setActiveTab('identity_logs')} style={{ backgroundColor: activeTab === 'identity_logs' ? 'var(--accent-color)' : 'transparent', color: activeTab === 'identity_logs' ? 'white' : 'var(--text-color)' }}>
+            <Shield size={16} style={{ marginRight: '8px' }}/> Identity Logs
         </button>
       </div>
 
@@ -1264,6 +1273,58 @@ export default function AdminDashboard() {
                       <button disabled={adminMsgPage >= Math.ceil(adminMsgTotal / 50)} onClick={() => { setAdminMsgPage(p => p + 1); }} style={{ padding: '0.5rem 1.5rem', borderRadius: '8px', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-main)', cursor: adminMsgPage >= Math.ceil(adminMsgTotal / 50) ? 'not-allowed' : 'pointer', opacity: adminMsgPage >= Math.ceil(adminMsgTotal / 50) ? 0.4 : 1 }}>Next →</button>
                   </div>
               )}
+          </div>
+      )}
+
+      {activeTab === 'identity_logs' && (
+          <div className="feed-card" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                  <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}><Shield size={24} color="var(--accent-color)"/> Legal Identity Audit Logs</h2>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>{identityLogs.length} recent logs</span>
+              </div>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                  This is a strictly confidential, append-only log of real identities tied to profile creations and updates. It records the exact JSON payload submitted alongside their IP address for legal traceability.
+              </p>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {identityLogs.length === 0 ? (
+                      <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No identity logs found.</div>
+                  ) : (
+                      identityLogs.map(log => (
+                          <div key={log.id} style={{ backgroundColor: 'var(--bg-elevated)', borderRadius: '12px', border: '1px solid rgba(255, 71, 87, 0.3)', overflow: 'hidden' }}>
+                              <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(255, 71, 87, 0.05)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                                  <div>
+                                      <strong style={{ fontSize: '1.1rem', color: '#ff4757' }}>User #{log.user_id} - @{log.username}</strong>
+                                      <div style={{ fontSize: '0.9rem', color: 'var(--text-main)', marginTop: '4px' }}>Display Name: {log.display_name}</div>
+                                  </div>
+                                  <div style={{ textAlign: 'right' }}>
+                                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{new Date(log.created_at).toLocaleString()}</div>
+                                      {log.ip_address && (
+                                          <button 
+                                              style={{ marginTop: '4px', padding: '2px 8px', backgroundColor: 'rgba(53, 214, 231, 0.15)', color: 'var(--accent-color)', borderRadius: '4px', border: '1px solid rgba(53, 214, 231, 0.3)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                                              onClick={() => { setLookupIp(log.ip_address); setActiveTab('settings'); }}
+                                          >
+                                              <Search size={10}/> IP: {log.ip_address}
+                                          </button>
+                                      )}
+                                  </div>
+                              </div>
+                              <div style={{ padding: '1rem', backgroundColor: '#0d1117' }}>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Raw Submitted Payload</div>
+                                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: '0.85rem', color: '#58a6ff', fontFamily: 'monospace' }}>
+                                      {(() => {
+                                          try {
+                                              return JSON.stringify(JSON.parse(log.raw_data), null, 2);
+                                          } catch {
+                                              return log.raw_data;
+                                          }
+                                      })()}
+                                  </pre>
+                              </div>
+                          </div>
+                      ))
+                  )}
+              </div>
           </div>
       )}
 
