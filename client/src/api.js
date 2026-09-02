@@ -407,22 +407,6 @@ export const adminDeleteDatingProfile = async (userId) => {
     }
 };
 
-export const fetchAdminDatingProfiles = async () => {
-    try {
-        const token = await getSessionToken();
-        const res = await fetch(`${API_URL}/admin/dating_profiles`, {
-            headers: {
-                'Authorization': token
-            }
-        });
-        const data = await res.json();
-        return data;
-    } catch (error) {
-        console.error("Error fetching dating profiles:", error);
-        return { error: 'Failed to fetch' };
-    }
-};
-
 export const adminToggleDatingProfile = async (userId) => {
     try {
         const token = await getSessionToken();
