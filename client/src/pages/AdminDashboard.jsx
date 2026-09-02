@@ -4,7 +4,7 @@ import {
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser, adminBulkWipeUsers,
-    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch, fetchAdminIdentityLogs
+    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch, fetchAdminIdentityLogs, adminMakeManager
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
 
@@ -43,6 +43,12 @@ export default function AdminDashboard() {
   // Bot spawning state
   const [botSpawnCount, setBotSpawnCount] = useState(1);
   const [botSpawnTopic, setBotSpawnTopic] = useState('');
+  
+  // Make Manager State
+  const [managerUsername, setManagerUsername] = useState('');
+  const [managerHandle, setManagerHandle] = useState('Campus');
+
+  const [users, setUsers] = useState([]);
   const [isSpawning, setIsSpawning] = useState(false);
   const [sysSettings, setSysSettings] = useState({ 
     lockdown: false, maintenance: false, bots_enabled: false, media_enabled: true,
@@ -244,6 +250,17 @@ export default function AdminDashboard() {
     }
   };
   
+  const handleMakeManager = async () => {
+      if (!managerUsername.trim() || !managerHandle.trim()) return alert("Both username and handle are required!");
+      const res = await adminMakeManager(managerUsername.trim(), managerHandle.trim());
+      if (res && res.message) {
+          alert(res.message);
+          setManagerUsername('');
+      } else {
+          alert(res.error || "Failed to make manager");
+      }
+  };
+
   const handleWipeUser = async (username) => {
     const confirm1 = window.confirm(`Are you absolutely sure you want to WIPE user ${username}? This cannot be undone and will delete all their content forever.`);
     if (confirm1) {
@@ -514,6 +531,39 @@ export default function AdminDashboard() {
 
                   <button className="btn-glow" onClick={handleSpawnBots} disabled={isSpawning} style={{ backgroundColor: 'var(--accent-color)' }}>
                       {isSpawning ? 'Spawning AI Activity...' : 'Spawn AI Activity Now'}
+                  </button>
+              </div>
+          </div>
+      )}
+
+      {activeTab === 'users' && userTab === 'overview' && (
+          <div className="feed-card" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+              <h2 style={{ marginBottom: '1.5rem', color: '#F2C94C' }}>Assign Manager Role</h2>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'end' }}>
+                  <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Exact Username</label>
+                      <input 
+                          type="text" 
+                          className="composer-textarea border-input" 
+                          style={{ width: '100%', padding: '0.5rem' }}
+                          placeholder="e.g. jondoe22"
+                          value={managerUsername}
+                          onChange={e => setManagerUsername(e.target.value)}
+                      />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem' }}>Manager Handle</label>
+                      <input 
+                          type="text" 
+                          className="composer-textarea border-input" 
+                          style={{ width: '100%', padding: '0.5rem' }}
+                          placeholder="e.g. Campus"
+                          value={managerHandle}
+                          onChange={e => setManagerHandle(e.target.value)}
+                      />
+                  </div>
+                  <button className="btn-glow" onClick={handleMakeManager} style={{ backgroundColor: '#F2C94C', color: '#000', padding: '0.6rem 1.2rem', height: 'fit-content' }}>
+                      Assign Role
                   </button>
               </div>
           </div>

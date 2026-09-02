@@ -1021,3 +1021,4 @@ export const fetchAdminIdentityLogs = async (page = 1) => {
     }
 };
 
+export const adminMakeManager = async (username, handle) => { const token = await getSessionToken(); try { const res = await fetch(API_URL + '/admin/managers', { method: 'POST', headers: { 'Authorization': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ username, handle }) }); return await res.json(); } catch(e) { return {error: 'Network Error'}; } };

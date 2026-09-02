@@ -746,6 +746,18 @@ def get_managers_me():
     manager_roles = Manager.query.filter_by(user_id=user.id).all()
     handles = [role.handle for role in manager_roles]
     
+    if user.role == 'admin':
+        # Admin can access all existing manager handles or use default ones
+        all_managers = Manager.query.with_entities(Manager.handle).distinct().all()
+        admin_handles = ['Admin', 'Campus', 'Hostel', 'Academic']
+        for m in all_managers:
+            if m[0] not in admin_handles:
+                admin_handles.append(m[0])
+        for h in handles:
+            if h not in admin_handles:
+                admin_handles.append(h)
+        handles = admin_handles
+    
     return jsonify({"handles": handles})
 
 @app.route('/api/users/<username>', methods=['GET'])
@@ -1998,6 +2010,28 @@ def admin_clear_cache():
             pass
     SIMPLE_CACHE.clear()
     return jsonify({"message": "Cache completely cleared!"})
+
+@app.route('/api/admin/managers', methods=['POST'])
+@admin_required
+def admin_make_manager():
+    data = request.json
+    username = data.get('username')
+    handle = data.get('handle')
+    if not username or not handle:
+        return jsonify({"error": "Username and handle required"}), 400
+        
+    target_user = User.query.filter_by(username=username).first()
+    if not target_user:
+        return jsonify({"error": "User not found"}), 404
+        
+    existing = Manager.query.filter_by(user_id=target_user.id, handle=handle).first()
+    if existing:
+        return jsonify({"error": "User is already a manager for this handle"}), 400
+        
+    new_manager = Manager(user_id=target_user.id, handle=handle)
+    db.session.add(new_manager)
+    db.session.commit()
+    return jsonify({"message": f"{username} is now a Manager for @{handle}!"})
 
 
 
