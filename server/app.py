@@ -8,7 +8,7 @@ import string
 import requests
 from io import BytesIO
 from datetime import datetime, timedelta, timezone
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_migrate import Migrate
@@ -69,7 +69,46 @@ import cloudinary.uploader
 
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 cloudinary_enabled = CLOUDINARY_URL is not None
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16 MB max limit
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max upload size
+
+# --- Ponytail Minimal Caching ---
+# A globally shared dictionary that caches API responses in memory.
+# It is completely cleared on ANY data write (POST, PUT, DELETE),
+# providing bulletproof "clear-on-write" consistency with zero Redis headaches.
+SIMPLE_CACHE = {}
+
+@app.before_request
+def check_cache():
+    if request.method == 'GET' and request.path.startswith('/api/'):
+        # Do not cache auth or admin endpoints to prevent session leaks
+        if '/api/me' in request.path or '/api/admin' in request.path:
+            return
+            
+        cache_key = f"{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
+        if cache_key in SIMPLE_CACHE:
+            cached_data = SIMPLE_CACHE[cache_key]
+            response = make_response(cached_data)
+            response.headers['Content-Type'] = 'application/json'
+            response.headers['X-Cache'] = 'HIT'
+            return response
+
+@app.after_request
+def update_cache(response):
+    # Store successful GET responses in cache
+    if request.method == 'GET' and request.path.startswith('/api/') and response.status_code == 200:
+        if '/api/me' not in request.path and '/api/admin' not in request.path:
+            cache_key = f"{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
+            if cache_key not in SIMPLE_CACHE:
+                SIMPLE_CACHE[cache_key] = response.get_data()
+            response.headers['X-Cache'] = 'MISS'
+            # Tell browser to cache for 15 seconds locally to prevent refresh spam
+            response.headers["Cache-Control"] = "private, max-age=15"
+            
+    # Clear entire cache on ANY state-changing action
+    if request.method in ['POST', 'PUT', 'DELETE']:
+        SIMPLE_CACHE.clear()
+        
+    return response
 
 # Initialize extensions
 db.init_app(app)
