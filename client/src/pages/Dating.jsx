@@ -583,12 +583,14 @@ export default function Dating() {
                     </div>
                 </div>
             ) : (
-                <div style={{ textAlign: 'center', padding: '3rem' }}>
-                    <div className="pulsing-heart-main" style={{ margin: '0 auto 1.5rem auto', opacity: 0.5 }}>
-                        <Heart size={64} fill="var(--text-muted)" color="var(--text-muted)" />
+                <div style={{ textAlign: 'center', padding: '3rem', margin: '2rem auto', maxWidth: '400px', background: '#ffcc00', border: '8px solid #000', boxShadow: '12px 12px 0px #ff3366', color: '#000' }}>
+                    <div className="pulsing-heart-main" style={{ margin: '0 auto 1.5rem auto' }}>
+                        <Heart size={64} fill="#000" color="#000" />
                     </div>
-                    <h3>You're all caught up!</h3>
-                    <p style={{ color: 'var(--text-muted)' }}>There are no more profiles to view right now. Check back later!</p>
+                    <h3 style={{ fontSize: '2rem', fontWeight: 900, textTransform: 'uppercase', marginBottom: '1rem', borderBottom: '4px solid #000', paddingBottom: '0.5rem' }}>NO PROFILES LEFT</h3>
+                    <p style={{ fontWeight: 700, fontSize: '1.1rem' }}>
+                        That's everyone for now! Check back later or try clearing your block filters to discover more people.
+                    </p>
                 </div>
             )}
         </div>
