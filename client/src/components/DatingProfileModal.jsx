@@ -5,7 +5,7 @@ import { CAMPUS_STRUCTURE } from '../campus_structure';
 
 const INTEREST_OPTIONS = ["Late Night Snacking", "Library Grind", "Gaming", "Photography", "Cafe Hopping", "Anime", "Gym Rat", "Partying", "Music Festivals", "Art & Design", "Sports", "Thrifting"];
 const GREEN_FLAG_OPTIONS = ["Replies fast", "Loves animals", "Has a car", "Cooks", "Knows good spots", "Good listener", "Punctual", "Spontaneous"];
-const RED_FLAG_OPTIONS = ["8 AM classes", "Uses TikTok too much", "Ghoster", "Never on time", "Picky eater", "Hates coffee", "Dry texter", "Too loud"];
+const RED_FLAG_OPTIONS = ["8 AM classes", "Uses Instagram Reels too much", "Ghoster", "Never on time", "Picky eater", "Hates coffee", "Dry texter", "Too loud"];
 const LOVE_LANGUAGE_OPTIONS = ["Physical Touch", "Quality Time", "Words of Affirmation", "Acts of Service", "Receiving Gifts"];
 
 export default function DatingProfileModal({ isOpen, onClose, onSaved, initialProfile }) {
