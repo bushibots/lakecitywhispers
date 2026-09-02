@@ -3,7 +3,8 @@ from models import db, User, DatingProfile
 from ai import generate_creative_identity
 import random
 import json
-from datetime import datetime
+from werkzeug.security import generate_password_hash
+from datetime import datetime, timezone
 
 def seed_dating_profiles():
     with app.app_context():
@@ -18,9 +19,9 @@ def seed_dating_profiles():
                 display_name=display_name,
                 avatar=display_name[0] if display_name else 'B',
                 is_registered=True,
-                last_active=datetime.utcnow()
+                last_active=datetime.now(timezone.utc),
+                password_hash=generate_password_hash('password123')
             )
-            user.set_password('password123')
             db.session.add(user)
             bot_users.append(user)
         
