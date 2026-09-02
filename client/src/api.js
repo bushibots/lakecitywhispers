@@ -423,25 +423,6 @@ export const fetchAdminDatingProfiles = async () => {
     }
 };
 
-export const forceAdminMatch = async (username1, username2) => {
-    try {
-        const token = await getSessionToken();
-        const res = await fetch(`${API_URL}/admin/dating/force_match`, {
-            method: 'POST',
-            headers: {
-                'Authorization': token,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ username1, username2 })
-        });
-        const data = await res.json();
-        return data;
-    } catch (error) {
-        console.error("Error forcing match:", error);
-        return { error: 'Failed to force match' };
-    }
-};
-
 export const adminToggleDatingProfile = async (userId) => {
     try {
         const token = await getSessionToken();
