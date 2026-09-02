@@ -4,7 +4,7 @@ import {
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser, adminBulkWipeUsers,
-    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch, fetchAdminIdentityLogs, adminMakeManager
+    fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch, fetchAdminIdentityLogs, adminMakeManager, apiFetch
 } from '../api';
 import IPLookupWidget from '../components/IPLookupWidget';
 
@@ -24,6 +24,10 @@ export default function AdminDashboard() {
   const [datingProfiles, setDatingProfiles] = useState([]);
   const [swipeHistory, setSwipeHistory] = useState([]);
   const [allMedia, setAllMedia] = useState([]);
+  
+  const [autopilotEnabled, setAutopilotEnabled] = useState(false);
+  const [autopilotTime, setAutopilotTime] = useState('20:00');
+  const [autopilotSaving, setAutopilotSaving] = useState(false);
   const [adminMessages, setAdminMessages] = useState([]);
   const [adminMsgPage, setAdminMsgPage] = useState(1);
   const [adminMsgTotal, setAdminMsgTotal] = useState(0);
@@ -100,6 +104,14 @@ export default function AdminDashboard() {
         } else {
             setDatingProfiles([]);
         }
+        
+        try {
+            const res = await apiFetch('/admin/dating/settings');
+            if (res && !res.error) {
+                setAutopilotEnabled(res.ai_autopilot_enabled || false);
+                setAutopilotTime(res.ai_autopilot_time || '20:00');
+            }
+        } catch (err) { console.error(err); }
     } else if (activeTab === 'swipes') {
         const data = await fetchAdminSwipes();
         if (Array.isArray(data)) {
@@ -293,6 +305,24 @@ export default function AdminDashboard() {
           setMatchStatus(res.error || 'Failed to force match.');
       }
       setTimeout(() => setMatchStatus(''), 4000);
+  };
+
+  const handleSaveAutopilot = async () => {
+      setAutopilotSaving(true);
+      try {
+          const res = await apiFetch('/admin/dating/settings', {
+              method: 'POST',
+              body: JSON.stringify({ ai_autopilot_enabled: autopilotEnabled, ai_autopilot_time: autopilotTime })
+          });
+          if (res && res.success) {
+              alert('Autopilot settings saved!');
+          } else {
+              alert('Failed to save settings.');
+          }
+      } catch (err) {
+          alert('Network error');
+      }
+      setAutopilotSaving(false);
   };
 
   const handleLogoUpload = async (e) => {
@@ -1163,7 +1193,50 @@ export default function AdminDashboard() {
       )}
       
       {activeTab === 'dating' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
+          <div>
+              {/* AI Autopilot Widget */}
+              <div className="widget" style={{ marginBottom: '2rem', border: '3px solid #000', boxShadow: '8px 8px 0px #FF5E5B', background: 'var(--bg-card)' }}>
+                  <h3 style={{ marginBottom: '1rem', color: '#FF5E5B', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                      ⚡ AI Match Autopilot
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                      When enabled, the AI will automatically find the top couples, force match them, and post a hype announcement at the specified time every day.
+                  </p>
+                  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 'bold' }}>
+                          <input 
+                              type="checkbox" 
+                              checked={autopilotEnabled}
+                              onChange={(e) => setAutopilotEnabled(e.target.checked)}
+                              style={{ width: '24px', height: '24px', accentColor: '#FF5E5B', cursor: 'pointer' }}
+                          />
+                          Enable Autopilot
+                      </label>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <label style={{ fontWeight: 'bold' }}>Daily Drop Time:</label>
+                          <input 
+                              type="time"
+                              value={autopilotTime}
+                              onChange={(e) => setAutopilotTime(e.target.value)}
+                              className="border-input"
+                              style={{ padding: '0.5rem', borderRadius: '8px', border: '2px solid #000', background: '#fff', color: '#000', fontWeight: 'bold' }}
+                          />
+                      </div>
+                      
+                      <button 
+                          className="btn-glow"
+                          onClick={handleSaveAutopilot}
+                          disabled={autopilotSaving}
+                          style={{ background: '#FF5E5B', color: '#fff', padding: '0.6rem 1.5rem' }}
+                      >
+                          {autopilotSaving ? 'Saving...' : 'Save Settings'}
+                      </button>
+                  </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
               {datingProfiles.map(dp => {
                 const imgs = (() => { try { return dp.images ? JSON.parse(dp.images) : []; } catch { return []; } })();
                 const displayImg = imgs[0] || dp.image_url;
@@ -1204,6 +1277,7 @@ export default function AdminDashboard() {
                       No dating profiles found.
                   </div>
               )}
+          </div>
           </div>
       )}
 
