@@ -465,11 +465,21 @@ export default function Dating() {
                                         
                                         const myInterests = profile.interests || [];
                                         const theirInterests = currentProfile.interests || [];
-                                        const shared = myInterests.filter(i => theirInterests.includes(i)).length;
-                                        vibeScore += shared * 10;
+                                        const sharedInterests = myInterests.filter(i => theirInterests.includes(i)).length;
+                                        vibeScore += sharedInterests * 10;
+
+                                        const myLove = profile.love_languages || [];
+                                        const theirLove = currentProfile.love_languages || [];
+                                        const sharedLove = myLove.filter(i => theirLove.includes(i)).length;
+                                        vibeScore += sharedLove * 15;
+
+                                        const myGreen = profile.green_flags || [];
+                                        const theirGreen = currentProfile.green_flags || [];
+                                        const sharedGreen = myGreen.filter(i => theirGreen.includes(i)).length;
+                                        vibeScore += sharedGreen * 10;
                                         
                                         if (vibeScore > 100) vibeScore = 100;
-                                        else if (vibeScore < 50 && shared === 0) vibeScore = 45 + (currentProfile.user_id % 5);
+                                        else if (vibeScore < 50 && sharedInterests === 0 && sharedLove === 0) vibeScore = 55 + (currentProfile.user_id % 12);
                                     }
                                     return (
                                         <span style={{ padding: '6px 16px', background: 'rgba(46, 204, 113, 0.3)', backdropFilter: 'blur(10px)', borderRadius: '24px', fontSize: '0.9rem', color: '#fff', fontWeight: '800', border: '1px solid rgba(46, 204, 113, 0.5)' }}>
