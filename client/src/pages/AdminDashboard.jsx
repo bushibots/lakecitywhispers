@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3, Heart, Search } from 'lucide-react';
+import { Shield, Trash2, Ban, Eye, Settings, Users, Database, Flame, Edit3, Heart, Search, RefreshCw } from 'lucide-react';
 import { 
     fetchAdminDashboard, adminDeletePost, adminToggleBanUser, adminTogglePermanentBot, adminUpdateStats, 
     fetchAdminUsers, fetchAdminSettings, updateAdminSettings, fetchAdminAllPosts, fetchPostAuthor, regenerateDailyPrompt,
@@ -348,8 +348,33 @@ export default function AdminDashboard() {
   if (loading && activeTab === 'moderation' && stats.users === 0) return <div className="page-content"><h2>Loading Dashboard...</h2></div>;
   if (error) return <div className="page-content"><h2>Access Denied</h2><p>{error}</p></div>;
 
+  const handleClearCache = async () => {
+      if (window.confirm("Are you sure you want to completely clear the server cache (Redis & Memory)?")) {
+          try {
+              const res = await fetch((import.meta.env.VITE_API_URL || 'https://lakecity-whispers-backend.onrender.com/api') + '/admin/clear-cache', { 
+                  method: 'POST',
+                  headers: { 'Authorization': localStorage.getItem('jluwhisper_session') }
+              }).then(r => r.json());
+              
+              if (res && res.message) {
+                  alert(res.message);
+              }
+          } catch (e) {
+              alert("Error clearing cache.");
+          }
+      }
+  };
+
   return (
     <div className="page-content">
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <h1 style={{ margin: 0 }}>Super Admin</h1>
+          <button className="btn-glow" onClick={handleClearCache} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--red)', color: '#fff', fontSize: '0.85rem', padding: '6px 12px' }}>
+              <RefreshCw size={16} /> Clear Cache
+          </button>
+      </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
