@@ -3,6 +3,7 @@ import { Heart, X, Filter, ChevronLeft, ChevronRight, Star, RotateCcw, ImagePlus
 import { apiFetch } from '../api';
 import DatingProfileModal from '../components/DatingProfileModal';
 import DatingFilterModal from '../components/DatingFilterModal';
+import { Avatar } from '../components/RenderAvatar';
 import { useNavigate } from 'react-router-dom';
 
 let datingCache = {
@@ -155,6 +156,7 @@ export default function Dating() {
                 name: "Your Match", 
                 conversation_id: data.conversation_id,
                 image: matchImg,
+                custom_avatar: target.custom_avatar,
                 isSuperlike: data.is_superlike
             });
         }
@@ -239,17 +241,31 @@ export default function Dating() {
         {/* Match Popup Overlay */}
         {matchPopup && (
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: '#000' }}>
-                {matchPopup.image && (
+                {matchPopup.image ? (
                     <img 
                         src={matchPopup.image} 
                         alt="Match background" 
                         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'blur(15px) brightness(0.4)', opacity: 0.8 }} 
                     />
-                )}
+                ) : matchPopup.custom_avatar && matchPopup.custom_avatar.startsWith('{') ? (
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0.3, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', filter: 'blur(8px)' }}>
+                        <Avatar avatarString={matchPopup.custom_avatar} style={{ width: '150%', height: '150%' }} />
+                    </div>
+                ) : null}
                 
                 <div className="feed-card" style={{ position: 'relative', zIndex: 10001, padding: '3rem', textAlign: 'center', width: '100%', maxWidth: '400px', border: '2px solid #FF5E5B', background: 'rgba(20, 20, 20, 0.85)', backdropFilter: 'blur(10px)', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
-                    <div className="pulsing-heart-main" style={{ margin: '0 auto 2rem auto', width: '80px', height: '80px', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(255, 94, 91, 0.4)' }}>
-                        <Heart size={40} fill="#fff" color="#fff" />
+                    <div style={{ width: '150px', height: '150px', borderRadius: '50%', border: '4px solid #FF5E5B', overflow: 'hidden', margin: '0 auto 1.5rem auto', boxShadow: '0 10px 25px rgba(255, 94, 91, 0.4)', background: 'var(--bg-elevated)', position: 'relative' }}>
+                        {matchPopup.image ? (
+                            <img src={matchPopup.image} alt="Match" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : matchPopup.custom_avatar && matchPopup.custom_avatar.startsWith('{') ? (
+                            <div style={{ position: 'absolute', width: '120%', height: '120%', top: '-10%', left: '-10%' }}>
+                                <Avatar avatarString={matchPopup.custom_avatar} style={{ width: '100%', height: '100%' }} />
+                            </div>
+                        ) : (
+                            <div className="pulsing-heart-main" style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #FF5E5B, #FF2A55)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Heart size={64} fill="#fff" color="#fff" />
+                            </div>
+                        )}
                     </div>
                     <h2 style={{ fontSize: '2.5rem', fontWeight: '800', marginBottom: '0.5rem', color: '#fff' }}>It's a Match!</h2>
                     <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '1.1rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>You and {matchPopup.targetName} have liked each other.</p>
@@ -377,6 +393,13 @@ export default function Dating() {
                                     pointerEvents: 'none'
                                 }} 
                             />
+                        ) : currentProfile.custom_avatar && currentProfile.custom_avatar.startsWith('{') ? (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-elevated)' }}>
+                                <Avatar 
+                                    avatarString={currentProfile.custom_avatar} 
+                                    style={{ width: '80%', height: '80%', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.3))' }} 
+                                />
+                            </div>
                         ) : (
                             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Heart size={64} color="rgba(255,255,255,0.2)" />

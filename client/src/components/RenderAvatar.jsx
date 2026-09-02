@@ -1,7 +1,7 @@
 import React from 'react';
 
 // Constants
-export const HEAD_TYPES = ['Rounded', 'Angular'];
+export const HEAD_TYPES = ['Rounded', 'Angular', 'Square'];
 export const SKIN_COLORS = ['#FDDBB4','#F1C27D','#E0A370','#C68642','#8D5524','#5C3317'];
 export const SKIN_NAMES = ['1','2','3','4','5','6'];
 export const HAIR_COLOR_NAMES = ['Black','Brown','Blonde','Red','Gray','Blue','Pink'];
@@ -15,15 +15,19 @@ export const HAIR_NAMES_A = ['Buzz','Crew Cut','Bob','Pixie','Side Part','Long S
 export const HAIR_NAMES_B = ['Buzz','Crew Cut','Bob','Pixie','Side Part','Long Straight','Long Wavy','Long Curly','Braids','Ponytail','Space Buns','Mohawk','Bald'];
 
 export function getHairNames(head) {
-  return head === 0 ? HAIR_NAMES_A : HAIR_NAMES_B;
+  if (head === 0) return HAIR_NAMES_A;
+  if (head === 1) return HAIR_NAMES_B;
+  return HAIR_NAMES_A; // fallback for Square
 }
 
 // SVG Drawing Helpers
 function drawHead(type, sc) {
   if (type === 0) { // Rounded
     return `<ellipse cx="100" cy="112" rx="58" ry="60" fill="${sc}"/><ellipse cx="42" cy="110" rx="10" ry="14" fill="${sc}"/><ellipse cx="158" cy="110" rx="10" ry="14" fill="${sc}"/>`;
-  } else { // Angular
+  } else if (type === 1) { // Angular
     return `<path d="M52 80 Q52 52 75 48 L125 48 Q148 52 148 80 L148 120 Q148 155 125 165 L100 172 L75 165 Q52 155 52 120 Z" fill="${sc}"/><rect x="42" y="98" width="12" height="22" rx="6" fill="${sc}"/><rect x="146" y="98" width="12" height="22" rx="6" fill="${sc}"/>`;
+  } else { // Square
+    return `<rect x="45" y="60" width="110" height="100" rx="15" fill="${sc}"/><rect x="35" y="100" width="10" height="20" rx="4" fill="${sc}"/><rect x="155" y="100" width="10" height="20" rx="4" fill="${sc}"/>`;
   }
 }
 
@@ -128,7 +132,7 @@ export default function RenderAvatar({ state, style = {}, className = "" }) {
     drawHead(h, sc) +
     drawEyes(e) +
     drawMouth(m) +
-    (h === 0 ? drawHairA(hr, hairC) : drawHairB(hr, hairC)) +
+    (h === 0 || h === 2 ? drawHairA(hr, hairC) : drawHairB(hr, hairC)) +
     drawAcc(a, h);
 
   return (

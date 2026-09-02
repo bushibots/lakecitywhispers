@@ -41,39 +41,49 @@ export default function AvatarGenerator({ avatarState, setAvatarState }) {
   };
 
   const ControlRow = ({ label, valKey, textVal }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-      <span style={{ fontSize: '0.85rem', color: 'var(--text-main)', width: '80px' }}>{label}</span>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <button type="button" onClick={() => cycle(valKey, -1)} style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
-          <ChevronLeft size={14}/>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', background: 'var(--bg-color)', padding: '6px 12px', borderRadius: '8px', border: '2px solid var(--border-strong)', boxShadow: '2px 2px 0px var(--border-strong)' }}>
+      <span style={{ fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>{label}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <button type="button" onClick={() => cycle(valKey, -1)} className="btn-brutal-small">
+          <ChevronLeft size={16}/>
         </button>
-        <div style={{ width: '80px', textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-main)' }}>
+        <div style={{ width: '85px', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>
           {valKey === 'b' ? (
-            <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: BG_COLORS[avatarState.b || 0], margin: '0 auto', border: '2px solid white' }} />
+            <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: BG_COLORS[avatarState.b || 0], margin: '0 auto', border: '2px solid var(--border-strong)' }} />
           ) : textVal}
         </div>
-        <button type="button" onClick={() => cycle(valKey, 1)} style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
-          <ChevronRight size={14}/>
+        <button type="button" onClick={() => cycle(valKey, 1)} className="btn-brutal-small">
+          <ChevronRight size={16}/>
         </button>
       </div>
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', background: 'var(--bg-elevated)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)', marginTop: '1rem' }}>
-      <div style={{ flex: '0 0 100px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: '1.5rem', 
+      background: 'var(--bg-elevated)', 
+      padding: '1.5rem', 
+      borderRadius: '12px', 
+      border: '3px solid var(--border-strong)', 
+      boxShadow: '4px 4px 0px var(--border-strong)',
+      marginTop: '1rem' 
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <RenderAvatar 
           state={avatarState} 
-          style={{ width: '100px', height: '100px', border: '3px solid rgba(255,255,255,0.2)' }}
+          style={{ width: '120px', height: '120px', border: '4px solid var(--border-strong)', boxShadow: '4px 4px 0px var(--border-strong)' }}
         />
-        <button type="button" onClick={randomize} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--text-main)', cursor: 'pointer' }}>
-          <Dices size={12}/> Random
+        <button type="button" className="btn-glow" onClick={randomize} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 16px' }}>
+          <Dices size={16}/> Randomize Look
         </button>
       </div>
-      <div style={{ flex: 1 }}>
-        <ControlRow label="Head" valKey="h" textVal={HEAD_TYPES[avatarState.h || 0]} />
-        <ControlRow label="Skin" valKey="s" textVal={SKIN_NAMES[avatarState.s || 0]} />
-        <ControlRow label="Hair" valKey="hr" textVal={getHairNames(avatarState.h || 0)[avatarState.hr || 0]} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <ControlRow label="Head Shape" valKey="h" textVal={HEAD_TYPES[avatarState.h || 0]} />
+        <ControlRow label="Skin Tone" valKey="s" textVal={SKIN_NAMES[avatarState.s || 0]} />
+        <ControlRow label="Hair Style" valKey="hr" textVal={getHairNames(avatarState.h || 0)[avatarState.hr || 0]} />
         <ControlRow label="Hair Color" valKey="hc" textVal={HAIR_COLOR_NAMES[avatarState.hc || 0]} />
         <ControlRow label="Eyes" valKey="e" textVal={EYE_NAMES[avatarState.e || 0]} />
         <ControlRow label="Mouth" valKey="m" textVal={MOUTH_NAMES[avatarState.m || 0]} />

@@ -1164,3 +1164,6 @@ body.t-india .btn-glow:hover {
         display: none !important;
     }
 }
+
+.btn-brutal-small { width: 32px; height: 32px; border-radius: 8px; background: var(--bg-color); border: 2px solid var(--border-strong); display: flex; align-items: center; justify-content: center; color: var(--text-main); cursor: pointer; box-shadow: 2px 2px 0px var(--border-strong); transition: all 0.1s; }
+.btn-brutal-small:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--border-strong); }
