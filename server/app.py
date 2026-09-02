@@ -2165,6 +2165,16 @@ def admin_delete_dating_profile(user_id):
         db.session.commit()
     return jsonify({"success": True})
 
+@app.route('/api/admin/dating_profiles/<int:user_id>/toggle', methods=['POST'])
+@admin_required
+def admin_toggle_dating_profile(user_id):
+    profile = DatingProfile.query.filter_by(user_id=user_id).first()
+    if profile:
+        profile.is_active = not profile.is_active
+        db.session.commit()
+        return jsonify({"success": True, "is_active": profile.is_active})
+    return jsonify({"error": "Profile not found"}), 404
+
 @app.route('/api/admin/swipes', methods=['GET'])
 @admin_required
 def admin_get_swipes():

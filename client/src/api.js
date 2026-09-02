@@ -407,6 +407,23 @@ export const adminDeleteDatingProfile = async (userId) => {
     }
 };
 
+export const adminToggleDatingProfile = async (userId) => {
+    try {
+        const token = await getSessionToken();
+        const res = await fetch(`${API_URL}/admin/dating_profiles/${userId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Authorization': token
+            }
+        });
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error("Error toggling dating profile:", error);
+        return { error: 'Failed to toggle' };
+    }
+};
+
 export const sendAdminBroadcast = async (message) => {
     const token = await getSessionToken();
     try {
