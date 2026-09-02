@@ -4,6 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import AuthModal from '../components/AuthModal';
 import { requestSupportMessage, fetchMe, fetchUserProfile } from '../api';
 import { formatTime } from '../utils';
+import { Avatar } from '../components/RenderAvatar';
 
 export default function Profile() {
   const { username } = useParams();
@@ -72,14 +73,12 @@ export default function Profile() {
       />
 
       <div className="profile-header">
-        <div className="avatar-flame large">
-          {profile.avatar && profile.avatar.startsWith('http') ? (
-            <img src={profile.avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-          ) : (
-            (profile.avatar || profile.display_name).charAt(0)
-          )}
-        </div>
-        <h2>{profile.display_name}</h2>
+        <Avatar 
+          avatarString={profile.avatar} 
+          fallbackChar={(profile.display_name || 'A').charAt(0)}
+          className="large"
+        />
+        <h2>{profile.display_name} {profile.is_admin && <Shield size={16} className="inline-icon text-accent" />}</h2>
         <span className="status-badge">
           <Shield size={14} /> {profile.is_registered ? 'Verified Account' : 'Guest Account'}
         </span>

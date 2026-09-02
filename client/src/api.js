@@ -58,28 +58,30 @@ export const apiFetch = async (endpoint, options = {}) => {
     }
 };
 
-export const register = async (username, password, customAlias = '') => {
+export const register = async (username, password, customAlias = '', avatarState = null) => {
     const token = await getSessionToken();
     try {
+        const payload = { username, password, custom_alias: customAlias };
+        if (avatarState) payload.avatar = avatarState;
+        
         const res = await fetch(`${API_URL}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': token
             },
-            body: JSON.stringify({ username, password, custom_alias: customAlias })
+            body: JSON.stringify(payload)
         });
         const data = await res.json();
         if (data.session_token) {
             localStorage.setItem('jluwhisper_session', data.session_token);
             localStorage.setItem('jluwhisper_registered', 'true');
             if (data.is_admin !== undefined) localStorage.setItem('jluwhisper_admin', data.is_admin);
-            // the backend might not return display_name on register, but it will be refetched
         }
         return data;
     } catch (e) {
         console.error(e);
-        return { error: 'Network error' };
+        return { error: 'Network Error' };
     }
 };
 

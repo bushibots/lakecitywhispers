@@ -5,6 +5,7 @@ import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, create
 import { socket } from '../socket';
 import { formatTime } from '../utils';
 import StoryShareModal from '../components/StoryShareModal';
+import { Avatar } from '../components/RenderAvatar';
 import CustomDropdown from '../components/CustomDropdown';
 
 import { CAMPUS_STRUCTURE } from '../campus_structure';
@@ -409,13 +410,12 @@ export default function Feed() {
       opacity: comment.is_optimistic ? 0.6 : 1
     }}>
       <div className="reply-item" style={{ borderBottom: 'none', padding: 0 }}>
-        <div className="avatar-flame small" style={comment.is_oracle_post ? {background: 'linear-gradient(135deg, #35D6E7, #8B5CF6)'} : (comment.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {})}>
-          {comment.author_avatar && comment.author_avatar.startsWith('http') ? (
-            <img src={comment.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-          ) : (
-            comment.is_oracle_post ? '🌟' : (comment.is_admin_post ? '👑' : (comment.author_username || 'A').charAt(0).toUpperCase())
-          )}
-        </div>
+        <Avatar 
+          avatarString={comment.author_avatar} 
+          fallbackChar={comment.is_oracle_post ? '🔮' : (comment.is_admin_post ? '🛡️' : (comment.author_username || 'A').charAt(0).toUpperCase())}
+          className="small"
+          style={comment.is_oracle_post ? {background: 'linear-gradient(135deg, #35D6E7, #8B5CF6)'} : (comment.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {})}
+        />
         <div className="reply-content" style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -492,13 +492,11 @@ export default function Feed() {
         {post.is_pinned && <div style={{ fontSize: '0.75rem', color: 'var(--accent-color)', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>📌 PINNED</div>}
         {isDailyPrompt && <div style={{ position: 'absolute', top: '-12px', left: '1.5rem', backgroundColor: 'var(--accent-color)', color: 'white', padding: '0.2rem 0.8rem', borderRadius: '12px', fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '4px' }}><Flame size={12}/> Prompt of the Day</div>}
         <div className="card-header">
-          <div className="avatar-flame" style={post.is_oracle_post ? {background: 'linear-gradient(135deg, #35D6E7, #8B5CF6)'} : (post.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {})}>
-            {post.author_avatar && post.author_avatar.startsWith('http') ? (
-              <img src={post.author_avatar} alt="avatar" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
-            ) : (
-              post.is_oracle_post ? '🌟' : (post.is_admin_post ? '👑' : identity.charAt(0).toUpperCase())
-            )}
-          </div>
+          <Avatar 
+            avatarString={post.author_avatar} 
+            fallbackChar={post.is_oracle_post ? '🔮' : (post.is_admin_post ? '🛡️' : identity.charAt(0).toUpperCase())}
+            style={post.is_oracle_post ? {background: 'linear-gradient(135deg, #35D6E7, #8B5CF6)'} : (post.is_admin_post ? {background: 'linear-gradient(135deg, #ffd700, #ff8c00)'} : {})}
+          />
           <div className="card-meta">
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Link to={`/profile/${post.author_username}`} style={{ textDecoration: 'none', color: 'inherit' }}>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ShieldAlert, Key } from 'lucide-react';
 import { login, register, recoverAccount } from '../api';
+import AvatarGenerator from './AvatarGenerator';
 
 export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'login' }) {
   const [mode, setMode] = useState(initialMode); // 'login', 'register', 'recovery_show', 'recover_account'
@@ -12,6 +13,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [generatedKey, setGeneratedKey] = useState('');
+  const [showAvatarBuilder, setShowAvatarBuilder] = useState(false);
+  const [avatarState, setAvatarState] = useState({ h:0, s:0, hr:0, hc:0, e:0, m:0, a:0, b:0 });
 
   if (!isOpen) return null;
 
@@ -29,7 +32,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
           onClose();
         }
       } else if (mode === 'register') {
-        const res = await register(username, password, customAlias);
+        const serializedAvatar = showAvatarBuilder ? JSON.stringify(avatarState) : null;
+        const res = await register(username, password, customAlias, serializedAvatar);
         if (res.error) setError(res.error);
         else if (res.recovery_key) {
           setGeneratedKey(res.recovery_key);
@@ -96,16 +100,29 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
             </div>
 
             {mode === 'register' && (
-              <div className="input-group mt-4">
-                <label>Optional Custom Alias</label>
-                <input 
-                  type="text" 
-                  className="composer-textarea border-input"
-                  value={customAlias}
-                  onChange={e => setCustomAlias(e.target.value)}
-                  placeholder="e.g. Batman (leave blank for AI name)"
-                />
-              </div>
+              <>
+                <div className="input-group mt-4">
+                  <label>Optional Custom Alias</label>
+                  <input 
+                    type="text" 
+                    className="composer-textarea border-input"
+                    value={customAlias}
+                    onChange={e => setCustomAlias(e.target.value)}
+                    placeholder="e.g. Batman (leave blank for AI name)"
+                  />
+                </div>
+                <div className="input-group mt-4">
+                  <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Avatar (Optional)
+                    <button type="button" onClick={() => setShowAvatarBuilder(!showAvatarBuilder)} style={{ background: 'none', border: 'none', color: 'var(--accent-color)', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      {showAvatarBuilder ? 'Hide' : '+ Create Avatar'}
+                    </button>
+                  </label>
+                  {showAvatarBuilder && (
+                    <AvatarGenerator avatarState={avatarState} setAvatarState={setAvatarState} />
+                  )}
+                </div>
+              </>
             )}
 
             {mode === 'recover_account' && (

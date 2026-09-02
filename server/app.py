@@ -555,6 +555,7 @@ def register():
     username = data.get('username')
     password = data.get('password')
     custom_alias = data.get('custom_alias')
+    avatar_state = data.get('avatar')
     session_token = request.headers.get('Authorization')
     
     if not username or not password:
@@ -576,7 +577,13 @@ def register():
         user.recovery_key_hash = generate_password_hash(recovery_key)
         if custom_alias and custom_alias.strip():
             user.display_name = custom_alias.strip()
-            user.avatar = user.display_name[0]
+            
+        if avatar_state and isinstance(avatar_state, str) and avatar_state.startswith('{'):
+            user.avatar = avatar_state
+        else:
+            if custom_alias and custom_alias.strip():
+                user.avatar = user.display_name[0]
+                
         db.session.commit()
         return jsonify({"message": "Registration successful", "recovery_key": recovery_key}), 201
         
@@ -592,7 +599,7 @@ def register():
         is_registered=True,
         recovery_key_hash=generate_password_hash(recovery_key),
         display_name=display_name,
-        avatar=display_name[0] if display_name else 'A'
+        avatar=avatar_state if (avatar_state and isinstance(avatar_state, str) and avatar_state.startswith('{')) else (display_name[0] if display_name else 'A')
     )
     db.session.add(new_user)
         
@@ -1512,7 +1519,7 @@ def get_conversations():
     
     # Bulk fetch users
     users = User.query.filter(User.id.in_(other_user_ids)).all()
-    user_map = {u.id: u.display_name for u in users}
+    user_map = {u.id: {"name": u.display_name, "avatar": u.avatar} for u in users}
     
     # Bulk fetch last messages
     conv_ids = [c.id for c in convs]
@@ -1550,7 +1557,9 @@ def get_conversations():
         if other_user_id in blocked_user_ids:
             continue
             
-        other_name = user_map.get(other_user_id, "Unknown")
+        other_user_info = user_map.get(other_user_id, {"name": "Unknown", "avatar": "U"})
+        other_name = other_user_info["name"]
+        other_avatar = other_user_info["avatar"]
         last_msg_obj = last_msg_map.get(c.id)
         last_msg_text = last_msg_obj.content if last_msg_obj else ""
         last_msg_time = (last_msg_obj.created_at.isoformat() + 'Z') if last_msg_obj and last_msg_obj.created_at else None
@@ -1558,6 +1567,7 @@ def get_conversations():
         conv_data = {
             "id": c.id,
             "other_user": other_name,
+            "other_user_avatar": other_avatar,
             "status": c.status,
             "last_message": last_msg_text,
             "last_message_at": last_msg_time,

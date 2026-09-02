@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getConversations, getMessages, sendMessage, acceptRequest, rejectRequest, blockUser, deleteConversation, unsendMessage } from '../api';
 import { socket } from '../socket';
 import { Send, Check, X as RejectIcon, Search, MailPlus, MoreVertical, Trash2, ArrowLeft, ShieldAlert } from 'lucide-react';
+import { Avatar } from '../components/RenderAvatar';
 import { formatTime } from '../utils';
 
 export default function Messages() {
@@ -354,9 +355,11 @@ export default function Messages() {
                     >
                         {/* Avatar */}
                         <div style={{ position: 'relative', marginRight: '0.75rem', flexShrink: 0 }}>
-                          <div className="avatar-flame" style={{ width: 42, height: 42, boxShadow: isActive ? '0 0 12px rgba(53, 214, 231, 0.3)' : 'none' }}>
-                              {conv.other_user.charAt(0)}
-                          </div>
+                        <Avatar 
+                          avatarString={conv.other_user_avatar} 
+                          fallbackChar={conv.other_user.charAt(0)}
+                          style={{ width: 42, height: 42, boxShadow: isActive ? '0 0 12px rgba(53, 214, 231, 0.3)' : 'none' }} 
+                        />
                           {hasUnread && (
                             <span style={{ position: 'absolute', bottom: 0, right: 0, width: '11px', height: '11px', borderRadius: '50%', background: '#FF4757', border: '2px solid var(--bg-color)' }} />
                           )}
@@ -402,7 +405,11 @@ export default function Messages() {
                         <button className="icon-btn-minimal back-btn mobile-only" onClick={() => setActiveConvId(null)} style={{ marginRight: '12px' }}>
                             <ArrowLeft size={20} />
                         </button>
-                        <div className="avatar-flame" style={{ width: 38, height: 38, marginRight: '0.75rem', border: '2px solid rgba(255,255,255,0.1)', fontSize: '0.9rem' }}>{activeConvData.other_user.charAt(0)}</div>
+                        <Avatar 
+                          avatarString={activeConvData.other_user_avatar} 
+                          fallbackChar={activeConvData.other_user.charAt(0)}
+                          style={{ width: 38, height: 38, marginRight: '0.75rem', border: '2px solid rgba(255,255,255,0.1)', fontSize: '0.9rem' }} 
+                        />
                         <div>
                             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>{activeConvData.other_user}</h3>
                             {activeConvData.status === 'pending' && !activeConvData.is_requester && (
