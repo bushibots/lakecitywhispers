@@ -549,10 +549,11 @@ input, select, textarea, button { font-size: 16px !important; }
   padding: 2.5rem;
   width: 90%;
   max-width: 440px;
+  max-height: 90vh;
   position: relative;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
   animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .modal-content::before {

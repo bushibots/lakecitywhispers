@@ -63,24 +63,24 @@ export default function AvatarGenerator({ avatarState, setAvatarState }) {
     <div style={{ 
       display: 'flex', 
       flexDirection: 'column', 
-      gap: '1.5rem', 
+      gap: '1rem', 
       background: 'var(--bg-elevated)', 
-      padding: '1.5rem', 
+      padding: '1rem', 
       borderRadius: '12px', 
       border: '3px solid var(--border-strong)', 
       boxShadow: '4px 4px 0px var(--border-strong)',
       marginTop: '1rem' 
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
         <RenderAvatar 
           state={avatarState} 
-          style={{ width: '120px', height: '120px', border: '4px solid var(--border-strong)', boxShadow: '4px 4px 0px var(--border-strong)' }}
+          style={{ width: '90px', height: '90px', border: '3px solid var(--border-strong)', boxShadow: '4px 4px 0px var(--border-strong)', flexShrink: 0 }}
         />
-        <button type="button" className="btn-glow" onClick={randomize} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 16px' }}>
-          <Dices size={16}/> Randomize Look
+        <button type="button" className="btn-glow" onClick={randomize} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', fontSize: '0.85rem' }}>
+          <Dices size={16}/> Randomize
         </button>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <div className="custom-scroll" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '6px', maxHeight: '200px', overflowY: 'auto', paddingRight: '4px' }}>
         <ControlRow label="Head Shape" valKey="h" textVal={HEAD_TYPES[avatarState.h || 0]} />
         <ControlRow label="Skin Tone" valKey="s" textVal={SKIN_NAMES[avatarState.s || 0]} />
         <ControlRow label="Hair Style" valKey="hr" textVal={getHairNames(avatarState.h || 0)[avatarState.hr || 0]} />
