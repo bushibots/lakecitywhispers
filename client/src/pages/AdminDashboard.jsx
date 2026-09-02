@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [userTab, setUserTab] = useState('real'); // 'real' or 'bots'
   const [allPosts, setAllPosts] = useState([]);
   const [adminChats, setAdminChats] = useState([]);
+  const [activeAdminChatId, setActiveAdminChatId] = useState(null);
   const [datingProfiles, setDatingProfiles] = useState([]);
   const [swipeHistory, setSwipeHistory] = useState([]);
   const [allMedia, setAllMedia] = useState([]);
@@ -926,46 +927,106 @@ export default function AdminDashboard() {
       )}
 
       {activeTab === 'all_chats' && (
-          <div className="feed-card" style={{ padding: '1.5rem' }}>
-              <h2 style={{ marginBottom: '1.5rem' }}>All Platform Conversations</h2>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-                  {adminChats.map(chat => (
-                      <div key={chat.id} style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-elevated)', borderRadius: '12px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
-                          <div style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'rgba(255,255,255,0.02)' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                  <strong style={{ fontSize: '1rem' }}>Chat #{chat.id}</strong>
-                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(chat.updated_at).toLocaleDateString()}</span>
+          <div className="feed-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', height: '600px', backgroundColor: 'var(--bg-elevated)' }}>
+              {/* Left Sidebar: Chat List */}
+              <div style={{ width: '350px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-card)' }}>
+                  <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+                      <h2 style={{ margin: 0, fontSize: '1.25rem' }}>All Conversations</h2>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{adminChats.length} active chats</span>
+                  </div>
+                  <div style={{ flex: 1, overflowY: 'auto' }}>
+                      {adminChats.length === 0 ? (
+                          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No chats found.</div>
+                      ) : (
+                          adminChats.map(chat => (
+                              <div 
+                                  key={chat.id} 
+                                  onClick={() => setActiveAdminChatId(chat.id)}
+                                  style={{ 
+                                      padding: '1rem', 
+                                      borderBottom: '1px solid var(--border-color)', 
+                                      cursor: 'pointer',
+                                      backgroundColor: activeAdminChatId === chat.id ? 'rgba(var(--accent-rgb), 0.15)' : 'transparent',
+                                      borderLeft: activeAdminChatId === chat.id ? '4px solid var(--accent-color)' : '4px solid transparent',
+                                      transition: 'background-color 0.2s'
+                                  }}
+                                  onMouseEnter={e => { if (activeAdminChatId !== chat.id) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)' }}
+                                  onMouseLeave={e => { if (activeAdminChatId !== chat.id) e.currentTarget.style.backgroundColor = 'transparent' }}
+                              >
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                      <strong style={{ fontSize: '0.95rem', color: activeAdminChatId === chat.id ? 'var(--accent-color)' : 'var(--text-main)' }}>
+                                          Chat #{chat.id}
+                                      </strong>
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                          {new Date(chat.updated_at).toLocaleDateString()}
+                                      </span>
+                                  </div>
+                                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                      Users: {chat.user1.id} &amp; {chat.user2.id}
+                                  </div>
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                      {chat.messages && chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].content : 'No messages'}
+                                  </div>
                               </div>
-                              <div style={{ fontSize: '0.85rem', color: 'var(--accent-color)' }}>
-                                  Users: {chat.user1.id} &amp; {chat.user2.id}
-                              </div>
-                          </div>
-                          
-                          <div style={{ padding: '1rem', maxHeight: '300px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-                              {chat.messages.map((m, idx) => {
-                                  const isUser1 = m.sender_id === chat.user1.id;
-                                  return (
-                                      <div key={idx} style={{ 
-                                          alignSelf: isUser1 ? 'flex-start' : 'flex-end',
-                                          maxWidth: '85%',
-                                          padding: '0.6rem 0.8rem',
-                                          borderRadius: '12px',
-                                          backgroundColor: isUser1 ? 'var(--bg-card)' : 'rgba(var(--accent-rgb), 0.15)',
-                                          border: isUser1 ? '1px solid var(--border-color)' : '1px solid rgba(var(--accent-rgb), 0.3)',
-                                          color: 'var(--text-color)'
-                                      }}>
-                                          <div style={{ fontSize: '0.7rem', color: isUser1 ? 'var(--text-muted)' : 'var(--accent-color)', marginBottom: '2px', fontWeight: 'bold' }}>
-                                              User {m.sender_id}
-                                          </div>
-                                          <div style={{ fontSize: '0.9rem', wordBreak: 'break-word' }}>
-                                              {m.content}
-                                          </div>
+                          ))
+                      )}
+                  </div>
+              </div>
+
+              {/* Right Main Area: Chat Messages */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-elevated)' }}>
+                  {activeAdminChatId ? (
+                      (() => {
+                          const chat = adminChats.find(c => c.id === activeAdminChatId);
+                          if (!chat) return null;
+                          return (
+                              <>
+                                  <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <h3 style={{ margin: 0 }}>Conversation #{chat.id}</h3>
+                                      <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                          Between User {chat.user1.id} and User {chat.user2.id}
                                       </div>
-                                  );
-                              })}
-                          </div>
+                                  </div>
+                                  <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                      {chat.messages && chat.messages.length > 0 ? (
+                                          chat.messages.map((m, idx) => {
+                                              const isUser1 = m.sender_id === chat.user1.id;
+                                              const isSystem = !m.sender_id;
+                                              return (
+                                                  <div key={idx} style={{ 
+                                                      alignSelf: isSystem ? 'center' : (isUser1 ? 'flex-start' : 'flex-end'),
+                                                      maxWidth: isSystem ? '90%' : '75%',
+                                                      padding: isSystem ? '0.5rem 1rem' : '0.75rem 1rem',
+                                                      borderRadius: isSystem ? '20px' : '16px',
+                                                      backgroundColor: isSystem ? 'rgba(242, 201, 76, 0.1)' : (isUser1 ? 'var(--bg-card)' : 'rgba(var(--accent-rgb), 0.15)'),
+                                                      border: isSystem ? '1px solid rgba(242, 201, 76, 0.3)' : (isUser1 ? '1px solid var(--border-color)' : '1px solid rgba(var(--accent-rgb), 0.3)'),
+                                                      color: isSystem ? '#F2C94C' : 'var(--text-color)',
+                                                      textAlign: isSystem ? 'center' : 'left'
+                                                  }}>
+                                                      {!isSystem && (
+                                                          <div style={{ fontSize: '0.75rem', color: isUser1 ? 'var(--text-muted)' : 'var(--accent-color)', marginBottom: '4px', fontWeight: 'bold' }}>
+                                                              User {m.sender_id}
+                                                          </div>
+                                                      )}
+                                                      <div style={{ fontSize: '0.95rem', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                                                          {m.content}
+                                                      </div>
+                                                  </div>
+                                              );
+                                          })
+                                      ) : (
+                                          <div style={{ margin: 'auto', color: 'var(--text-muted)' }}>No messages in this conversation yet.</div>
+                                      )}
+                                  </div>
+                              </>
+                          );
+                      })()
+                  ) : (
+                      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--text-muted)', flexDirection: 'column', gap: '1rem' }}>
+                          <Eye size={48} style={{ opacity: 0.2 }} />
+                          <p>Select a conversation from the sidebar to view messages.</p>
                       </div>
-                  ))}
+                  )}
               </div>
           </div>
       )}
