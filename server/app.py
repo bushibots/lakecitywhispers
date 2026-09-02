@@ -116,8 +116,154 @@ def cleanup_old_bots():
             db.session.commit()
             print(f"Cleaned up {deleted_count} old AI bots.")
 
+def ai_autopilot_job():
+    with app.app_context():
+        # 1. Read settings
+        enabled_setting = SystemSetting.query.filter_by(key='ai_autopilot_enabled').first()
+        if not enabled_setting or enabled_setting.value != 'true':
+            return
+            
+        time_setting = SystemSetting.query.filter_by(key='ai_autopilot_time').first()
+        if not time_setting or not time_setting.value:
+            return
+            
+        target_time = time_setting.value # e.g. "20:00"
+        
+        # Check current time
+        now_time_str = datetime.now().strftime("%H:%M")
+        if now_time_str != target_time:
+            return
+            
+        # Check if already run today
+        last_run_setting = SystemSetting.query.filter_by(key='ai_autopilot_last_run').first()
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        if last_run_setting and last_run_setting.value == today_str:
+            return
+            
+        # Update last run
+        if not last_run_setting:
+            last_run_setting = SystemSetting(key='ai_autopilot_last_run', value=today_str)
+            db.session.add(last_run_setting)
+        else:
+            last_run_setting.value = today_str
+        db.session.commit()
+        
+        # 2. Run Vibe Scanner
+        print("Running AI Match Autopilot Vibe Scanner...")
+        from models import DatingProfile, SwipeInteraction, Conversation, Message, Notification
+        profiles = DatingProfile.query.filter_by(is_active=True).all()
+        
+        couples = []
+        for i in range(len(profiles)):
+            for j in range(i+1, len(profiles)):
+                p1 = profiles[i]
+                p2 = profiles[j]
+                
+                if not p1.user or not p2.user: continue
+                
+                p1_likes_p2 = p1.looking_for == 'everyone' or p1.looking_for == p2.gender
+                p2_likes_p1 = p2.looking_for == 'everyone' or p2.looking_for == p1.gender
+                
+                if p1_likes_p2 and p2_likes_p1:
+                    score = 0
+                    shared = 0
+                    p1_interests = json.loads(p1.interests) if p1.interests else []
+                    p2_interests = json.loads(p2.interests) if p2.interests else []
+                    p1_ll = json.loads(p1.love_languages) if p1.love_languages else []
+                    p2_ll = json.loads(p2.love_languages) if p2.love_languages else []
+                    p1_gf = json.loads(p1.green_flags) if p1.green_flags else []
+                    p2_gf = json.loads(p2.green_flags) if p2.green_flags else []
+                    
+                    for interest in p1_interests:
+                        if interest in p2_interests:
+                            score += 10
+                            shared += 1
+                    for ll in p1_ll:
+                        if ll in p2_ll:
+                            score += 15
+                            shared += 1
+                    for gf in p1_gf:
+                        if gf in p2_gf:
+                            score += 12
+                            shared += 1
+                            
+                    if p1.block == p2.block and p1.block: score += 15
+                    if p1.course == p2.course and p1.course: score += 15
+                    
+                    if score < 50 and shared == 0:
+                        score = 55 + ((p1.user_id + p2.user_id) % 12)
+                    if score > 99: score = 99
+                    
+                    couples.append({
+                        'p1': p1,
+                        'p2': p2,
+                        'score': score
+                    })
+                    
+        couples.sort(key=lambda x: x['score'], reverse=True)
+        top_couples = couples[:3]
+        
+        if not top_couples: return
+        
+        # 3. Force Match and create Announcement
+        announcement_lines = ["🚨 **AI AUTOPILOT DROP**: The AI just found today's perfect matches! 💖"]
+        
+        for c in top_couples:
+            u1 = c['p1'].user
+            u2 = c['p2'].user
+            score = c['score']
+            
+            # Force match logic
+            inter1 = SwipeInteraction.query.filter_by(swiper_id=u1.id, target_id=u2.id).first()
+            if not inter1: db.session.add(SwipeInteraction(swiper_id=u1.id, target_id=u2.id, action='like'))
+            else: inter1.action = 'like'
+            
+            inter2 = SwipeInteraction.query.filter_by(swiper_id=u2.id, target_id=u1.id).first()
+            if not inter2: db.session.add(SwipeInteraction(swiper_id=u2.id, target_id=u1.id, action='like'))
+            else: inter2.action = 'like'
+            
+            existing = Conversation.query.filter(
+                ((Conversation.user1_id == u1.id) & (Conversation.user2_id == u2.id)) |
+                ((Conversation.user1_id == u2.id) & (Conversation.user2_id == u1.id))
+            ).first()
+            if not existing:
+                conv = Conversation(user1_id=u1.id, user2_id=u2.id, status='accepted')
+                db.session.add(conv)
+                db.session.flush()
+                db.session.add(Message(conversation_id=conv.id, sender_id=u1.id, content=f"💖 It's a Match! The AI Autopilot paired you with a {score}% compatibility score. Say hi!"))
+                
+                db.session.add(Notification(user_id=u2.id, type="message", message=f"New match with {u1.display_name}! (AI Pick)"))
+                db.session.add(Notification(user_id=u1.id, type="message", message=f"New match with {u2.display_name}! (AI Pick)"))
+                
+            announcement_lines.append(f"✨ @{u1.username} & @{u2.username} - {score}% Match!")
+            
+        announcement_lines.append("\nCheck your DMs if you were chosen! The rest of you, go swipe in the Dating tab!")
+        announcement_text = "\n".join(announcement_lines)
+        
+        # Post it to Campus Feed
+        admin_user = User.query.filter_by(role='admin').first()
+        if not admin_user: admin_user = User.query.first()
+        
+        if admin_user:
+            # Pick any valid handle for this admin to post under
+            from models import Manager
+            manager = Manager.query.filter_by(user_id=admin_user.id).first()
+            handle = manager.handle if manager else "global"
+            new_post = Post(
+                content=announcement_text,
+                user_id=admin_user.id,
+                topic="Campus",
+                handle=handle,
+                is_announcement=True
+            )
+            db.session.add(new_post)
+            
+        db.session.commit()
+        print("AI Match Autopilot executed successfully.")
+
 # The ai_bot_job has been removed so AI activity is only triggered manually by admins.
 scheduler.add_job(id='cleanup_old_bots_job', func=cleanup_old_bots, trigger='interval', hours=1)
+scheduler.add_job(id='ai_autopilot_job', func=ai_autopilot_job, trigger='interval', minutes=1)
 scheduler.start()
 
 # Create tables
@@ -2147,16 +2293,29 @@ def admin_get_dating_profiles():
             except Exception:
                 pass
         
+        def safe_json_load(val):
+            if not val: return []
+            try:
+                res = json.loads(val)
+                return res if isinstance(res, list) else []
+            except Exception:
+                return []
+
         result.append({
             "id": p.id,
             "user_id": p.user_id,
             "username": p.user.username if p.user else "Unknown",
             "gender": p.gender,
+            "looking_for": p.looking_for,
             "age": p.age,
             "course": p.course,
             "block": p.block,
             "image_url": p.image_url,
             "images": parsed_images,
+            "interests": safe_json_load(p.interests),
+            "love_languages": safe_json_load(p.love_languages),
+            "green_flags": safe_json_load(p.green_flags),
+            "red_flags": safe_json_load(p.red_flags),
             "is_active": p.is_active,
             "created_at": p.created_at.isoformat() + 'Z' if p.created_at else None
         })
@@ -2724,6 +2883,40 @@ def admin_broadcast_daily_drop():
         'body': 'Check Dating now to see your top matches for the day before they are gone.'
     })
     return jsonify({"message": "Daily drop broadcasted."})
+
+@app.route('/api/admin/dating/settings', methods=['GET'])
+@admin_required
+def get_dating_settings():
+    enabled_setting = SystemSetting.query.filter_by(key='ai_autopilot_enabled').first()
+    time_setting = SystemSetting.query.filter_by(key='ai_autopilot_time').first()
+    
+    return jsonify({
+        "ai_autopilot_enabled": enabled_setting.value == 'true' if enabled_setting else False,
+        "ai_autopilot_time": time_setting.value if time_setting else "20:00"
+    })
+
+@app.route('/api/admin/dating/settings', methods=['POST'])
+@admin_required
+def update_dating_settings():
+    enabled = request.json.get('ai_autopilot_enabled', False)
+    time = request.json.get('ai_autopilot_time', "20:00")
+    
+    enabled_setting = SystemSetting.query.filter_by(key='ai_autopilot_enabled').first()
+    if not enabled_setting:
+        enabled_setting = SystemSetting(key='ai_autopilot_enabled', value='true' if enabled else 'false')
+        db.session.add(enabled_setting)
+    else:
+        enabled_setting.value = 'true' if enabled else 'false'
+        
+    time_setting = SystemSetting.query.filter_by(key='ai_autopilot_time').first()
+    if not time_setting:
+        time_setting = SystemSetting(key='ai_autopilot_time', value=time)
+        db.session.add(time_setting)
+    else:
+        time_setting.value = time
+        
+    db.session.commit()
+    return jsonify({"success": True})
 
 if __name__ == '__main__':
     with app.app_context():
