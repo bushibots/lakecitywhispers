@@ -1,12 +1,16 @@
 import gevent.monkey
 gevent.monkey.patch_all()
 
-import os
+import sys
 import uuid
+import re
+import math
+import base64
 import random
-import string
+import time
 import requests
-from io import BytesIO
+import redis
+import os
 from datetime import datetime, timedelta, timezone
 from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
@@ -71,10 +75,17 @@ CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 cloudinary_enabled = CLOUDINARY_URL is not None
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max upload size
 
-# --- Ponytail Minimal Caching ---
-# A globally shared dictionary that caches API responses in memory.
-# It is completely cleared on ANY data write (POST, PUT, DELETE),
-# providing bulletproof "clear-on-write" consistency with zero Redis headaches.
+# --- Redis / Minimal Caching ---
+REDIS_URL = os.environ.get('REDIS_URL')
+redis_client = None
+if REDIS_URL:
+    try:
+        redis_client = redis.from_url(REDIS_URL)
+        redis_client.ping()
+    except Exception as e:
+        print(f"Redis connection failed: {e}. Falling back to SIMPLE_CACHE.")
+        redis_client = None
+
 SIMPLE_CACHE = {}
 
 @app.before_request
@@ -84,9 +95,18 @@ def check_cache():
         if '/api/me' in request.path or '/api/admin' in request.path:
             return
             
-        cache_key = f"{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
-        if cache_key in SIMPLE_CACHE:
-            cached_data = SIMPLE_CACHE[cache_key]
+        cache_key = f"whisper_cache:{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
+        
+        cached_data = None
+        if redis_client:
+            try:
+                cached_data = redis_client.get(cache_key)
+            except:
+                pass
+        else:
+            cached_data = SIMPLE_CACHE.get(cache_key)
+
+        if cached_data:
             response = make_response(cached_data)
             response.headers['Content-Type'] = 'application/json'
             response.headers['X-Cache'] = 'HIT'
@@ -97,15 +117,28 @@ def update_cache(response):
     # Store successful GET responses in cache
     if request.method == 'GET' and request.path.startswith('/api/') and response.status_code == 200:
         if '/api/me' not in request.path and '/api/admin' not in request.path:
-            cache_key = f"{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
-            if cache_key not in SIMPLE_CACHE:
-                SIMPLE_CACHE[cache_key] = response.get_data()
+            cache_key = f"whisper_cache:{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
+            
+            if redis_client:
+                try:
+                    redis_client.setex(cache_key, 3600, response.get_data())
+                except:
+                    pass
+            else:
+                if cache_key not in SIMPLE_CACHE:
+                    SIMPLE_CACHE[cache_key] = response.get_data()
+                    
             response.headers['X-Cache'] = 'MISS'
             # Tell browser to cache for 15 seconds locally to prevent refresh spam
             response.headers["Cache-Control"] = "private, max-age=15"
             
     # Clear entire cache on ANY state-changing action
     if request.method in ['POST', 'PUT', 'DELETE']:
+        if redis_client:
+            try:
+                redis_client.flushdb()
+            except:
+                pass
         SIMPLE_CACHE.clear()
         
     return response
@@ -1954,6 +1987,17 @@ def get_sidebar_polls():
     return jsonify(result)
 
 # --- Admin Routes ---
+
+@app.route('/api/admin/clear-cache', methods=['POST'])
+@admin_required
+def admin_clear_cache():
+    if redis_client:
+        try:
+            redis_client.flushdb()
+        except:
+            pass
+    SIMPLE_CACHE.clear()
+    return jsonify({"message": "Cache completely cleared!"})
 
 
 

@@ -93,8 +93,8 @@ export default function Guide() {
         </p>
       </div>
 
-      {/* Tappable Story Cards */}
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '4/5', perspective: '1000px', margin: '0 auto' }}>
+        {/* Tappable Story Cards */}
+      <div style={{ position: 'relative', width: '100%', minHeight: '380px', perspective: '1000px', margin: '0 auto' }}>
         {storyCards.map((card, idx) => {
           const isActive = idx === activeCard;
           const isPast = idx < activeCard;
@@ -105,11 +105,11 @@ export default function Guide() {
           let zIndex = storyCards.length - idx;
 
           if (isPast) {
-            transform = 'translateZ(-100px) translateX(-120%) rotate(-10deg)';
+            transform = 'translateZ(-80px) translateX(-110%) rotate(-5deg)';
             opacity = 0;
           } else if (isNext) {
-            transform = `translateZ(-${(idx - activeCard) * 50}px) translateX(${(idx - activeCard) * 20}px) rotate(${(idx - activeCard) * 3}deg)`;
-            opacity = 1 - (idx - activeCard) * 0.2;
+            transform = `translateZ(-${(idx - activeCard) * 40}px) translateX(${(idx - activeCard) * 15}px) rotate(${(idx - activeCard) * 2}deg)`;
+            opacity = 1 - (idx - activeCard) * 0.15;
           }
 
           return (
@@ -122,8 +122,8 @@ export default function Guide() {
                 background: card.color,
                 border: '6px solid var(--text-main)',
                 borderRadius: '24px',
-                boxShadow: isActive ? '12px 12px 0px var(--text-main)' : 'none',
-                padding: '2rem',
+                boxShadow: isActive ? '8px 8px 0px var(--text-main)' : 'none',
+                padding: '1.5rem',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -139,11 +139,11 @@ export default function Guide() {
                 userSelect: 'none'
               }}
             >
-              <div style={{ marginBottom: '1.5rem', background: 'rgba(255,255,255,0.2)', padding: '1.5rem', borderRadius: '50%', border: '4px solid currentColor', display: 'inline-flex' }}>
+              <div style={{ marginBottom: '1rem', background: 'rgba(255,255,255,0.2)', padding: '1rem', borderRadius: '50%', border: '4px solid currentColor', display: 'inline-flex' }}>
                 {card.icon}
               </div>
-              <h2 style={{ fontSize: '2rem', fontWeight: '900', marginBottom: '1rem', textTransform: 'uppercase' }}>{card.title}</h2>
-              <p style={{ fontSize: '1.1rem', fontWeight: 'bold', lineHeight: '1.5', marginBottom: '1.5rem' }}>{card.text}</p>
+              <h2 style={{ fontSize: '1.7rem', fontWeight: '900', marginBottom: '0.5rem', textTransform: 'uppercase', lineHeight: '1.1' }}>{card.title}</h2>
+              <p style={{ fontSize: '1rem', fontWeight: 'bold', lineHeight: '1.4', marginBottom: '1rem' }}>{card.text}</p>
               
               {card.warning && (
                 <div style={{ background: '#000', color: '#fff', padding: '1rem', borderRadius: '12px', border: '3px solid currentColor', fontWeight: 'bold', fontSize: '0.9rem' }}>

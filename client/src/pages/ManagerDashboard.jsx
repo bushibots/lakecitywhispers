@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch, createPost, deletePost, fetchAdminDatingProfiles, adminToggleDatingProfile, adminDeleteDatingProfile, forceAdminMatch } from '../api';
-import { Shield, Trash2, Megaphone, Heart, Power, Zap, User, Search } from 'lucide-react';
+import { Shield, Trash2, Megaphone, Heart, Power, Zap, User, Search, RefreshCw } from 'lucide-react';
 
 export default function ManagerDashboard() {
   const [activeTab, setActiveTab] = useState('community'); // 'community' | 'dating'
@@ -100,6 +100,19 @@ export default function ManagerDashboard() {
     }
   };
 
+  const handleClearCache = async () => {
+      if (window.confirm("Are you sure you want to completely clear the server cache (Redis & Memory)?")) {
+          try {
+              const res = await apiFetch('/admin/clear-cache', { method: 'POST' });
+              if (res && res.message) {
+                  alert(res.message);
+              }
+          } catch (e) {
+              alert("Error clearing cache.");
+          }
+      }
+  };
+
   const handleToggleDatingProfile = async (userId) => {
       const res = await adminToggleDatingProfile(userId);
       if (res && res.success) {
@@ -193,9 +206,14 @@ export default function ManagerDashboard() {
 
   return (
     <div className="page-content" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem' }}>
-            <Shield size={32} className="icon-teal" />
-            <h1 style={{ margin: 0 }}>Manager Dashboard</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Shield size={32} className="icon-teal" />
+                <h1 style={{ margin: 0 }}>Manager Dashboard</h1>
+            </div>
+            <button className="btn-glow" onClick={handleClearCache} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--red)', color: '#fff', fontSize: '0.9rem', padding: '6px 12px' }}>
+                <RefreshCw size={16} /> Force Clear Cache
+            </button>
         </div>
 
         {/* Tab Navigation */}
