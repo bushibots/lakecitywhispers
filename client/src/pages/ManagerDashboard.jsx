@@ -79,7 +79,7 @@ export default function ManagerDashboard() {
 
   const fetchPosts = async () => {
     const data = await apiFetch(`/posts?handle=${encodeURIComponent(activeHandle)}`);
-    if (data && !data.error) setPosts(data);
+    if (data && !data.error) setPosts(data.posts || data);
   };
 
   const handlePostAnnouncement = async () => {
