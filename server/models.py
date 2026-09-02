@@ -143,6 +143,7 @@ class DatingProfile(db.Model):
     course = db.Column(db.String(255), nullable=True)
     image_url = db.Column(db.String(255), nullable=True) # Legacy single image
     images = db.Column(db.Text, nullable=True) # JSON array of image URLs
+    insta_username = db.Column(db.String(100), nullable=True)
     interests = db.Column(db.Text, nullable=True) # JSON array of interests
     red_flags = db.Column(db.Text, nullable=True) # JSON array of red flags
     green_flags = db.Column(db.Text, nullable=True) # JSON array of green flags

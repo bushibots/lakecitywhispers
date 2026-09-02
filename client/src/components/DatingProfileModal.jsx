@@ -24,7 +24,8 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false); // store index being uploaded, or false
   const [errorMsg, setErrorMsg] = useState('');
-  const [instaUsername, setInstaUsername] = useState('');
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [instaUsername, setInstaUsername] = useState(initialProfile?.insta_username || '');
   const [instaLoading, setInstaLoading] = useState(false);
   const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
 
@@ -36,14 +37,14 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
   };
 
   const handleUrlAdd = async () => {
-      if (!instaUsername.trim() || images.length >= 5) return;
+      if (!imageUrlInput.trim() || images.length >= 5) return;
       setInstaLoading(true);
       setErrorMsg('');
       try {
           // Just add the URL directly if it's a valid image link
-          const url = instaUsername.trim();
+          const url = imageUrlInput.trim();
           setImages([...images, url]);
-          setInstaUsername('');
+          setImageUrlInput('');
       } catch (err) {
           setErrorMsg('Invalid URL');
       } finally {
@@ -102,6 +103,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           course,
           image_url: images[0] || '',
           images,
+          insta_username: instaUsername,
           interests,
           red_flags: redFlags,
           green_flags: greenFlags,
@@ -190,13 +192,13 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
                        <input 
                          type="text" 
                          placeholder="https://example.com/image.jpg" 
-                         value={instaUsername}
-                         onChange={(e) => setInstaUsername(e.target.value)}
+                         value={imageUrlInput}
+                         onChange={(e) => setImageUrlInput(e.target.value)}
                          style={{ width: '100%', padding: '0.6rem 0.8rem', fontSize: '0.9rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-main)' }}
                          onKeyDown={(e) => { if (e.key === 'Enter') handleUrlAdd(); }}
                        />
                      </div>
-                     <button onClick={handleUrlAdd} disabled={instaLoading || !instaUsername.trim()} className="btn-secondary" style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
+                     <button onClick={handleUrlAdd} disabled={instaLoading || !imageUrlInput.trim()} className="btn-secondary" style={{ padding: '0.6rem 1rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
                        Add Link
                      </button>
                    </div>
@@ -212,6 +214,18 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
               placeholder="e.g. 21"
               value={age}
               onChange={(e) => setAge(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>Instagram Handle (Optional)</label>
+            <input 
+              type="text" 
+              className="composer-textarea"
+              style={{ width: '100%', padding: '0.8rem', border: '3px solid #000', backgroundColor: '#fff', color: '#000', fontWeight: 'bold', borderRadius: '8px', boxShadow: 'inset 2px 2px 0 rgba(0,0,0,0.05)' }}
+              placeholder="e.g. jlu_whispers (Shown only on match!)"
+              value={instaUsername}
+              onChange={(e) => setInstaUsername(e.target.value)}
             />
           </div>
 

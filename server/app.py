@@ -174,6 +174,12 @@ with app.app_context():
         db.session.rollback()
 
     try:
+        db.session.execute(db.text('ALTER TABLE dating_profile ADD COLUMN insta_username VARCHAR(100);'))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    try:
         db.session.execute(db.text('CREATE INDEX IF NOT EXISTS idx_message_conv_created ON message(conversation_id, created_at DESC);'))
         db.session.commit()
     except Exception:
@@ -2330,6 +2336,7 @@ def dating_profile():
         except ValueError:
             pass
         profile.image_url = data.get('image_url', profile.image_url)
+        profile.insta_username = data.get('insta_username', profile.insta_username)
         
         imgs = data.get('images')
         if imgs is not None:
@@ -2395,6 +2402,7 @@ def dating_profile():
         "course": profile.course,
         "image_url": profile.image_url,
         "images": parsed_images,
+        "insta_username": profile.insta_username,
         "interests": parsed_interests,
         "red_flags": parsed_red,
         "green_flags": parsed_green,
@@ -2565,10 +2573,16 @@ def dating_swipe():
                 if user_dp and user_dp.image_url:
                     msg1 = Message(conversation_id=conv.id, sender_id=user.id, content=f"[IMAGE] {user_dp.image_url}")
                     db.session.add(msg1)
+                if user_dp and user_dp.insta_username:
+                    msg1_insta = Message(conversation_id=conv.id, sender_id=user.id, content=f"My Instagram: @{user_dp.insta_username}")
+                    db.session.add(msg1_insta)
                 
                 if target_dp and target_dp.image_url:
                     msg2 = Message(conversation_id=conv.id, sender_id=target_id, content=f"[IMAGE] {target_dp.image_url}")
                     db.session.add(msg2)
+                if target_dp and target_dp.insta_username:
+                    msg2_insta = Message(conversation_id=conv.id, sender_id=target_id, content=f"My Instagram: @{target_dp.insta_username}")
+                    db.session.add(msg2_insta)
                 
                 # Notifications
                 from models import Notification
