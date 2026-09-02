@@ -927,9 +927,9 @@ export default function AdminDashboard() {
       )}
 
       {activeTab === 'all_chats' && (
-          <div className="feed-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', height: '600px', backgroundColor: 'var(--bg-elevated)' }}>
+          <div className="feed-card admin-chat-layout" style={{ padding: 0, overflow: 'hidden' }}>
               {/* Left Sidebar: Chat List */}
-              <div style={{ width: '350px', borderRight: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-card)' }}>
+              <div className={`admin-chat-sidebar ${activeAdminChatId ? 'hidden-mobile' : ''}`}>
                   <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
                       <h2 style={{ margin: 0, fontSize: '1.25rem' }}>All Conversations</h2>
                       <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{adminChats.length} active chats</span>
@@ -974,7 +974,7 @@ export default function AdminDashboard() {
               </div>
 
               {/* Right Main Area: Chat Messages */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-elevated)' }}>
+              <div className={`admin-chat-main ${!activeAdminChatId ? 'hidden-mobile' : ''}`}>
                   {activeAdminChatId ? (
                       (() => {
                           const chat = adminChats.find(c => c.id === activeAdminChatId);
@@ -982,7 +982,16 @@ export default function AdminDashboard() {
                           return (
                               <>
                                   <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                      <h3 style={{ margin: 0 }}>Conversation #{chat.id}</h3>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                          <button 
+                                              className="btn-glow" 
+                                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', backgroundColor: 'var(--bg-card)' }}
+                                              onClick={() => setActiveAdminChatId(null)}
+                                          >
+                                              &larr; Back
+                                          </button>
+                                          <h3 style={{ margin: 0 }}>Conversation #{chat.id}</h3>
+                                      </div>
                                       <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                                           Between User {chat.user1.id} and User {chat.user2.id}
                                       </div>

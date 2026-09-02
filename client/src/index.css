@@ -1122,3 +1122,45 @@ body.t-india .btn-glow:hover {
   outline: none;
   font-size: 0.85rem;
 }
+
+
+/* Admin Chat Layout Mobile Optimization */
+.admin-chat-layout {
+    display: flex;
+    height: 600px;
+    background-color: var(--bg-elevated);
+}
+.admin-chat-sidebar {
+    width: 350px;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-card);
+}
+.admin-chat-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-elevated);
+}
+
+@media (max-width: 768px) {
+    .admin-chat-layout {
+        flex-direction: column;
+        height: 80vh;
+    }
+    .admin-chat-sidebar {
+        width: 100%;
+        border-right: none;
+        height: 100%;
+    }
+    .admin-chat-sidebar.hidden-mobile {
+        display: none !important;
+    }
+    .admin-chat-main {
+        height: 100%;
+    }
+    .admin-chat-main.hidden-mobile {
+        display: none !important;
+    }
+}
