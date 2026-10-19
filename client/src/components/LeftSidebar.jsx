@@ -1,11 +1,12 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, TrendingUp, Shield, LogIn, Flame, Moon, Sun } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Compass, MessageSquare, Bell, User, Settings as SettingsIcon, Bookmark, Shield, LogIn, Flame, Moon, Sun } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import AuthModal from './AuthModal';
 import { fetchPublicConfig, apiFetch } from '../api';
 
 export default function LeftSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const isRegistered = localStorage.getItem('jluwhisper_registered') === 'true';
@@ -64,7 +65,7 @@ export default function LeftSidebar() {
   const [siteLogo, setSiteLogo] = useState('');
   const [siteName, setSiteName] = useState('JLU Whisper');
   const [globalTheme, setGlobalTheme] = useState('');
-  const [chakraClicks, setChakraClicks] = useState(0);
+  const chakraClicksRef = useRef(0);
 
   useEffect(() => {
     fetchPublicConfig().then(cfg => {
@@ -75,14 +76,20 @@ export default function LeftSidebar() {
   }, []);
 
   const handleChakraClick = () => {
-    setChakraClicks(prev => {
-        const newCount = prev + 1;
-        if (newCount >= 3) {
-            window.dispatchEvent(new CustomEvent('trigger_confetti', { detail: { colors: ['#FF9933', '#FFFFFF', '#138808'] } }));
-            return 0; // reset
-        }
-        return newCount;
-    });
+    chakraClicksRef.current += 1;
+    if (chakraClicksRef.current >= 3) {
+      window.dispatchEvent(new CustomEvent('trigger_confetti', { detail: { colors: ['#FF9933', '#FFFFFF', '#138808'] } }));
+      chakraClicksRef.current = 0;
+    }
+  };
+
+  const handleWhisperClick = () => {
+    navigate('/feed');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      const composer = document.querySelector('.composer-textarea');
+      if (composer) composer.focus();
+    }, 100);
   };
 
   return (
@@ -131,7 +138,7 @@ export default function LeftSidebar() {
         })}
       </nav>
 
-      <button className="btn-glow sidebar-fab">
+      <button className="btn-glow sidebar-fab" onClick={handleWhisperClick}>
         <span style={{ fontSize: '1.2rem', marginRight: '8px' }}>+</span> Whisper
       </button>
 

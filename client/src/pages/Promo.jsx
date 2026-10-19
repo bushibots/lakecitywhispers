@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Zap, Flame, Clock, Users, ArrowRight, X, Download } from 'lucide-react';
+import { Shield, Zap, Flame, Clock, ArrowRight, X, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Promo() {

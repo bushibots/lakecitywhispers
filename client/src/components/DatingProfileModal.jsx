@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, X, Camera } from 'lucide-react';
-import { apiFetch, uploadFile, fetchInstagramProfile } from '../api';
+import { apiFetch, uploadFile } from '../api';
 import { CAMPUS_STRUCTURE } from '../campus_structure';
 
 const INTEREST_OPTIONS = ["Late Night Snacking", "Library Grind", "Gaming", "Photography", "Cafe Hopping", "Anime", "Gym Rat", "Partying", "Music Festivals", "Art & Design", "Sports", "Thrifting"];
@@ -45,7 +45,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           const url = imageUrlInput.trim();
           setImages([...images, url]);
           setImageUrlInput('');
-      } catch (err) {
+      } catch {
           setErrorMsg('Invalid URL');
       } finally {
           setInstaLoading(false);
@@ -416,7 +416,7 @@ export default function DatingProfileModal({ isOpen, onClose, onSaved, initialPr
           {initialProfile && (
               <button 
                   style={{ width: '100%', padding: '0.8rem', fontSize: '1rem', fontWeight: 700, color: '#e74c3c', border: '3px solid #000', background: '#fff', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.1s', boxShadow: '3px 3px 0 #000' }}
-                  onClick={async (e) => {
+                  onClick={async () => {
                       if (window.confirm("Are you sure you want to withdraw your profile? You will no longer be visible in Dating.")) {
                           setLoading(true);
                           const res = await apiFetch('/dating/profile', {

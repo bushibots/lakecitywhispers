@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, TrendingUp, Flame, MessageSquare, ArrowRight, BarChart2 } from 'lucide-react';
+import { Search, TrendingUp, Flame, MessageSquare } from 'lucide-react';
 import { fetchTrending, searchPosts, fetchDailyPrompt } from '../api';
 import CampusPolls from '../components/CampusPolls';
 
@@ -15,12 +15,19 @@ export default function Explore() {
     fetchDailyPrompt().then(p => setDailyPrompt(p));
   }, []);
 
-  const handleSearch = async (e) => {
-    if (e.key === 'Enter' && query.trim()) {
-      setLoading(true);
-      const data = await searchPosts(query.trim());
-      setResults(data);
-      setLoading(false);
+  const performSearch = async (searchTerm) => {
+    const term = (searchTerm !== undefined ? searchTerm : query).trim();
+    if (!term) return;
+    setLoading(true);
+    setQuery(term);
+    const data = await searchPosts(term);
+    setResults(data);
+    setLoading(false);
+  };
+
+  const handleSearch = (e) => {
+    if (e.key === 'Enter') {
+      performSearch();
     }
   };
 
@@ -33,7 +40,7 @@ export default function Explore() {
     <div className="page-content">
 
       <div className="search-bar-large">
-        <Search className="search-icon" />
+        <Search className="search-icon" style={{ cursor: 'pointer' }} onClick={() => performSearch()} />
         <input 
           type="text" 
           placeholder="Search whispers, topics, or identities... (Press Enter)" 
@@ -85,7 +92,7 @@ export default function Explore() {
                 <p style={{ color: 'var(--text-muted)' }}>No trending topics yet.</p>
               ) : (
                 trending.map(t => (
-                  <div key={t.rank} className="trending-card" onClick={() => { setQuery(t.topic); handleSearch({ key: 'Enter' }); }}>
+                  <div key={t.rank} className="trending-card" onClick={() => performSearch(t.topic)}>
                     <span className="rank">#{t.rank}</span>
                     <div>
                       <h4>{t.topic}</h4>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Ghost, Key, ShieldCheck, Sparkles, ChevronLeft, ChevronRight, MessageSquare, Flame, Coffee } from 'lucide-react';
+import React, { useState } from 'react';
+import { Ghost, Key, ShieldCheck, Flame, Coffee } from 'lucide-react';
 import JSConfetti from 'js-confetti';
 
 export default function Guide() {
@@ -12,7 +12,7 @@ export default function Guide() {
     try {
       const jsConfetti = new JSConfetti();
       jsConfetti.addConfetti({ emojis: ['🍵', '☕', '🔥', '✨'] });
-    } catch (e) {
+    } catch {
       // ignore if not installed
     }
   };

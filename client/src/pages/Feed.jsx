@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Image, Smile, Mic, BarChart2, MessageCircle, Flame, Eye, Share, X, Square, Mail, MoreVertical, Bookmark } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { getSessionToken, fetchPosts, createPost, votePost, fetchReplies, createReply, votePoll, recordView, uploadFile, requestMessage, fetchDailyPrompt, deletePost, editPost, pinPost } from '../api';
 import { socket } from '../socket';
 import { formatTime } from '../utils';
@@ -8,10 +9,7 @@ import StoryShareModal from '../components/StoryShareModal';
 import { Avatar } from '../components/RenderAvatar';
 import CustomDropdown from '../components/CustomDropdown';
 
-import { CAMPUS_STRUCTURE } from '../campus_structure';
-
 const CATEGORIES = ['Confessions', 'Crushes', 'Academics', 'Funny', 'Campus', 'Advice', 'Events'];
-const IDENTITIES = ['Silent Owl', 'Midnight Fox', 'Quiet Wolf', 'Ghost Panda', 'Hidden Leaf', 'Shadow Cat'];
 
 export default function Feed() {
   const location = useLocation();
@@ -27,7 +25,6 @@ export default function Feed() {
   const [showPollInputs, setShowPollInputs] = useState(false);
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [votedPolls, setVotedPolls] = useState({});
-  const [selectedOptions, setSelectedOptions] = useState({});
   const [sharePost, setSharePost] = useState(null);
   const [isComposerFocused, setIsComposerFocused] = useState(false);
   
@@ -69,11 +66,15 @@ export default function Feed() {
   const [myIdentity, setMyIdentity] = useState('?');
   const [activeMenu, setActiveMenu] = useState(null);
   const [votedPosts, setVotedPosts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('jluwhisper_voted_posts')) || {}; } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem('jluwhisper_voted_posts')) || {}; } catch { return {}; }
   });
   const [savedPosts, setSavedPosts] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('jluwhisper_saved_posts')) || {}; } catch(e) { return {}; }
+    try { return JSON.parse(localStorage.getItem('jluwhisper_saved_posts')) || {}; } catch { return {}; }
   });
+  const savedPostsRef = useRef(savedPosts);
+  useEffect(() => {
+    savedPostsRef.current = savedPosts;
+  }, [savedPosts]);
   
   // Track which specific comment we are replying to, if any
   const [replyingTo, setReplyingTo] = useState(null);
@@ -100,7 +101,7 @@ export default function Feed() {
     const handleNewPost = (post) => {
       // If we are filtering, only show if it matches
       if (filterTopic && filterTopic !== 'Watchlist' && post.topic !== filterTopic) return;
-      if (filterTopic === 'Watchlist' && !savedPosts[post.id]) return;
+      if (filterTopic === 'Watchlist' && !savedPostsRef.current[post.id]) return;
       
       setPosts(prev => {
         // Avoid duplicates if we created it
@@ -118,7 +119,7 @@ export default function Feed() {
     if (!t && !sq) {
       const cached = localStorage.getItem('jluwhisper_feed_cache');
       if (cached) {
-        try { setPosts(JSON.parse(cached)); } catch (e) {}
+        try { setPosts(JSON.parse(cached)); } catch { /* ignore */ }
       }
     }
     
@@ -192,7 +193,6 @@ export default function Feed() {
         content: content.trim() || " ",
         topic,
         author_username: myIdentity,
-        topic: topic,
         created_at: new Date().toISOString(),
         upvotes: 0, downvotes: 0, views: 0, replies_count: 0,
         is_optimistic: true
@@ -213,7 +213,7 @@ export default function Feed() {
     } else {
       // Revert if failed
       setPosts(prev => prev.filter(p => p.id !== tempId));
-      import('react-hot-toast').then(m => m.toast.error("Failed to post whisper."));
+      toast.error("Failed to post whisper.");
     }
     setIsPosting(false);
   };
@@ -238,7 +238,7 @@ export default function Feed() {
         mediaRecorder.start();
         setIsRecording(true);
         recordingTimerRef.current = setTimeout(() => {
-            import('react-hot-toast').then(m => m.toast.error("Voice note limit (2 min) reached."));
+            toast.error("Voice note limit (2 min) reached.");
             stopRecording();
         }, 120000);
     } catch (err) {
@@ -690,7 +690,7 @@ export default function Feed() {
                   onChange={(e) => {
                       if (e.target.files && e.target.files[0]) {
                           if (e.target.files[0].size > 9 * 1024 * 1024) {
-                              import('react-hot-toast').then(m => m.toast.error("File exceeds 9MB limit."));
+                              toast.error("File exceeds 9MB limit.");
                               return;
                           }
                           setImageFile(e.target.files[0]);

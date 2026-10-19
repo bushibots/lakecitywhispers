@@ -6,7 +6,6 @@ import {
     sendAdminBroadcast, fetchAdminConversations, adminForgePost, adminSpawnBots, adminWipeUser, adminBulkWipeUsers,
     fetchAdminDatingProfiles, adminDeleteDatingProfile, fetchAdminSwipes, fetchAdminMedia, forceAdminMatch, fetchAdminIdentityLogs, adminMakeManager, apiFetch
 } from '../api';
-import IPLookupWidget from '../components/IPLookupWidget';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('moderation');
@@ -33,7 +32,6 @@ export default function AdminDashboard() {
   const [adminMsgTotal, setAdminMsgTotal] = useState(0);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [broadcastMsg, setBroadcastMsg] = useState('');
-  const [lookupIp, setLookupIp] = useState('');
   const [identityLogs, setIdentityLogs] = useState([]);
   
   // Force Match State
@@ -52,7 +50,6 @@ export default function AdminDashboard() {
   const [managerUsername, setManagerUsername] = useState('');
   const [managerHandle, setManagerHandle] = useState('Campus');
 
-  const [users, setUsers] = useState([]);
   const [isSpawning, setIsSpawning] = useState(false);
   const [sysSettings, setSysSettings] = useState({ 
     lockdown: false, maintenance: false, bots_enabled: false, media_enabled: true,
@@ -319,7 +316,7 @@ export default function AdminDashboard() {
           } else {
               alert('Failed to save settings.');
           }
-      } catch (err) {
+      } catch {
           alert('Network error');
       }
       setAutopilotSaving(false);
@@ -381,7 +378,7 @@ export default function AdminDashboard() {
         await updateAdminSettings({ site_logo: upData.url });
         alert("Logo updated globally! Please refresh the page to see changes.");
       }
-    } catch(err) {
+    } catch {
       alert("Upload failed.");
     }
   };
@@ -406,7 +403,7 @@ export default function AdminDashboard() {
               if (res && res.message) {
                   alert(res.message);
               }
-          } catch (e) {
+          } catch {
               alert("Error clearing cache.");
           }
       }
@@ -890,8 +887,13 @@ export default function AdminDashboard() {
                           style={{ width: '200px', height: '40px', padding: '0.5rem' }} 
                           value={sysSettings.global_theme || 't-default'} 
                           onChange={(e) => {
-                              handleSettingChange('global_theme', e.target.value);
-                              document.body.className = e.target.value; // Optimistic local update
+                              const newTheme = e.target.value;
+                              handleSettingChange('global_theme', newTheme);
+                              const themeClasses = ['t-aurora', 't-cyber', 't-space', 't-inverted', 't-retro', 't-brutalism', 't-india', 't-default'];
+                              document.body.classList.remove(...themeClasses);
+                              if (newTheme && newTheme !== 't-default') {
+                                  document.body.classList.add(newTheme);
+                              }
                           }}
                       >
                           <option value="t-default">Default (Dark)</option>

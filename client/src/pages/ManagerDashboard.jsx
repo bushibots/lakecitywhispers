@@ -53,7 +53,7 @@ export default function ManagerDashboard() {
           } else {
               alert('Failed to save settings.');
           }
-      } catch (err) {
+      } catch {
           alert('Network error');
       }
       setAutopilotSaving(false);
@@ -107,7 +107,7 @@ export default function ManagerDashboard() {
               if (res && res.message) {
                   alert(res.message);
               }
-          } catch (e) {
+          } catch {
               alert("Error clearing cache.");
           }
       }

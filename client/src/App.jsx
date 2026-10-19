@@ -13,9 +13,8 @@ import Settings from './pages/Settings';
 import Promo from './pages/Promo';
 import NewFeatures from './pages/NewFeatures';
 import AuthModal from './components/AuthModal';
-import { Heart } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import EasterEggs from './components/EasterEggs';
 import { socket, joinSocketRoom } from './socket';
 import { fetchMe, fetchPublicConfig } from './api';
@@ -56,7 +55,7 @@ function App() {
         document.body.classList.remove('dark-mode');
       }
 
-      const themeClasses = ['t-aurora', 't-cyber', 't-space', 't-inverted', 't-retro', 't-brutalism', 't-default'];
+      const themeClasses = ['t-aurora', 't-cyber', 't-space', 't-inverted', 't-retro', 't-brutalism', 't-india', 't-default'];
       document.body.classList.remove(...themeClasses);
 
       if (cfg && cfg.global_theme && cfg.global_theme !== 't-default') {

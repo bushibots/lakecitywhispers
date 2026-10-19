@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, TrendingUp, Shield, LogIn, Flame, Moon, Sun } from 'lucide-react';
+import { Menu, X, Home, Compass, MessageSquare, Bell, Settings, Bookmark, Shield, LogIn, Flame, Moon, Sun } from 'lucide-react';
 import AuthModal from './AuthModal';
 import { fetchPublicConfig } from '../api';
 

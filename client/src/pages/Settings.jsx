@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, Settings as SettingsIcon, Shield, Trash2, Key, RefreshCw } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { fetchMe, regenerateIdentity, changePassword, deleteAccount, changeUsername, changeAlias } from '../api';
 
 export default function Settings() {
@@ -95,7 +96,7 @@ export default function Settings() {
           setPassSuccess("Profile picture updated!");
         }
       }
-    } catch(err) {
+    } catch {
       setPassError("Upload failed.");
     }
   };
@@ -157,9 +158,9 @@ export default function Settings() {
     if (!res.error) {
       setProfile(prev => ({ ...prev, display_name: res.display_name, avatar: res.avatar }));
       setCustomAliasInput('');
-      import('react-hot-toast').then(m => m.toast.success("Alias updated!"));
+      toast.success("Alias updated!");
     } else {
-      import('react-hot-toast').then(m => m.toast.error(res.error));
+      toast.error(res.error || "Failed to update alias.");
     }
   };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Flame, Users, Activity, BarChart2 } from 'lucide-react';
+import { Flame, Users, Activity } from 'lucide-react';
 import { fetchSidebarStats } from '../api';
 import { socket } from '../socket';
 import CampusPolls from './CampusPolls';
@@ -37,23 +37,6 @@ export default function RightSidebar() {
       const newArr = [msg, ...prev];
       return newArr.slice(0, 3);
     });
-  };
-
-  const handleVote = async (pollId, optionId) => {
-    if (votedPolls[pollId]) return;
-    setVotedPolls(prev => ({ ...prev, [pollId]: optionId }));
-    await votePoll(pollId, optionId);
-    // Optimistically update poll counts
-    setPolls(prev => prev.map(p => {
-      if (p.id === pollId) {
-        return {
-          ...p,
-          total_votes: p.total_votes + 1,
-          options: p.options.map(o => o.id === optionId ? { ...o, votes: o.votes + 1 } : o)
-        };
-      }
-      return p;
-    }));
   };
 
   const handleSearch = (e) => {

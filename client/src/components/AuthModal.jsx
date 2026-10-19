@@ -47,7 +47,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
           setMode('recovery_show');
         }
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred.');
     }
     setLoading(false);

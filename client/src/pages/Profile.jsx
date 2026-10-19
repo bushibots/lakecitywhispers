@@ -125,7 +125,7 @@ export default function Profile() {
         <div className="profile-section">
           <h3>Options</h3>
           <ul className="settings-list">
-            <li><Bookmark size={18} /> Saved Whispers</li>
+            <Link to="/feed?topic=Watchlist" style={{ color: 'inherit', textDecoration: 'none' }}><li><Bookmark size={18} /> Saved Whispers</li></Link>
             <Link to="/settings" style={{ color: 'inherit', textDecoration: 'none' }}><li><Settings size={18} /> Account Settings</li></Link>
             <li onClick={handleSupport}><HelpCircle size={18} /> Get Help from Admin Forum</li>
             <li className="text-danger" onClick={handleLogout}><LogOut size={18} /> Log Out (Reset Identity)</li>

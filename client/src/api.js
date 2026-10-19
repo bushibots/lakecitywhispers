@@ -46,8 +46,13 @@ export const apiFetch = async (endpoint, options = {}) => {
         ...options.headers
     };
     
+    let cleanEndpoint = endpoint;
+    if (cleanEndpoint.startsWith('/api/')) cleanEndpoint = cleanEndpoint.slice(4);
+    else if (cleanEndpoint.startsWith('api/')) cleanEndpoint = cleanEndpoint.slice(3);
+    const path = cleanEndpoint.startsWith('/') ? cleanEndpoint : `/${cleanEndpoint}`;
+    
     try {
-        const res = await fetch(`${API_URL}${endpoint}`, {
+        const res = await fetch(`${API_URL}${path}`, {
             ...options,
             headers
         });
@@ -854,7 +859,7 @@ export const blockUser = async (convId) => {
             headers: { "Authorization": token }
         });
         return await res.json();
-    } catch (error) {
+    } catch {
         return { error: "Network error" };
     }
 };
@@ -867,7 +872,7 @@ export const deleteConversation = async (convId) => {
             headers: { "Authorization": token }
         });
         return await res.json();
-    } catch (error) {
+    } catch {
         return { error: "Network error" };
     }
 };
@@ -880,7 +885,7 @@ export const unsendMessage = async (msgId) => {
             headers: { "Authorization": token }
         });
         return await res.json();
-    } catch (error) {
+    } catch {
         return { error: "Network error" };
     }
 };
@@ -892,7 +897,7 @@ export const fetchNotifications = async () => {
     try {
         const res = await fetch(`${API_URL}/notifications`, { headers: { "Authorization": token } });
         return await res.json();
-    } catch (error) { return []; }
+    } catch { return []; }
 };
 
 export const markNotificationsRead = async () => {
@@ -900,21 +905,21 @@ export const markNotificationsRead = async () => {
     try {
         const res = await fetch(`${API_URL}/notifications/read`, { method: "POST", headers: { "Authorization": token } });
         return await res.json();
-    } catch (error) { return { error: "Network error" }; }
+    } catch { return { error: "Network error" }; }
 };
 
 export const fetchTrending = async () => {
     try {
         const res = await fetch(`${API_URL}/explore/trending`);
         return await res.json();
-    } catch (error) { return []; }
+    } catch { return []; }
 };
 
 export const searchPosts = async (query) => {
     try {
         const res = await fetch(`${API_URL}/explore/search?q=${encodeURIComponent(query)}`);
         return await res.json();
-    } catch (error) { return []; }
+    } catch { return []; }
 };
 
 
@@ -923,14 +928,14 @@ export const fetchSidebarStats = async () => {
     try {
         const res = await fetch(`${API_URL}/sidebar/stats`);
         return await res.json();
-    } catch (error) { return { total_posts_today: 0, online_users: 0, trending_tags: [] }; }
+    } catch { return { total_posts_today: 0, online_users: 0, trending_tags: [] }; }
 };
 
 export const fetchSidebarPolls = async () => {
     try {
         const res = await fetch(`${API_URL}/sidebar/polls`);
         return await res.json();
-    } catch (error) { return []; }
+    } catch { return []; }
 };
 
 
@@ -960,7 +965,7 @@ export const changeUsername = async (newUsername, password) => {
             body: JSON.stringify({ new_username: newUsername, password })
         });
         return await res.json();
-    } catch (error) {
+    } catch {
         return { error: 'Network error' };
     }
 };
@@ -975,7 +980,7 @@ export const changeAlias = async (newAlias) => {
             body: JSON.stringify({ new_alias: newAlias })
         });
         return await res.json();
-    } catch (error) {
+    } catch {
         return { error: 'Network error' };
     }
 };
@@ -989,7 +994,7 @@ export const adminWipeUser = async (username) => {
             headers: { 'Authorization': token }
         });
         return await res.json();
-    } catch (error) {
+    } catch {
         return { error: 'Network error' };
     }
 };
@@ -1003,7 +1008,7 @@ export const adminBulkWipeUsers = async (userIds) => {
             body: JSON.stringify({ user_ids: userIds })
         });
         return await res.json();
-    } catch (error) {
+    } catch {
         return { error: 'Network error' };
     }
 };
@@ -1021,4 +1026,4 @@ export const fetchAdminIdentityLogs = async (page = 1) => {
     }
 };
 
-export const adminMakeManager = async (username, handle) => { const token = await getSessionToken(); try { const res = await fetch(API_URL + '/admin/managers', { method: 'POST', headers: { 'Authorization': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ username, handle }) }); return await res.json(); } catch(e) { return {error: 'Network Error'}; } };
+export const adminMakeManager = async (username, handle) => { const token = await getSessionToken(); try { const res = await fetch(API_URL + '/admin/managers', { method: 'POST', headers: { 'Authorization': token, 'Content-Type': 'application/json' }, body: JSON.stringify({ username, handle }) }); return await res.json(); } catch { return {error: 'Network Error'}; } };

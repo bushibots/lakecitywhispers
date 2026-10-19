@@ -157,7 +157,7 @@ export function Avatar({ avatarString, fallbackChar, style, className }) {
     try {
       const state = JSON.parse(avatarString);
       return <RenderAvatar state={state} style={style} className={className} />;
-    } catch (e) {
+    } catch {
       // ignore
     }
   }

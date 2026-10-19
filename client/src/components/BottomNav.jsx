@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Compass, Heart, Bell, User, MessageSquare } from 'lucide-react';
+import { Home, Compass, Heart, Bell, User } from 'lucide-react';
 
 export default function BottomNav() {
   const location = useLocation();

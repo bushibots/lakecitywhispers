@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, X, Filter, ChevronLeft, ChevronRight, Star, RotateCcw, ImagePlus } from 'lucide-react';
+import { Heart, X, Filter, ChevronLeft, ChevronRight, Star, RotateCcw } from 'lucide-react';
 import { apiFetch } from '../api';
 import DatingProfileModal from '../components/DatingProfileModal';
 import DatingFilterModal from '../components/DatingFilterModal';
@@ -142,7 +142,8 @@ export default function Dating() {
     
     await new Promise(resolve => setTimeout(resolve, 300));
     
-    fetchPromise.then(res => res.json()).then(data => {
+    fetchPromise.then(data => {
+        if (!data) return;
         if (data.error === 'daily_limit') {
             setDailyLimitHit(true);
             setLikesToday(data.likes_today || likesLimit);
@@ -179,9 +180,9 @@ export default function Dating() {
       const crushStr = prompt("Enter up to 3 usernames (comma separated) for your Secret Crush list.\nIf they also crush on you, it's a match!");
       if (crushStr !== null) {
           const crushes = crushStr.split(',').map(s => s.trim().replace('@', '')).filter(Boolean).slice(0, 3);
-          apiFetch('/api/dating/secret_crush', { method: 'POST', body: JSON.stringify({ crushes }) })
+          apiFetch('/dating/secret_crush', { method: 'POST', body: JSON.stringify({ crushes }) })
           .then(res => {
-              if (res.message) alert("Secret crushes saved! 🤫");
+              if (res && res.message) alert("Secret crushes saved! 🤫");
           });
       }
   };
@@ -432,7 +433,6 @@ export default function Dating() {
                         <div style={{ display: 'flex', flex: 1, width: '100%', height: '100%' }}>
                             <div style={{ flex: 1, height: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', paddingLeft: '10px' }} onClick={(e) => {
                                 e.stopPropagation();
-                                const imgs = currentProfile.images?.length > 0 ? currentProfile.images : (currentProfile.image_url ? [currentProfile.image_url] : []);
                                 if (photoIndex > 0) setPhotoIndex(photoIndex - 1);
                             }}>
                                 {photoIndex > 0 && <ChevronLeft size={32} color="rgba(255,255,255,0.7)" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />}
