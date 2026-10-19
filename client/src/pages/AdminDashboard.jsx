@@ -27,6 +27,7 @@ export default function AdminDashboard() {
   const [autopilotEnabled, setAutopilotEnabled] = useState(false);
   const [autopilotTime, setAutopilotTime] = useState('20:00');
   const [autopilotSaving, setAutopilotSaving] = useState(false);
+  const [cleaningSpam, setCleaningSpam] = useState(false);
   const [adminMessages, setAdminMessages] = useState([]);
   const [adminMsgPage, setAdminMsgPage] = useState(1);
   const [adminMsgTotal, setAdminMsgTotal] = useState(0);
@@ -320,6 +321,18 @@ export default function AdminDashboard() {
           alert('Network error');
       }
       setAutopilotSaving(false);
+  };
+
+  const handleCleanupAutopilotSpam = async () => {
+    if (!window.confirm("Are you sure you want to clean up duplicate AI Autopilot posts? This will keep only the latest announcement and delete all older duplicates.")) return;
+    setCleaningSpam(true);
+    try {
+      const res = await apiFetch('/admin/dating/cleanup_autopilot_spam', { method: 'POST' });
+      alert(res.message || 'Duplicate drops purged!');
+    } catch {
+      alert('Failed to purge duplicate drops.');
+    }
+    setCleaningSpam(false);
   };
 
   const handleLogoUpload = async (e) => {
@@ -1227,14 +1240,24 @@ export default function AdminDashboard() {
                           />
                       </div>
                       
-                      <button 
-                          className="btn-glow"
-                          onClick={handleSaveAutopilot}
-                          disabled={autopilotSaving}
-                          style={{ background: '#FF5E5B', color: '#fff', padding: '0.6rem 1.5rem' }}
-                      >
-                          {autopilotSaving ? 'Saving...' : 'Save Settings'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button 
+                            className="btn-glow"
+                            onClick={handleSaveAutopilot}
+                            disabled={autopilotSaving}
+                            style={{ background: '#FF5E5B', color: '#fff', padding: '0.6rem 1.5rem' }}
+                        >
+                            {autopilotSaving ? 'Saving...' : 'Save Settings'}
+                        </button>
+                        <button 
+                            className="btn-glow"
+                            onClick={handleCleanupAutopilotSpam}
+                            disabled={cleaningSpam}
+                            style={{ background: 'var(--bg-elevated)', color: 'var(--text-main)', border: '1px solid var(--border)', padding: '0.6rem 1.25rem' }}
+                        >
+                            {cleaningSpam ? 'Cleaning...' : '🧹 Purge Duplicate AI Drops'}
+                        </button>
+                      </div>
                   </div>
               </div>
 

@@ -1272,6 +1272,27 @@ a {
 }
 
 /* ==========================================================================
+   APP SHELL & MOBILE BASE RULES (Strictly hidden on desktop > 768px)
+   ========================================================================== */
+
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+}
+
+/* Ensure mobile-only elements NEVER render on desktop */
+.global-mobile-header,
+.mobile-drawer,
+.drawer-overlay,
+.bottom-nav {
+  display: none !important;
+}
+
+/* ==========================================================================
    RESPONSIVE DESIGN (Tablets, Mobiles, Screen Optimizations)
    ========================================================================== */
 
@@ -1594,22 +1615,23 @@ body.t-inverted {
   --card-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
 }
 
-/* 5. Neo-Brutalism (Sharp Edge, Hard Shadow, High Contrast GenZ) */
+/* 5. Neo-Brutalism (Modern GenZ Playful UI) */
 body.t-brutalism {
-  --bg-color: #FDFBF7;
-  --bg-secondary: #F5EFEB;
+  --bg-color: #FFFDF9;
+  --bg-secondary: #F7F3EB;
   --card-bg: #FFFFFF;
   --bg-elevated: #FFFFFF;
-  --bg-glass: #FFFFFF;
-  --primary: #FFCC00;
-  --accent-glow: #FF3366;
-  --accent-color: #FFCC00;
-  --text-main: #000000;
-  --text-muted: #4B5563;
-  --border: #000000;
-  --border-strong: #000000;
-  --card-shadow: 4px 4px 0px #000000;
-  --card-shadow-hover: 6px 6px 0px #000000;
+  --bg-glass: rgba(255, 253, 249, 0.95);
+  --primary: #F59E0B;
+  --primary-rgb: 245, 158, 11;
+  --accent-glow: #EC4899;
+  --accent-color: #F59E0B;
+  --text-main: #18181B;
+  --text-muted: #52525B;
+  --border: #18181B;
+  --border-strong: #18181B;
+  --card-shadow: 4px 4px 0px #18181B;
+  --card-shadow-hover: 6px 6px 0px #18181B;
 }
 
 body.t-brutalism .feed-card,
@@ -1617,43 +1639,58 @@ body.t-brutalism .widget,
 body.t-brutalism .composer-box,
 body.t-brutalism .modal-content,
 body.t-brutalism .stat-box {
-  border: 3px solid #000000 !important;
-  border-radius: 0px !important;
-  box-shadow: 5px 5px 0px #000000 !important;
+  border: 2px solid #18181B !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 4px 4px 0px #18181B !important;
 }
 
 body.t-brutalism .btn-glow {
-  border: 3px solid #000000 !important;
-  border-radius: 0px !important;
-  background: #FFCC00 !important;
-  color: #000000 !important;
-  box-shadow: 3px 3px 0px #000000 !important;
+  border: 2px solid #18181B !important;
+  border-radius: var(--radius-full) !important;
+  background: #F59E0B !important;
+  color: #18181B !important;
+  font-weight: 800 !important;
+  box-shadow: 3px 3px 0px #18181B !important;
 }
 
 body.t-brutalism .btn-glow:hover {
   transform: translate(-2px, -2px) !important;
-  box-shadow: 5px 5px 0px #000000 !important;
+  box-shadow: 5px 5px 0px #18181B !important;
+  filter: brightness(1.05);
 }
 
 body.t-brutalism.dark-mode {
-  --bg-color: #121212;
-  --bg-secondary: #1C1C1C;
-  --card-bg: #1E1E1E;
-  --bg-elevated: #242424;
-  --primary: #FFCC00;
-  --text-main: #FFFFFF;
-  --text-muted: #9CA3AF;
-  --border: #FFFFFF;
-  --border-strong: #FFFFFF;
-  --card-shadow: 4px 4px 0px #FFFFFF;
+  --bg-color: #0E1015;
+  --bg-secondary: #161922;
+  --card-bg: #161922;
+  --bg-elevated: #1F2432;
+  --bg-glass: rgba(14, 16, 21, 0.92);
+  --primary: #FBBF24;
+  --primary-rgb: 251, 191, 36;
+  --accent-glow: #F43F5E;
+  --accent-color: #FBBF24;
+  --text-main: #F4F4F5;
+  --text-muted: #A1A1AA;
+  --border: rgba(255, 255, 255, 0.16);
+  --border-strong: #FBBF24;
+  --card-shadow: 4px 4px 0px rgba(0, 0, 0, 0.7);
 }
 
 body.t-brutalism.dark-mode .feed-card,
 body.t-brutalism.dark-mode .widget,
 body.t-brutalism.dark-mode .composer-box,
 body.t-brutalism.dark-mode .modal-content {
-  border: 2px solid #FFFFFF !important;
-  box-shadow: 4px 4px 0px #FFFFFF !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.6) !important;
+}
+
+body.t-brutalism.dark-mode .btn-glow {
+  border: 2px solid #FBBF24 !important;
+  border-radius: var(--radius-full) !important;
+  background: #FBBF24 !important;
+  color: #0E1015 !important;
+  box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.8) !important;
 }
 
 /* 6. Retro (Arcade Matrix Terminal) */

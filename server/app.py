@@ -223,8 +223,23 @@ def ai_autopilot_job():
         # 2. Run Vibe Scanner
         print("Running AI Match Autopilot Vibe Scanner...")
         from models import DatingProfile, SwipeInteraction, Conversation, Message, Notification
-        profiles = DatingProfile.query.filter_by(is_active=True).all()
+        from datetime import timedelta
         
+        # Idle check: Only consider users who have been active within the last 14 days
+        active_cutoff = datetime.utcnow() - timedelta(days=14)
+        profiles = [
+            p for p in DatingProfile.query.filter_by(is_active=True).all()
+            if p.user and not p.user.is_banned and (
+                (p.user.last_active and p.user.last_active >= active_cutoff) or
+                (p.user.created_at and p.user.created_at >= active_cutoff)
+            )
+        ]
+        
+        # If the site is idle and there are not enough active users, skip posting
+        if len(profiles) < 2:
+            print("AI Match Autopilot: Insufficient active users in last 14 days. Skipping drop to prevent duplicate spam.")
+            return
+
         couples = []
         for i in range(len(profiles)):
             for j in range(i+1, len(profiles)):
@@ -233,6 +248,14 @@ def ai_autopilot_job():
                 
                 if not p1.user or not p2.user: continue
                 
+                # Check if this couple was ALREADY matched or has an existing conversation
+                existing_conv = Conversation.query.filter(
+                    ((Conversation.user1_id == p1.user_id) & (Conversation.user2_id == p2.user_id)) |
+                    ((Conversation.user1_id == p2.user_id) & (Conversation.user2_id == p1.user_id))
+                ).first()
+                if existing_conv:
+                    continue  # Already matched, do not spam again!
+
                 p1_likes_p2 = p1.looking_for == 'everyone' or p1.looking_for == p2.gender
                 p2_likes_p1 = p2.looking_for == 'everyone' or p2.looking_for == p1.gender
                 
@@ -275,7 +298,9 @@ def ai_autopilot_job():
         couples.sort(key=lambda x: x['score'], reverse=True)
         top_couples = couples[:3]
         
-        if not top_couples: return
+        if not top_couples:
+            print("AI Match Autopilot: No new un-matched eligible pairs found. Skipping feed post to prevent duplicates.")
+            return
         
         # 3. Force Match and create Announcement
         announcement_lines = ["🚨 **AI AUTOPILOT DROP**: The AI just found today's perfect matches! 💖"]
@@ -3057,6 +3082,25 @@ def update_dating_settings():
         
     db.session.commit()
     return jsonify({"success": True})
+
+@app.route('/api/admin/dating/cleanup_autopilot_spam', methods=['POST'])
+@admin_required
+def cleanup_autopilot_spam():
+    # Find all announcement posts created by AI Autopilot
+    posts = Post.query.filter(Post.content.like('%AI AUTOPILOT DROP%')).order_by(Post.id.desc()).all()
+    if not posts:
+        return jsonify({"message": "No autopilot posts found.", "deleted_count": 0})
+    
+    # Keep the latest 1 post and delete older duplicate spam
+    deleted_count = 0
+    for p in posts[1:]:
+        Notification.query.filter_by(post_id=p.id).delete()
+        PostView.query.filter_by(post_id=p.id).delete()
+        db.session.delete(p)
+        deleted_count += 1
+        
+    db.session.commit()
+    return jsonify({"message": f"Successfully purged {deleted_count} duplicate AI match posts.", "deleted_count": deleted_count})
 
 if __name__ == '__main__':
     with app.app_context():

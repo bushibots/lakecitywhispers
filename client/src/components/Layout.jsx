@@ -6,13 +6,15 @@ import MobileHeader from './MobileHeader';
 
 export default function Layout() {
   return (
-    <div className="layout-wrapper">
+    <div className="app-shell">
       <MobileHeader />
-      <LeftSidebar />
-      <main className="layout-main">
-        <Outlet />
-      </main>
-      <RightSidebar />
+      <div className="layout-wrapper">
+        <LeftSidebar />
+        <main className="layout-main">
+          <Outlet />
+        </main>
+        <RightSidebar />
+      </div>
       <BottomNav />
     </div>
   );
