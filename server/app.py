@@ -240,6 +240,24 @@ def ai_autopilot_job():
             print("AI Match Autopilot: Insufficient active users in last 14 days. Skipping drop to prevent duplicate spam.")
             return
 
+        # Load featured matches cooldown history (30-day cooldown)
+        history_setting = SystemSetting.query.filter_by(key='featured_matches_history').first()
+        featured_history = []
+        if history_setting and history_setting.value:
+            try:
+                featured_history = json.loads(history_setting.value)
+            except Exception:
+                featured_history = []
+
+        cooldown_cutoff_str = (datetime.utcnow() - timedelta(days=30)).strftime("%Y-%m-%d")
+        prune_cutoff_str = (datetime.utcnow() - timedelta(days=60)).strftime("%Y-%m-%d")
+        valid_history = [h for h in featured_history if h.get('date', '') >= prune_cutoff_str]
+        recent_pairs = {
+            (min(h['pair']), max(h['pair']))
+            for h in valid_history
+            if h.get('date', '') >= cooldown_cutoff_str and 'pair' in h and len(h['pair']) == 2
+        }
+
         couples = []
         for i in range(len(profiles)):
             for j in range(i+1, len(profiles)):
@@ -248,6 +266,11 @@ def ai_autopilot_job():
                 
                 if not p1.user or not p2.user: continue
                 
+                # Check if this couple is on 30-day featured cooldown
+                pair_key = (min(p1.user_id, p2.user_id), max(p1.user_id, p2.user_id))
+                if pair_key in recent_pairs:
+                    continue
+
                 # Check if this couple was ALREADY matched or has an existing conversation
                 existing_conv = Conversation.query.filter(
                     ((Conversation.user1_id == p1.user_id) & (Conversation.user2_id == p2.user_id)) |
@@ -296,7 +319,11 @@ def ai_autopilot_job():
                     })
                     
         couples.sort(key=lambda x: x['score'], reverse=True)
-        top_couples = couples[:3]
+        # Pair exploration: take top high-scoring candidates and rotate smoothly
+        import random
+        top_pool = couples[:6]
+        random.shuffle(top_pool)
+        top_couples = top_pool[:3]
         
         if not top_couples:
             print("AI Match Autopilot: No new un-matched eligible pairs found. Skipping feed post to prevent duplicates.")
@@ -309,6 +336,12 @@ def ai_autopilot_job():
             u1 = c['p1'].user
             u2 = c['p2'].user
             score = c['score']
+            
+            # Record featured history
+            valid_history.append({
+                'pair': [u1.id, u2.id],
+                'date': today_str
+            })
             
             # Force match logic
             inter1 = SwipeInteraction.query.filter_by(swiper_id=u1.id, target_id=u2.id).first()
@@ -355,6 +388,13 @@ def ai_autopilot_job():
             )
             db.session.add(new_post)
             
+        # Persist updated featured match history
+        if not history_setting:
+            history_setting = SystemSetting(key='featured_matches_history', value=json.dumps(valid_history))
+            db.session.add(history_setting)
+        else:
+            history_setting.value = json.dumps(valid_history)
+
         db.session.commit()
         print("AI Match Autopilot executed successfully.")
 
