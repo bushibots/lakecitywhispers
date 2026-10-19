@@ -45,7 +45,7 @@ def on_join(data):
 
 
 # Configuration
-basedir = os.path.abspath(os.path.dirname(__name__))
+basedir = os.path.abspath(os.path.dirname(__file__))
 db_url = os.environ.get('DATABASE_URL')
 if db_url:
     if db_url.startswith('postgres://'):
