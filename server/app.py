@@ -75,13 +75,33 @@ CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 cloudinary_enabled = CLOUDINARY_URL is not None
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB max upload size
 
-# --- Redis / Minimal Caching ---
+# Detect current deploy commit or build timestamp to auto-bust cache walls on every commit
+GIT_COMMIT = (
+    os.environ.get('RENDER_GIT_COMMIT') or 
+    os.environ.get('VERCEL_GIT_COMMIT_SHA') or 
+    os.environ.get('COMMIT_SHA')
+)
+if not GIT_COMMIT:
+    try:
+        import subprocess
+        GIT_COMMIT = subprocess.check_output(
+            ['git', 'rev-parse', '--short', 'HEAD'], 
+            stderr=subprocess.DEVNULL,
+            cwd=basedir
+        ).decode('ascii').strip()
+    except Exception:
+        GIT_COMMIT = str(int(time.time()))
+
+# --- Redis / Auto-Flushing Cache Walls ---
 REDIS_URL = os.environ.get('REDIS_URL')
 redis_client = None
 if REDIS_URL:
     try:
         redis_client = redis.from_url(REDIS_URL)
         redis_client.ping()
+        # Automatically flush Redis cache walls on every deploy / commit startup
+        redis_client.flushdb()
+        print(f"[✓] Flushed all Redis cache walls on deploy commit: {GIT_COMMIT}")
     except Exception as e:
         print(f"Redis connection failed: {e}. Falling back to SIMPLE_CACHE.")
         redis_client = None
@@ -91,11 +111,12 @@ SIMPLE_CACHE = {}
 @app.before_request
 def check_cache():
     if request.method == 'GET' and request.path.startswith('/api/'):
-        # Do not cache auth or admin endpoints to prevent session leaks
-        if '/api/me' in request.path or '/api/admin' in request.path:
+        # Do not cache auth, admin, or version endpoints to prevent session leaks & stale checks
+        if '/api/me' in request.path or '/api/admin' in request.path or '/api/version' in request.path:
             return
             
-        cache_key = f"whisper_cache:{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
+        # Namespace cache key by current GIT_COMMIT so new commits naturally bypass old cache walls
+        cache_key = f"whisper_cache:{GIT_COMMIT}:{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
         
         cached_data = None
         if redis_client:
@@ -110,14 +131,21 @@ def check_cache():
             response = make_response(cached_data)
             response.headers['Content-Type'] = 'application/json'
             response.headers['X-Cache'] = 'HIT'
+            response.headers['X-Commit-Version'] = GIT_COMMIT
             return response
 
 @app.after_request
 def update_cache(response):
+    response.headers['X-Commit-Version'] = GIT_COMMIT
+    if response.mimetype == 'text/html':
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+
     # Store successful GET responses in cache
     if request.method == 'GET' and request.path.startswith('/api/') and response.status_code == 200:
-        if '/api/me' not in request.path and '/api/admin' not in request.path:
-            cache_key = f"whisper_cache:{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
+        if '/api/me' not in request.path and '/api/admin' not in request.path and '/api/version' not in request.path:
+            cache_key = f"whisper_cache:{GIT_COMMIT}:{request.path}?{request.query_string.decode('utf-8')}_{request.headers.get('Authorization')}"
             
             if redis_client:
                 try:
@@ -129,7 +157,6 @@ def update_cache(response):
                     SIMPLE_CACHE[cache_key] = response.get_data()
                     
             response.headers['X-Cache'] = 'MISS'
-            # Tell browser to cache for 15 seconds locally to prevent refresh spam
             response.headers["Cache-Control"] = "private, max-age=15"
             
     # Clear entire cache on ANY state-changing action
@@ -142,6 +169,14 @@ def update_cache(response):
         SIMPLE_CACHE.clear()
         
     return response
+
+@app.route('/api/version', methods=['GET'])
+def get_app_version():
+    return jsonify({
+        "commit": GIT_COMMIT,
+        "timestamp": int(time.time()),
+        "cache_flushed": True
+    })
 
 # Initialize extensions
 db.init_app(app)

@@ -17,11 +17,32 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useEffect } from 'react';
 import EasterEggs from './components/EasterEggs';
 import { socket, joinSocketRoom } from './socket';
-import { fetchMe, fetchPublicConfig } from './api';
+import { fetchMe, fetchPublicConfig, API_URL } from './api';
 import './index.css';
 
 function App() {
   const location = useLocation();
+
+  // Automatic Cache-Buster: Detect new commit deployed on server & auto-flush cache walls
+  useEffect(() => {
+    fetch(`${API_URL}/version`).then(r => r.json()).then(data => {
+      if (data && data.commit) {
+        const lastCommit = localStorage.getItem('whisper_active_commit');
+        if (lastCommit && lastCommit !== data.commit) {
+          console.log(`[Cache-Buster] New commit detected (${data.commit} vs ${lastCommit}). Refreshing cache walls...`);
+          localStorage.setItem('whisper_active_commit', data.commit);
+          if ('caches' in window) {
+            caches.keys().then(names => {
+              names.forEach(name => caches.delete(name));
+            });
+          }
+          window.location.reload();
+        } else {
+          localStorage.setItem('whisper_active_commit', data.commit);
+        }
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let pageName = 'Home';
